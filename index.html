@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breakbulk & Drybulk Broker Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --navy: #0a1628;
+    --navy2: #112240;
+    --blue: #1e3a5f;
+    --accent: #2196f3;
+    --accent2: #00bcd4;
+    --gold: #f5a623;
+    --green: #26a65b;
+    --red: #e74c3c;
+    --text: #e0e6f0;
+    --muted: #7f8fa6;
+    --border: #1e3a5f;
+    --card: #0d1e35;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--navy); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--navy2);
+    border-bottom: 2px solid var(--accent);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 20px rgba(33,150,243,0.15);
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { font-size: 28px; }
+  .logo h1 { font-size: 1.2rem; font-weight: 700; color: #fff; letter-spacing: .5px; }
+  .logo p { font-size: .72rem; color: var(--accent2); letter-spacing: 1px; text-transform: uppercase; }
+  .header-meta { text-align: right; }
+  .header-meta .date { font-size: .8rem; color: var(--muted); }
+  .header-meta .segment { font-size: .75rem; color: var(--gold); font-weight: 600; letter-spacing: .5px; }
+
+  /* TICKER */
+  .ticker-bar {
+    background: var(--blue);
+    padding: 8px 0;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .ticker-track {
+    display: flex;
+    white-space: nowrap;
+    animation: ticker 60s linear infinite;
+  }
+  .ticker-track:hover { animation-play-state: paused; }
+  .ticker-item {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 0 32px; font-size: .78rem; color: var(--text);
+  }
+  .ticker-item .label { color: var(--muted); font-size: .7rem; }
+  .ticker-item .val { font-weight: 600; }
+  .up { color: var(--green); }
+  .dn { color: var(--red); }
+  .sep { color: var(--border); }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* LAYOUT */
+  .main { display: grid; grid-template-columns: 1fr 420px; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+
+  /* SECTIONS */
+  .section-title {
+    font-size: .7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent2); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* NEWS */
+  .news-col { display: flex; flex-direction: column; gap: 16px; }
+
+  .news-sources {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  }
+  .news-source {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; text-align: center; cursor: pointer; transition: all .2s;
+    text-decoration: none; color: var(--text);
+  }
+  .news-source:hover { border-color: var(--accent); background: var(--blue); transform: translateY(-2px); }
+  .news-source .src-icon { font-size: 1.4rem; margin-bottom: 4px; }
+  .news-source .src-name { font-size: .72rem; font-weight: 600; color: var(--accent2); }
+  .news-source .src-desc { font-size: .65rem; color: var(--muted); margin-top: 2px; }
+
+  .news-feed { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .news-filter {
+    display: flex; gap: 8px; padding: 12px 16px; background: var(--navy2); flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-btn {
+    padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: .72rem; cursor: pointer; transition: all .2s;
+  }
+  .filter-btn.active, .filter-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .news-list { max-height: 460px; overflow-y: auto; }
+  .news-list::-webkit-scrollbar { width: 4px; }
+  .news-list::-webkit-scrollbar-track { background: var(--navy2); }
+  .news-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .news-item {
+    padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+    transition: background .15s; display: flex; gap: 12px;
+  }
+  .news-item:hover { background: var(--blue); }
+  .news-item:last-child { border-bottom: none; }
+  .news-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
+  .news-dot.hot { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+  .news-dot.alert { background: var(--red); }
+  .news-dot.live { background: #00e676; box-shadow: 0 0 8px #00e676; animation: livePulse 1.5s infinite; }
+  @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .news-content {}
+  .news-headline { font-size: .83rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+  .news-meta { display: flex; gap: 10px; font-size: .68rem; color: var(--muted); align-items: center; flex-wrap: wrap; }
+  .news-tag {
+    display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: .62rem;
+    font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  }
+  .tag-bb { background: rgba(245,166,35,.15); color: var(--gold); }
+  .tag-db { background: rgba(33,150,243,.15); color: var(--accent); }
+  .tag-port { background: rgba(38,166,91,.15); color: var(--green); }
+  .tag-mkt { background: rgba(0,188,212,.15); color: var(--accent2); }
+  .tag-reg { background: rgba(231,76,60,.15); color: var(--red); }
+  .tag-live { background: rgba(0,230,118,.2); color: #00e676; }
+
+  /* NEWS MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--navy2); border: 1px solid var(--accent); border-radius: 12px;
+    max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 24px;
+  }
+  .modal h3 { color: #fff; font-size: 1rem; margin-bottom: 8px; line-height: 1.5; }
+  .modal .modal-meta { color: var(--muted); font-size: .75rem; margin-bottom: 16px; }
+  .modal .modal-body { color: var(--text); font-size: .85rem; line-height: 1.8; }
+  .modal-close {
+    float: right; background: var(--red); border: none; color: #fff; cursor: pointer;
+    padding: 4px 10px; border-radius: 4px; font-size: .75rem; margin-left: 12px;
+  }
+
+  /* QUOTE FORM */
+  .quote-col {}
+  .quote-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    position: sticky; top: 80px;
+  }
+  .quote-header {
+    background: linear-gradient(135deg, var(--blue), var(--navy2));
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .quote-header h2 { font-size: .95rem; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .quote-header p { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+
+  form { padding: 18px 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { margin-bottom: 12px; }
+  label { display: block; font-size: .7rem; color: var(--accent2); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 5px; }
+  input, select, textarea {
+    width: 100%; background: var(--navy); border: 1px solid var(--border); border-radius: 6px;
+    padding: 9px 12px; color: var(--text); font-size: .83rem; outline: none;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  select option { background: var(--navy); }
+  .form-hint { font-size: .65rem; color: var(--muted); margin-top: 3px; }
+
+  .vessel-toggle { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .vessel-toggle button {
+    flex: 1; padding: 9px; border: none; background: var(--navy); color: var(--muted);
+    cursor: pointer; font-size: .8rem; transition: all .2s;
+  }
+  .vessel-toggle button.active { background: var(--accent); color: #fff; }
+
+  .calc-btn {
+    width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #1565c0);
+    border: none; border-radius: 8px; color: #fff; font-size: .9rem; font-weight: 700;
+    cursor: pointer; transition: all .2s; letter-spacing: .5px; margin-top: 4px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(33,150,243,.4); }
+
+  /* RESULTS */
+  .results { display: none; padding: 0 20px 20px; }
+  .results.show { display: block; }
+  .result-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0 16px; }
+
+  .freight-display {
+    background: linear-gradient(135deg, #0d2d1a, #0a1628);
+    border: 1px solid var(--green); border-radius: 8px; padding: 16px;
+    text-align: center; margin-bottom: 14px;
+  }
+  .freight-label { font-size: .7rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .freight-value { font-size: 2rem; font-weight: 800; color: var(--green); line-height: 1.2; }
+  .freight-unit { font-size: .8rem; color: var(--muted); }
+  .freight-range { font-size: .72rem; color: var(--accent2); margin-top: 4px; }
+
+  .breakdown {
+    background: var(--navy); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  .breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: .78rem;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row .b-label { color: var(--muted); }
+  .breakdown-row .b-val { color: var(--text); font-weight: 600; font-family: 'Courier New', monospace; }
+  .breakdown-row.total { background: rgba(33,150,243,.1); }
+  .breakdown-row.total .b-label { color: var(--accent2); font-weight: 700; }
+  .breakdown-row.total .b-val { color: var(--accent); font-size: .85rem; }
+
+  .voyage-tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+  .vtag {
+    background: rgba(33,150,243,.1); border: 1px solid rgba(33,150,243,.3);
+    border-radius: 4px; padding: 4px 10px; font-size: .68rem; color: var(--accent2);
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  .disclaimer {
+    font-size: .63rem; color: var(--muted); text-align: center; margin-top: 10px;
+    line-height: 1.5; font-style: italic;
+  }
+
+  /* MAP SECTION */
+  .map-section {
+    max-width: 1400px; margin: 0 auto 24px; padding: 0 24px;
+  }
+  .map-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  }
+  .map-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; background: var(--navy2); border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .map-header h3 { font-size: .85rem; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .map-info-bar {
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  }
+  .map-stat { text-align: center; }
+  .map-stat .ms-label { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .map-stat .ms-val { font-size: .9rem; font-weight: 700; color: var(--accent2); }
+  .speed-control {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .speed-control label { font-size: .7rem; color: var(--accent2); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; margin: 0; }
+  .speed-control input {
+    width: 72px; padding: 5px 8px; font-size: .8rem;
+    background: var(--navy); border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text); outline: none;
+  }
+  .speed-control input:focus { border-color: var(--accent); }
+  .speed-unit { font-size: .72rem; color: var(--muted); }
+  #routeMap { height: 420px; width: 100%; background: #0a1628; }
+  .map-placeholder {
+    height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--muted); gap: 10px;
+  }
+  .map-placeholder .ph-icon { font-size: 3rem; opacity: .4; }
+  .map-placeholder p { font-size: .82rem; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .news-sources { grid-template-columns: repeat(2, 1fr); }
+    .quote-card { position: static; }
+    .map-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">&#9875;</div>
+    <div>
+      <h1>Broker Intelligence Suite</h1>
+      <p>Breakbulk &amp; Drybulk &mdash; 3,000&ndash;50,000 DWT</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="date" id="curDate"></div>
+    <div class="segment">Tramp / Spot Market</div>
+  </div>
+</header>
+
+<!-- MARKET TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: NEWS -->
+  <div class="news-col">
+
+    <div class="section-title">Live Market Intelligence</div>
+
+    <!-- Quick-link news sources -->
+    <div class="news-sources">
+      <a href="https://www.tradewindsnews.com" target="_blank" class="news-source">
+        <div class="src-icon">&#128240;</div>
+        <div class="src-name">TradeWinds</div>
+        <div class="src-desc">Shipping news leader</div>
+      </a>
+      <a href="https://splash247.com" target="_blank" class="news-source">
+        <div class="src-icon">&#127754;</div>
+        <div class="src-name">Splash247</div>
+        <div class="src-desc">Global maritime</div>
+      </a>
+      <a href="https://www.hellenicshippingnews.com" target="_blank" class="news-source">
+        <div class="src-icon">&#127963;&#65039;</div>
+        <div class="src-name">Hellenic Shipping</div>
+        <div class="src-desc">Bulk &amp; market data</div>
+      </a>
+      <a href="https://www.maritime-executive.com" target="_blank" class="news-source">
+        <div class="src-icon">&#128478;&#65039;</div>
+        <div class="src-name">Maritime Exec</div>
+        <div class="src-desc">Industry analysis</div>
+      </a>
+      <a href="https://www.lloydslist.com" target="_blank" class="news-source">
+        <div class="src-icon">&#9875;</div>
+        <div class="src-name">Lloyd's List</div>
+        <div class="src-desc">Premium intel</div>
+      </a>
+      <a href="https://www.breakbulk.com" target="_blank" class="news-source">
+        <div class="src-icon">&#128230;</div>
+        <div class="src-name">Breakbulk</div>
+        <div class="src-desc">Project cargo focus</div>
+      </a>
+      <a href="https://www.balticexchange.com" target="_blank" class="news-source">
+        <div class="src-icon">&#128202;</div>
+        <div class="src-name">Baltic Exchange</div>
+        <div class="src-desc">Freight indices</div>
+      </a>
+      <a href="https://www.portnews.ru/en/" target="_blank" class="news-source">
+        <div class="src-icon">&#128674;</div>
+        <div class="src-name">PortNews</div>
+        <div class="src-desc">Port intelligence</div>
+      </a>
+    </div>
+
+    <!-- News feed -->
+    <div class="news-feed">
+      <div class="news-filter">
+        <button class="filter-btn active" onclick="filterNews('all',this)">All</button>
+        <button class="filter-btn" onclick="filterNews('bb',this)">Breakbulk</button>
+        <button class="filter-btn" onclick="filterNews('db',this)">Drybulk</button>
+        <button class="filter-btn" onclick="filterNews('port',this)">Ports &amp; Routes</button>
+        <button class="filter-btn" onclick="filterNews('mkt',this)">Market</button>
+        <button class="filter-btn" onclick="filterNews('reg',this)">Regulation</button>
+      </div>
+      <div class="news-list" id="newsList"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: QUOTE FORM -->
+  <div class="quote-col">
+    <div class="quote-card">
+      <div class="quote-header">
+        <h2>&#129518; Freight Quotation Calculator</h2>
+        <p>Indicative freight basis &mdash; tramp / spot market</p>
+      </div>
+
+      <form id="quoteForm" onsubmit="return false;">
+        <div class="form-group">
+          <label>Commodity</label>
+          <select id="commodity">
+            <option value="">&mdash; Select commodity &mdash;</option>
+            <optgroup label="Agricultural">
+              <option value="grain">Grain (Wheat / Corn / Barley)</option>
+              <option value="rice">Rice (Bagged)</option>
+              <option value="sugar">Sugar (Bagged / Bulk)</option>
+              <option value="fertilizer">Fertilizer (Bagged / Bulk)</option>
+              <option value="soybeans">Soybeans</option>
+            </optgroup>
+            <optgroup label="Minerals / Metals">
+              <option value="steel">Steel Products (Coils/Plates/Pipes)</option>
+              <option value="iron_ore">Iron Ore</option>
+              <option value="clinker">Clinker</option>
+              <option value="cement">Cement (Bagged / Bulk)</option>
+              <option value="scrap">Steel Scrap</option>
+              <option value="salt">Salt</option>
+              <option value="copper_conc">Copper Concentrate</option>
+            </optgroup>
+            <optgroup label="Project / Breakbulk">
+              <option value="machinery">Machinery / Equipment</option>
+              <option value="timber">Timber / Logs</option>
+              <option value="pipes">Pipes / Steel Structures</option>
+              <option value="vehicles">Vehicles / Heavy Lift</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="coal">Coal</option>
+              <option value="gypsum">Gypsum</option>
+              <option value="pet_coke">Pet Coke</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Quantity (MT)</label>
+            <input type="number" id="quantity" placeholder="e.g. 5000" min="500" max="60000">
+          </div>
+          <div class="form-group">
+            <label>Vessel Size (DWT)</label>
+            <select id="vesselSize">
+              <option value="auto">Auto-select</option>
+              <option value="3500">~3,500 DWT</option>
+              <option value="5000">~5,000 DWT</option>
+              <option value="7500">~7,500 DWT</option>
+              <option value="10000">~10,000 DWT</option>
+              <option value="12500">~12,500 DWT</option>
+              <option value="15000">~15,000 DWT</option>
+              <option value="20000">~20,000 DWT</option>
+              <option value="25000">~25,000 DWT</option>
+              <option value="30000">~30,000 DWT</option>
+              <option value="45000">~45,000 DWT</option>
+              <option value="50000">~50,000 DWT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Loading Port</label>
+            <select id="loadPort">
+              <option value="">&mdash; Select port &mdash;</option>
+              <optgroup label="China">
+                <option value="shanghai">Shanghai</option>
+                <option value="ningbo">Ningbo / Zhoushan</option>
+                <option value="qingdao">Qingdao</option>
+                <option value="tianjin">Tianjin / Xingang</option>
+                <option value="dalian">Dalian</option>
+                <option value="guangzhou">Guangzhou</option>
+                <option value="shenzhen">Shenzhen / Yantian</option>
+                <option value="xiamen">Xiamen</option>
+                <option value="nanjing">Nanjing</option>
+                <option value="lianyungang">Lianyungang</option>
+                <option value="zhanjiang">Zhanjiang</option>
+                <option value="fangcheng">Fangcheng</option>
+              </optgroup>
+              <optgroup label="Vietnam">
+                <option value="ho_chi_minh">Ho Chi Minh City</option>
+                <option value="haiphong">Hai Phong</option>
+                <option value="cailan">Cai Lan</option>
+                <option value="danang">Da Nang</option>
+                <option value="quynhon">Quy Nhon</option>
+                <option value="vung_tau">Vung Tau</option>
+              </optgroup>
+              <optgroup label="Malaysia">
+                <option value="spore">Singapore</option>
+                <option value="port_klang">Port Klang</option>
+                <option value="penang">Penang</option>
+                <option value="kuantan">Kuantan</option>
+                <option value="pasir_gudang">Pasir Gudang / Johor</option>
+                <option value="tanjung_manis">Tanjung Manis</option>
+                <option value="bintulu">Bintulu</option>
+              </optgroup>
+              <optgroup label="Philippines">
+                <option value="manila">Manila</option>
+                <option value="batangas">Batangas</option>
+                <option value="cebu">Cebu</option>
+                <option value="iloilo">Iloilo</option>
+                <option value="davao">Davao</option>
+                <option value="gensan">General Santos</option>
+                <option value="cdo">Cagayan de Oro</option>
+              </optgroup>
+              <optgroup label="Indonesia">
+                <option value="jakarta">Jakarta / Tanjung Priok</option>
+                <option value="surabaya">Surabaya</option>
+                <option value="semarang">Semarang</option>
+                <option value="belawan">Belawan / Medan</option>
+                <option value="makassar">Makassar</option>
+                <option value="banjarmasin">Banjarmasin</option>
+                <option value="balikpapan">Balikpapan</option>
+                <option value="samarinda">Samarinda</option>
+                <option value="cilacap">Cilacap</option>
+              </optgroup>
+              <optgroup label="South Asia">
+                <option value="mundra">Mundra</option>
+                <option value="kandla">Kandla</option>
+                <option value="nhava_sheva">Nhava Sheva / Mumbai</option>
+                <option value="colombo">Colombo</option>
+                <option value="chittagong">Chittagong</option>
+              </optgroup>
+              <optgroup label="Middle East">
+                <option value="dubai">Dubai / Jebel Ali</option>
+                <option value="dammam">Dammam / King Abdul Aziz</option>
+                <option value="sohar">Sohar</option>
+                <option value="salalah">Salalah</option>
+              </optgroup>
+              <optgroup label="Africa">
+                <option value="mombasa">Mombasa</option>
+                <option value="dar_es_salaam">Dar es Salaam</option>
+                <option value="lagos">Lagos / Apapa</option>
+                <option value="durban">Durban</option>
+              </optgroup>
+              <optgroup label="Europe / Med">
+                <option value="rotterdam">Rotterdam</option>
+                <option value="antwerp">Antwerp</option>
+                <option value="hamburg">Hamburg</option>
+                <option value="genoa">Genoa</option>
+                <option value="istanbul">Istanbul</option>
+              </optgroup>
+              <optgroup label="Americas">
+                <option value="houston">Houston</option>
+                <option value="new_orleans">New Orleans</option>
+                <option value="baltimore">Baltimore</option>
+                <option value="savannah">Savannah</option>
+                <option value="santos">Santos</option>
+              </optgroup>
+              <optgroup label="Mexico">
+                <option value="ensenada">Ensenada</option>
+                <option value="guaymas">Guaymas</option>
+                <option value="la_paz">La Paz</option>
+              </optgroup>
+              <optgroup label="South Korea">
+                <option value="busan">Busan</option>
+              </optgroup>
+              <optgroup label="Thailand">
+                <option value="bangkok">Bangkok</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Discharging Port</label>
+            <select id="dischargePort">
+              <option value="">&mdash; Select port &mdash;</option>
+              <optgroup label="China">
+                <option value="shanghai">Shanghai</option>
+                <option value="ningbo">Ningbo / Zhoushan</option>
+                <option value="qingdao">Qingdao</option>
+                <option value="tianjin">Tianjin / Xingang</option>
+                <option value="dalian">Dalian</option>
+                <option value="guangzhou">Guangzhou</option>
+                <option value="shenzhen">Shenzhen / Yantian</option>
+                <option value="xiamen">Xiamen</option>
+                <option value="nanjing">Nanjing</option>
+                <option value="lianyungang">Lianyungang</option>
+                <option value="zhanjiang">Zhanjiang</option>
+                <option value="fangcheng">Fangcheng</option>
+              </optgroup>
+              <optgroup label="Vietnam">
+                <option value="ho_chi_minh">Ho Chi Minh City</option>
+                <option value="haiphong">Hai Phong</option>
+                <option value="cailan">Cai Lan</option>
+                <option value="danang">Da Nang</option>
+                <option value="quynhon">Quy Nhon</option>
+                <option value="vung_tau">Vung Tau</option>
+              </optgroup>
+              <optgroup label="Malaysia">
+                <option value="spore">Singapore</option>
+                <option value="port_klang">Port Klang</option>
+                <option value="penang">Penang</option>
+                <option value="kuantan">Kuantan</option>
+                <option value="pasir_gudang">Pasir Gudang / Johor</option>
+                <option value="tanjung_manis">Tanjung Manis</option>
+                <option value="bintulu">Bintulu</option>
+              </optgroup>
+              <optgroup label="Philippines">
+                <option value="manila">Manila</option>
+                <option value="batangas">Batangas</option>
+                <option value="cebu">Cebu</option>
+                <option value="iloilo">Iloilo</option>
+                <option value="davao">Davao</option>
+                <option value="gensan">General Santos</option>
+                <option value="cdo">Cagayan de Oro</option>
+              </optgroup>
+              <optgroup label="Indonesia">
+                <option value="jakarta">Jakarta / Tanjung Priok</option>
+                <option value="surabaya">Surabaya</option>
+                <option value="semarang">Semarang</option>
+                <option value="belawan">Belawan / Medan</option>
+                <option value="makassar">Makassar</option>
+                <option value="banjarmasin">Banjarmasin</option>
+                <option value="balikpapan">Balikpapan</option>
+                <option value="samarinda">Samarinda</option>
+                <option value="cilacap">Cilacap</option>
+              </optgroup>
+              <optgroup label="South Asia">
+                <option value="mundra">Mundra</option>
+                <option value="kandla">Kandla</option>
+                <option value="nhava_sheva">Nhava Sheva / Mumbai</option>
+                <option value="colombo">Colombo</option>
+                <option value="chittagong">Chittagong</option>
+              </optgroup>
+              <optgroup label="Middle East">
+                <option value="dubai">Dubai / Jebel Ali</option>
+                <option value="dammam">Dammam / King Abdul Aziz</option>
+                <option value="sohar">Sohar</option>
+                <option value="salalah">Salalah</option>
+              </optgroup>
+              <optgroup label="Africa">
+                <option value="mombasa">Mombasa</option>
+                <option value="dar_es_salaam">Dar es Salaam</option>
+                <option value="lagos">Lagos / Apapa</option>
+                <option value="durban">Durban</option>
+              </optgroup>
+              <optgroup label="Europe / Med">
+                <option value="rotterdam">Rotterdam</option>
+                <option value="antwerp">Antwerp</option>
+                <option value="hamburg">Hamburg</option>
+                <option value="genoa">Genoa</option>
+                <option value="istanbul">Istanbul</option>
+              </optgroup>
+              <optgroup label="Americas">
+                <option value="houston">Houston</option>
+                <option value="new_orleans">New Orleans</option>
+                <option value="baltimore">Baltimore</option>
+                <option value="savannah">Savannah</option>
+                <option value="santos">Santos</option>
+              </optgroup>
+              <optgroup label="Mexico">
+                <option value="ensenada">Ensenada</option>
+                <option value="guaymas">Guaymas</option>
+                <option value="la_paz">La Paz</option>
+              </optgroup>
+              <optgroup label="South Korea">
+                <option value="busan">Busan</option>
+              </optgroup>
+              <optgroup label="Thailand">
+                <option value="bangkok">Bangkok</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Loading Rate (MT/day)</label>
+            <input type="number" id="loadRate" placeholder="e.g. 1500" min="100">
+            <div class="form-hint">SHINC / SHEX &mdash; enter daily rate</div>
+          </div>
+          <div class="form-group">
+            <label>Discharging Rate (MT/day)</label>
+            <input type="number" id="dischRate" placeholder="e.g. 1000" min="100">
+            <div class="form-hint">SHINC / SHEX &mdash; enter daily rate</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Laycan (From)</label>
+            <input type="date" id="laycanFrom">
+          </div>
+          <div class="form-group">
+            <label>Laycan (To)</label>
+            <input type="date" id="laycanTo">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Vessel Speed (knots)</label>
+            <input type="number" id="vesselSpeed" value="11.5" min="6" max="16" step="0.5">
+            <div class="form-hint">Adjust for weather routing / eco-speed</div>
+          </div>
+          <div class="form-group">
+            <label>Freight Basis</label>
+            <select id="freightBasis">
+              <option value="fio">FIO (Free In/Out)</option>
+              <option value="fios">FIOS (Free In/Out &amp; Stowed)</option>
+              <option value="gross">Gross Terms (Owner ops)</option>
+              <option value="filo">FILO (Free In, Liner Out)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Route Via</label>
+            <select id="routeVia" onchange="updateMapRoute(); if(document.getElementById('results').classList.contains('show')) calculateFreight();">
+              <option value="auto">Auto &mdash; shortest (Suez vs Panama)</option>
+              <option value="suez">Suez Canal (via Indian Ocean &amp; Med)</option>
+              <option value="panama">Panama Canal (trans-Pacific)</option>
+              <option value="cape">Cape of Good Hope (via S.Africa)</option>
+            </select>
+            <div class="form-hint">Override for trans-oceanic voyages &mdash; auto picks shorter</div>
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <div id="routeInfo" class="form-hint" style="padding:8px;background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.25);border-radius:6px;color:#8dd;min-height:36px">
+              Select ports to see route comparison &hellip;
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>VLSFO Price (USD/MT) &mdash; sea</label>
+            <input type="number" id="vlsfoPrice" value="498" min="200" max="1500" step="1">
+            <div class="form-hint">Main engine fuel.</div>
+          </div>
+          <div class="form-group">
+            <label>MGO Price (USD/MT) &mdash; aux / port</label>
+            <input type="number" id="mgoPrice" value="685" min="300" max="2000" step="1">
+            <div class="form-hint">Auxiliary engines (sea + port).</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:-4px;margin-bottom:10px;flex-wrap:wrap">
+          <button type="button" onclick="fetchCPCPrices(true)"
+             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(38,166,91,0.15);border:1px solid rgba(38,166,91,0.4);border-radius:6px;color:#26a65b;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s"
+             onmouseover="this.style.background='rgba(38,166,91,0.3)'" onmouseout="this.style.background='rgba(38,166,91,0.15)'">
+            &#8635; Refresh Live CPC Prices
+          </button>
+          <a href="https://www.cpc.com.tw/en/News_Content.aspx?n=2671&s=3104" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(33,150,243,0.15);border:1px solid rgba(33,150,243,0.4);border-radius:6px;color:#2196f3;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
+             onmouseover="this.style.background='rgba(33,150,243,0.3)'" onmouseout="this.style.background='rgba(33,150,243,0.15)'">
+            &#9981; Open CPC Page
+          </a>
+          <div id="bunkerPriceHint" class="form-hint" style="margin:0;font-size:11px;color:#f5a623">&#9203; Preparing to fetch CPC bunker prices&hellip;</div>
+        </div>
+
+        <div class="form-group">
+          <label>Vessel Type</label>
+          <div class="vessel-toggle">
+            <button type="button" id="btnGeared" class="active" onclick="setVesselType('geared')">&#9881;&#65039; Geared</button>
+            <button type="button" id="btnGearless" onclick="setVesselType('gearless')">&#127959;&#65039; Gearless</button>
+            <button type="button" id="btnEither" onclick="setVesselType('either')">Both</button>
+          </div>
+          <div class="form-hint">Gearless requires shore crane &mdash; specify account below</div>
+        </div>
+
+        <div class="form-group" id="craneAccountGroup" style="display:none">
+          <label>Shore Crane Account (gearless only)</label>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
+              <input type="radio" name="craneAccount" value="charterer" checked>
+              <span>Charterer&rsquo;s account</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
+              <input type="radio" name="craneAccount" value="owner">
+              <span>Owner&rsquo;s account</span>
+            </label>
+          </div>
+          <div class="form-hint">If Charterer&rsquo;s account &rarr; crane cost excluded from freight.</div>
+        </div>
+
+        <button class="calc-btn" onclick="calculateFreight()">
+          &#9875; Calculate Indicative Freight
+        </button>
+      </form>
+
+      <!-- RESULTS -->
+      <div class="results" id="results">
+        <hr class="result-divider">
+
+        <div class="freight-display">
+          <div class="freight-label">Indicative Freight Rate</div>
+          <div class="freight-value" id="freightRate">&mdash;</div>
+          <div class="freight-unit">USD / MT</div>
+          <div class="freight-range" id="freightRange"></div>
+        </div>
+
+        <div class="voyage-tags" id="voyageTags"></div>
+
+        <div class="breakdown" id="breakdown"></div>
+
+        <p class="disclaimer">
+          Indicative basis only. Market rates may vary &plusmn;20&ndash;35% depending on vessel availability,
+          bunker prices, port conditions, and negotiation. Always validate against current market fixtures.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ROUTE MAP -->
+<div class="map-section">
+  <div class="map-card">
+    <div class="map-header">
+      <h3>&#128506;&#65039; Voyage Route Map</h3>
+      <div class="map-info-bar">
+        <div class="map-stat"><div class="ms-label">Distance</div><div class="ms-val" id="mapDist">&mdash;</div></div>
+        <div class="map-stat"><div class="ms-label">Sea Days</div><div class="ms-val" id="mapDays">&mdash;</div></div>
+        <div class="map-stat"><div class="ms-label">ETA (from now)</div><div class="ms-val" id="mapEta">&mdash;</div></div>
+        <div class="speed-control">
+          <label>Speed</label>
+          <input type="number" id="mapSpeed" value="11.5" min="6" max="16" step="0.5" oninput="syncSpeed(this);updateMapRoute()">
+          <span class="speed-unit">knots</span>
+        </div>
+      </div>
+    </div>
+    <div id="routeMap">
+      <div class="map-placeholder">
+        <div class="ph-icon">&#128506;&#65039;</div>
+        <p>Select loading &amp; discharging ports above to display the voyage route</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEWS MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModalBtn()">&#10005; Close</button>
+    <div class="news-tag" id="modalTag"></div>
+    <h3 id="modalTitle"></h3>
+    <div class="modal-meta" id="modalMeta"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ─── DATE ────────────────────────────────────────────────────────────────────
+document.getElementById('curDate').textContent =
+  new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+// ─── TICKER DATA ─────────────────────────────────────────────────────────────
+const tickerData = [
+  { label: 'BSI-58', val: '1,024', chg: '+12', dir: 'up' },
+  { label: 'BHSI (Handysize)', val: '413', chg: '-3', dir: 'dn' },
+  { label: 'BPCI (Small)', val: '892', chg: '+5', dir: 'up' },
+  { label: 'VLSFO SG', val: '$498/MT', chg: '+2', dir: 'up' },
+  { label: 'MGO SG', val: '$685/MT', chg: '-4', dir: 'dn' },
+  { label: 'VLSFO ARA', val: '$512/MT', chg: '+1', dir: 'up' },
+  { label: 'SGD/USD', val: '0.748', chg: '0.00', dir: 'up' },
+  { label: 'USD/INR', val: '83.42', chg: '-0.05', dir: 'dn' },
+  { label: 'Malay Straits Congestion', val: 'Moderate', chg: '', dir: '' },
+  { label: 'Red Sea Status', val: 'High Risk', chg: '', dir: 'dn' },
+  { label: 'Suez Canal', val: 'Operational', chg: '', dir: 'up' },
+  { label: 'WTI Crude', val: '$82.4/bbl', chg: '+0.6', dir: 'up' },
+];
+
+function buildTicker() {
+  const track = document.getElementById('tickerTrack');
+  const items = [...tickerData, ...tickerData];
+  track.innerHTML = items.map(d => `
+    <span class="ticker-item">
+      <span class="label">${d.label}</span>
+      <span class="val ${d.dir}">${d.val}</span>
+      ${d.chg ? `<span class="${d.dir}">${d.dir==='up'?'\u25B2':'\u25BC'} ${d.chg}</span>` : ''}
+      <span class="sep">|</span>
+    </span>
+  `).join('');
+}
+buildTicker();
+
+// ─── NEWS DATA ───────────────────────────────────────────────────────────────
+const newsItems = [
+  {
+    type:'bb', hot:false, alert:false, live:false,
+    headline:'Steel coil exports from SE Asia surge as infrastructure demand spikes in East Africa corridor',
+    source:'TradeWinds', time:'2h ago',
+    body:`Breakbulk operators report a significant uptick in steel coil bookings from Malaysian and Thai mills destined for Mombasa, Dar es Salaam, and Beira. Infrastructure projects funded by Chinese and Gulf capital are driving the demand, with charterers reporting difficulty sourcing geared vessels in the 5,000\u201310,000 DWT range. Freight ideas for this route have firmed by approximately 8\u201312% over Q4 levels.\n\nVessel owners are increasingly selective, preferring longer-term period charters over spot fixtures amid the positive rate environment.`
+  },
+  {
+    type:'db', hot:true, alert:false, live:false,
+    headline:'Grain volumes from Black Sea ports up 18% YTD \u2014 small bulk carriers in high demand',
+    source:'Hellenic Shipping News', time:'3h ago',
+    body:`Ukrainian and Romanian grain exports through Constanta and Odessa have rebounded strongly, with handysize and small supramax vessels particularly in demand. Charterers are facing a tight prompt tonnage position in the 10,000\u201325,000 DWT segment throughout April and May.\n\nFertilizer and bagged grain movements to North Africa and the Eastern Mediterranean are contributing to the squeeze. Freight for grain Constanta/Egypt has firmed to around USD 18\u201322/MT for prompt loading.`
+  },
+  {
+    type:'mkt', hot:false, alert:false, live:false,
+    headline:'BSI touches 1,024 points \u2014 analysts flag seasonal demand as key driver for Q2 outlook',
+    source:'Baltic Exchange', time:'4h ago',
+    body:`The Baltic Supramax Index (BSI-58) has reached its highest level since November 2024, supported by strong demand across multiple commodity segments. Agricultural shipments, Indian sub-continent coal imports, and Indonesian clinker/cement exports are cited as primary drivers.\n\nAnalysts at Braemar and Clarksons note that vessel supply growth remains subdued, with limited newbuilding deliveries in the small bulk segment expected through 2026. This supports a constructive outlook for freight rates in the 3,000\u201330,000 DWT space.`
+  },
+  {
+    type:'port', hot:false, alert:true, live:false,
+    headline:'Port congestion worsens at Nhava Sheva \u2014 waiting times exceed 6 days for bulk vessels',
+    source:'Maritime Executive', time:'5h ago',
+    body:`Congestion at Jawaharlal Nehru Port (Nhava Sheva / JNPT) has intensified due to a combination of increased steel imports, fertilizer arrivals ahead of kharif season, and ongoing berth maintenance. Vessels under 15,000 DWT are reportedly waiting 5\u20137 days for berth.\n\nBrokers advise charterers to factor additional waiting time into laytime calculations and to discuss despatch/demurrage clauses carefully. Colombo and Mundra are being considered as alternative discharge hubs for some cargoes.`
+  },
+  {
+    type:'reg', hot:false, alert:false, live:false,
+    headline:'IMO 2025 MARPOL amendments: CII rating impact on small bulk carrier chartering decisions',
+    source:'Lloyd\'s List', time:'6h ago',
+    body:`The Carbon Intensity Indicator (CII) framework introduced under IMO 2025 amendments is increasingly influencing chartering decisions in the small to mid-size bulk segment. Vessels with D or E ratings are finding it harder to secure charters, with some charterers imposing CII warranties in standard charter parties.\n\nOwners of older handysize and small supramax tonnage are evaluating speed reduction and fuel optimization strategies. Brokers report that vessels with verified B or C ratings command a premium of USD 500\u20131,500/day in the current market.`
+  },
+  {
+    type:'bb', hot:false, alert:false, live:false,
+    headline:'Project cargo market: Renewable energy equipment drives breakbulk demand across Southeast Asia',
+    source:'Breakbulk Magazine', time:'7h ago',
+    body:`Wind turbine components, solar panel manufacturing equipment, and grid infrastructure hardware are fueling a sustained breakbulk market across the ASEAN region. Vietnam, Indonesia, and the Philippines are primary destinations, with European manufacturers (Germany, Denmark, Spain) dominating the cargo flow.\n\nGeared vessels with heavy-lift capability in the 7,000\u201315,000 DWT range are particularly sought after. Charterers note that scheduling flexibility is limited due to complex port logistics and crane availability issues.`
+  },
+  {
+    type:'db', hot:false, alert:false, live:false,
+    headline:'Indonesian coal exports to South Asia rise \u2014 handysize preferred for river-accessible terminals',
+    source:'Splash247', time:'8h ago',
+    body:`South Kalimantan coal shipments to Bangladesh, Sri Lanka, and southern Indian coastal ports have increased, with charterers specifically seeking geared handysize vessels capable of self-discharge at shallow-draft river terminals. The 5,000\u201312,000 DWT segment is particularly active.\n\nFreight on Muara Satui/Chittagong has been quoted at USD 12\u201316/MT basis 7,000 DWT geared vessel for prompt April lifting. Owners are pushing for higher rates given limited prompt tonnage availability.`
+  },
+  {
+    type:'port', hot:false, alert:false, live:false,
+    headline:'Jebel Ali introduces new berth allocation system to reduce vessel waiting times',
+    source:'PortNews', time:'9h ago',
+    body:`DP World has implemented a revised pre-arrival notification and berth reservation system at Jebel Ali Port (JEBEL ALI, UAE) to streamline bulk cargo handling. The new system requires 72-hour pre-arrival notice and advance cargo documentation submission.\n\nThe measure is expected to reduce average waiting times from 3.5 to under 1.5 days for bulk vessels under 30,000 DWT. Brokers operating Middle East routes are advised to update standard fixture clauses accordingly.`
+  },
+  {
+    type:'mkt', hot:false, alert:false, live:false,
+    headline:'Bunker prices ease slightly as crude softens \u2014 VLSFO at Singapore drops to $498/MT',
+    source:'Hellenic Shipping News', time:'10h ago',
+    body:`VLSFO prices at the Singapore hub have declined to USD 498/MT as of mid-week, tracking a modest retreat in crude oil benchmarks. MGO remains elevated at USD 685/MT, a gap of USD 187/MT that continues to incentivize VLSFO compliance.\n\nFor voyage calculations on typical SE Asia routes, the bunker cost component for a 10,000 DWT vessel over a 15-day round voyage is estimated at USD 70,000\u201390,000 at current prices. Brokers should ensure freight quotations reflect current bunker actuals.`
+  },
+  {
+    type:'reg', hot:false, alert:false, live:false,
+    headline:'Bangladesh introduces new port state control campaign targeting small bulk carriers',
+    source:'Maritime Executive', time:'12h ago',
+    body:`The Department of Shipping of Bangladesh has launched an enhanced Port State Control inspection campaign at Chittagong targeting vessels in the 3,000\u201320,000 DWT range. Focus areas include fire safety equipment, life-saving appliances, cargo hold conditions, and structural integrity documentation.\n\nOwners trading to Chittagong are advised to ensure pre-arrival inspections are complete and all certificates are current. Vessels with outstanding deficiencies risk detention, with significant commercial implications for time-sensitive charters.`
+  },
+  // ─── ADDITIONAL NEWS ITEMS ─────────────────────────────────────────
+  {
+    type:'port', hot:true, alert:true, live:false,
+    headline:'Tianjin / Xingang congestion intensifies \u2014 coal import surge clogs berths for 8+ days',
+    source:'Splash247', time:'1h ago',
+    body:`A record influx of thermal coal imports at Tianjin/Xingang has led to severe congestion, with bulk carriers waiting 8\u201310 days for berth. Chinese utilities are restocking ahead of summer peak demand, and vessels in the 10,000\u201325,000 DWT range are most affected.\n\nBrokers report demurrage claims mounting rapidly. Some charterers are diverting cargoes to Dalian and Qingdao, but those ports are also experiencing increased waiting times of 3\u20135 days.`
+  },
+  {
+    type:'db', hot:true, alert:false, live:false,
+    headline:'Vietnam clinker and cement exports boom \u2014 Hai Phong and Ho Chi Minh terminals at capacity',
+    source:'TradeWinds', time:'2h ago',
+    body:`Vietnamese clinker exports have surged 25% YoY, driven by strong demand from the Philippines, Bangladesh, and East Africa. Hai Phong and Ho Chi Minh City terminals are operating at near-full capacity, with loading delays of 2\u20134 days common.\n\nFreight rates for clinker Hai Phong/Manila on 10,000 DWT geared vessels have firmed to USD 14\u201318/MT. Vung Tau and Quy Nhon are emerging as alternative loading points for southern Vietnamese mills.`
+  },
+  {
+    type:'bb', hot:false, alert:false, live:false,
+    headline:'Philippines infrastructure push drives steel rebar and HRC imports through Manila and Batangas',
+    source:'Hellenic Shipping News', time:'3h ago',
+    body:`The Philippine government\'s Build Build Build program continues to fuel strong steel import demand. Manila and Batangas are the primary discharge ports, with Cebu and Davao also seeing increased breakbulk steel volumes. Geared vessels of 7,500\u201315,000 DWT are preferred.\n\nFreight ideas from Guangzhou and Shenzhen to Manila have been assessed at USD 12\u201316/MT basis 10,000 DWT geared. Iloilo and General Santos are developing as secondary discharge points for Visayas and Mindanao projects.`
+  },
+  {
+    type:'db', hot:false, alert:false, live:false,
+    headline:'Indonesia nickel ore shipments from Sulawesi rise \u2014 Makassar and Balikpapan loading active',
+    source:'Lloyd\'s List', time:'4h ago',
+    body:`Nickel ore exports from eastern Indonesia have increased as Chinese smelters rebuild inventories. Makassar and Balikpapan are the main loading ports, with cargoes typically shipped on 7,500\u201320,000 DWT geared vessels to Chinese discharge ports including Lianyungang, Ningbo, and Zhanjiang.\n\nThe Indonesian government\'s ore export quota system continues to create periodic supply disruptions, adding volatility to the freight market. Brokers advise securing tonnage early for confirmed quotas.`
+  },
+  {
+    type:'mkt', hot:false, alert:false, live:false,
+    headline:'Malaysia palm oil shipments firm \u2014 Pasir Gudang and Kuantan loading berths tight',
+    source:'PortNews', time:'5h ago',
+    body:`Palm oil export volumes from Malaysia have strengthened with seasonal harvest peaks. Pasir Gudang (Johor) and Kuantan are the busiest loading terminals, with vessels waiting 1\u20133 days. Bintulu handles palm kernel cargoes alongside its LNG traffic.\n\nTimber and plywood exports from Tanjung Manis and Bintulu (Sarawak) continue at steady volumes, mostly bound for South Asian and Middle Eastern markets. Freight rates for timber Tanjung Manis/Dubai assessed around USD 22\u201328/MT on 5,000 DWT geared.`
+  },
+  {
+    type:'port', hot:false, alert:false, live:false,
+    headline:'Malacca Strait traffic reaches record levels \u2014 VTS advisories issued for small bulk carriers',
+    source:'Maritime Executive', time:'6h ago',
+    body:`Vessel Traffic Service (VTS) authorities in the Malacca Strait have issued advisories as daily transit volumes hit new records. Small bulk carriers in the 3,000\u201315,000 DWT range are advised to maintain enhanced lookout and AIS reporting.\n\nThe congestion is concentrated around the Singapore Strait eastern approach, where anchorages at both Singapore and Pasir Gudang are near capacity. Penang and Belawan transits are reported as normal.`
+  },
+  {
+    type:'mkt', hot:false, alert:false, live:false,
+    headline:'Bunker update: VLSFO spread narrows between Singapore and Zhoushan \u2014 Chinese bunkers gain share',
+    source:'Hellenic Shipping News', time:'7h ago',
+    body:`VLSFO prices at Zhoushan (Ningbo) have moved to within USD 8/MT of Singapore levels, at USD 490/MT. Chinese bunker suppliers are aggressively competing for market share in the East Asian small bulk segment.\n\nVessels trading China-SE Asia routes are increasingly bunkering at Zhoushan or Guangzhou rather than Singapore, saving both time and cost. MGO availability at Philippine ports remains limited, with Cebu and Manila the only reliable supply points.`
+  },
+  {
+    type:'db', hot:false, alert:false, live:false,
+    headline:'Small bulk freight rates for coal S.Kalimantan/China firm on strong demand',
+    source:'Baltic Exchange', time:'8h ago',
+    body:`Freight rates for thermal coal from South Kalimantan (Banjarmasin / Samarinda loading) to Chinese discharge ports have firmed to USD 10\u201314/MT on 10,000\u201315,000 DWT geared vessels. Demand from smaller Chinese coastal power plants unable to accommodate capesize vessels is driving the mini-bulk segment.\n\nThe Banjarmasin-Ningbo route is particularly active, with multiple fixtures reported in the past week at rates 8\u201312% above March levels.`
+  },
+  {
+    type:'bb', hot:false, alert:false, live:false,
+    headline:'Breakbulk cement demand spikes in Mindanao \u2014 Davao and General Santos discharge volumes up 30%',
+    source:'Breakbulk Magazine', time:'9h ago',
+    body:`Cement and clinker imports into Mindanao have surged as construction activity accelerates in Davao, General Santos, and Cagayan de Oro. Vietnamese and Chinese mills are the primary origins, with 7,500\u201312,500 DWT geared vessels preferred for the trade.\n\nPort infrastructure in CDO and GenSan is being upgraded, but current berth capacity is strained. Brokers report 2\u20134 day waiting times at both ports during peak periods.`
+  },
+  {
+    type:'mkt', hot:false, alert:false, live:false,
+    headline:'Handysize period rates for SE Asia trading firm to $5,500\u2013$6,500/day on 12-month TC',
+    source:'Clarksons Research', time:'11h ago',
+    body:`Period rates for handysize (8,000\u201315,000 DWT) geared bulk carriers trading within Southeast Asia have firmed to USD 5,500\u20136,500/day on 12-month time charter. This represents a 15% increase over the same period last year.\n\nThe premium is driven by strong regional cargo flows in coal, clinker, cement, and agricultural products. Owners with modern, well-maintained tonnage are in a strong negotiating position, particularly for vessels with CII ratings of B or better.`
+  },
+  {
+    type:'port', hot:false, alert:false, live:false,
+    headline:'Semarang port expansion nears completion \u2014 new bulk berth to double capacity',
+    source:'PortNews', time:'13h ago',
+    body:`Tanjung Emas port in Semarang (Central Java) is completing a new deep-water bulk berth expected to double the port\'s dry bulk handling capacity. The facility will accommodate vessels up to 20,000 DWT.\n\nThis expansion is expected to relieve pressure on Surabaya and Jakarta for Java-bound bulk cargoes, particularly coal and cement. Commercial operations are expected to begin in Q3 2026.`
+  },
+];
+
+let activeFilter = 'all';
+function filterNews(type, btn) {
+  activeFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews();
+}
+
+function renderNews() {
+  const list = document.getElementById('newsList');
+  const filtered = activeFilter === 'all' ? newsItems : newsItems.filter(n => n.type === activeFilter);
+  list.innerHTML = filtered.map((n, i) => {
+    const tagMap = { bb:'tag-bb', db:'tag-db', port:'tag-port', mkt:'tag-mkt', reg:'tag-reg' };
+    const tagLabel = { bb:'Breakbulk', db:'Drybulk', port:'Port/Route', mkt:'Market', reg:'Regulation' };
+    const dotClass = n.live ? 'live' : n.hot ? 'hot' : n.alert ? 'alert' : '';
+    const liveBadge = n.live ? '<span class="news-tag tag-live">LIVE</span>' : '';
+    return `
+      <div class="news-item" onclick="openModal(${newsItems.indexOf(n)})">
+        <div class="news-dot ${dotClass}"></div>
+        <div class="news-content">
+          <div class="news-headline">${n.headline}</div>
+          <div class="news-meta">
+            <span class="news-tag ${tagMap[n.type]}">${tagLabel[n.type]}</span>
+            ${liveBadge}
+            <span>${n.source}</span>
+            <span>${n.time}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('') || '<div style="padding:20px;color:var(--muted);text-align:center">No items for this filter.</div>';
+}
+renderNews();
+
+// ─── LIVE RSS FEED ───────────────────────────────────────────────────────────
+async function fetchLiveNews() {
+  const feeds = [
+    'https://api.rss2json.com/v1/api.json?rss_url=https://splash247.com/feed/',
+    'https://api.rss2json.com/v1/api.json?rss_url=https://gcaptain.com/feed/',
+  ];
+  try {
+    const results = await Promise.allSettled(feeds.map(url => fetch(url).then(r => r.json())));
+    let liveCount = 0;
+    results.forEach(result => {
+      if (result.status === 'fulfilled' && result.value && result.value.items) {
+        result.value.items.slice(0, 5).forEach(item => {
+          const exists = newsItems.some(n => n.headline === item.title);
+          if (!exists && item.title) {
+            const pubDate = new Date(item.pubDate);
+            const hoursAgo = Math.round((Date.now() - pubDate.getTime()) / 3600000);
+            const timeStr = hoursAgo < 1 ? 'Just now' : hoursAgo + 'h ago';
+            newsItems.unshift({
+              type: 'mkt', hot: false, alert: false, live: true,
+              headline: item.title,
+              source: result.value.feed ? result.value.feed.title : 'RSS Feed',
+              time: timeStr,
+              body: (item.description || item.content || 'No additional details available.').replace(/<[^>]+>/g, '')
+            });
+            liveCount++;
+          }
+        });
+      }
+    });
+    if (liveCount > 0) renderNews();
+  } catch (e) {
+    // Silently fall back to static items
+  }
+}
+fetchLiveNews();
+setInterval(fetchLiveNews, 30 * 60 * 1000); // Refresh every 30 minutes
+
+// ─── BUNKER PRICE HELPER ─────────────────────────────────────────────────────
+// Auto-fetches marine bunker prices from CPC Taiwan and fills the VLSFO / MGO inputs.
+// The parent news page embeds an iframe pointing at the price schedule — we hit the
+// iframe URL directly. The International schedule is already published in USD/MT,
+// so no FX or density conversion is needed.
+// CORS is handled via public proxy fallbacks; prices are cached in localStorage for 6h.
+
+const CPC_URL = 'https://vipmbr.cpc.com.tw/mbwebs/ShowListPrice_d1520_En.aspx';
+// Each entry: { build: (url)=>proxyUrl, unwrap: (rawBody)=>htmlString }
+// Some proxies return the raw body; others wrap it in JSON — unwrap accordingly.
+const CPC_PROXIES = [
+  { build: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+    unwrap: b => b },
+  { build: u => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u),
+    unwrap: b => { try { return JSON.parse(b).contents || ''; } catch(e) { return ''; } } },
+  { build: u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+    unwrap: b => b },
+  { build: u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
+    unwrap: b => b },
+  { build: u => 'https://thingproxy.freeboard.io/fetch/' + u,
+    unwrap: b => b },
+  { build: u => 'https://cors.eu.org/' + u,
+    unwrap: b => b },
+];
+const CPC_CACHE_KEY = 'cpcBunkerCache_v2';
+const CPC_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+function setBunkerHint(msg, color) {
+  const hint = document.getElementById('bunkerPriceHint');
+  if (!hint) return;
+  hint.style.color = color || '#f5a623';
+  hint.innerHTML = msg;
+  hint.style.display = '';
+}
+
+// Scan news RSS for price mentions as a fallback when CPC fetch fails
+function scanRssForBunkerPrices() {
+  const allText = (typeof newsItems !== 'undefined' ? newsItems : []).map(n => (n.headline + ' ' + n.body)).join(' ');
+  const vlsfoMatch = allText.match(/VLSFO[^$\d]{0,60}(?:USD?\s*|US\$?\s*|\$)\s*(\d{3,4})(?:\s*\/\s*MT)?/i);
+  const mgoMatch   = allText.match(/(?:MGO|LSMGO)[^$\d]{0,60}(?:USD?\s*|US\$?\s*|\$)\s*(\d{3,4})(?:\s*\/\s*MT)?/i);
+  let found = false;
+  if (vlsfoMatch) {
+    const v = parseInt(vlsfoMatch[1]);
+    if (v >= 200 && v <= 1500) { document.getElementById('vlsfoPrice').value = v; found = true; }
+  }
+  if (mgoMatch) {
+    const m = parseInt(mgoMatch[1]);
+    if (m >= 300 && m <= 2000) { document.getElementById('mgoPrice').value = m; found = true; }
+  }
+  return found;
+}
+
+// Parse CPC International Marine Fuel Oil price schedule out of the iframe HTML.
+// The table rows use ASP.NET GridView span IDs. Each row has one span for the
+// product name and another for the "Spot (USD/MT)" price, e.g.:
+//   <span id="MyGridView0_ctl02_Label_產品名稱">Marine Gas Oil</span>
+//   <span id="MyGridView0_ctl02_Label_參考牌價">1235</span>
+// Products we care about:
+//   VLSFO 0.5% 380cst → "Low Sulfur Marine Residual Fuels MF-380(0.5%)" (preferred)
+//                    or "Low Sulfur Marine Residual Fuels MF-180(0.5%)" (fallback)
+//   MGO              → "Marine Gas Oil"
+function parseCpcPrices(html) {
+  // Pull out all (product-name span, price span) pairs that appear in the same row.
+  // The two spans share the same row prefix e.g. MyGridView0_ctl02_... so we walk
+  // row-by-row using the product-name span as the anchor.
+  const rowRe = /<span[^>]*id="[^"]*_Label_產品名稱"[^>]*>([^<]+)<\/span>[\s\S]*?<span[^>]*id="[^"]*_Label_參考牌價"[^>]*>([^<]*)<\/span>/g;
+  const rows = [];
+  let m;
+  while ((m = rowRe.exec(html)) !== null) {
+    const name = m[1].replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+    const priceRaw = m[2].replace(/[^0-9.]/g,'');
+    const price = priceRaw ? parseFloat(priceRaw) : NaN;
+    rows.push({ name, price: isFinite(price) ? price : null });
+  }
+
+  function find(predicate) {
+    const hit = rows.find(r => r.price != null && predicate(r.name));
+    return hit ? hit.price : null;
+  }
+
+  // Prefer 380cst for VLSFO matching the port fuel spec; fall back to MF-180 0.5%.
+  const vlsfoUsd = find(n => /Low Sulfur.*MF-?380/i.test(n) && /0\.5/.test(n))
+                || find(n => /Low Sulfur.*MF-?180/i.test(n) && /0\.5/.test(n))
+                || find(n => /Low Sulfur Marine Residual/i.test(n))
+                || find(n => /VLSFO/i.test(n));
+
+  const mgoUsd   = find(n => /^Marine Gas Oil$/i.test(n))
+                || find(n => /Marine Gas Oil/i.test(n))
+                || find(n => /Marine Diesel Oil/i.test(n))
+                || find(n => /\bMGO\b/i.test(n));
+
+  return { vlsfoUsd, mgoUsd, rowCount: rows.length };
+}
+
+async function fetchCPCHtml() {
+  // Try each proxy in order; accept only bodies that actually look like the CPC price page.
+  for (const p of CPC_PROXIES) {
+    const url = p.build(CPC_URL);
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const body = await r.text();
+      const html = p.unwrap(body);
+      if (html && html.length > 500 && /產品名稱|Marine|MyGridView/i.test(html)) {
+        return html;
+      }
+    } catch(e) { /* try next */ }
+  }
+  return null;
+}
+
+async function fetchCPCPrices(forceRefresh) {
+  // Cache check
+  try {
+    const cached = JSON.parse(localStorage.getItem(CPC_CACHE_KEY) || 'null');
+    if (cached && !forceRefresh && (Date.now() - cached.ts) < CPC_CACHE_TTL_MS) {
+      applyCpcPrices(cached);
+      setBunkerHint(`\u26FD CPC prices (cached ${new Date(cached.ts).toLocaleString()}) &mdash; VLSFO $${cached.vlsfoUsd}/MT, MGO $${cached.mgoUsd}/MT. Click Refresh for latest.`, '#26a65b');
+      return;
+    }
+  } catch(e) {}
+
+  setBunkerHint('\u23F3 Fetching live CPC bunker prices&hellip;', '#2196f3');
+
+  const html = await fetchCPCHtml();
+  if (!html) {
+    const rssFound = scanRssForBunkerPrices();
+    setBunkerHint(rssFound
+      ? '\u26A0 CPC fetch blocked (CORS). Fell back to RSS scan &mdash; verify via CPC link.'
+      : '\u26A0 Could not fetch CPC prices (CORS/network). Edit prices manually or open CPC page.',
+      '#e74c3c');
+    return;
+  }
+
+  let { vlsfoUsd, mgoUsd } = parseCpcPrices(html);
+  if (!vlsfoUsd && !mgoUsd) {
+    setBunkerHint('\u26A0 Fetched CPC page but could not find prices in markup. Check CPC page &mdash; structure may have changed.', '#e74c3c');
+    return;
+  }
+
+  // Sanity bounds for USD/MT
+  if (vlsfoUsd != null && (vlsfoUsd < 200 || vlsfoUsd > 1500)) vlsfoUsd = null;
+  if (mgoUsd   != null && (mgoUsd   < 300 || mgoUsd   > 2000)) mgoUsd   = null;
+
+  if (!vlsfoUsd && !mgoUsd) {
+    setBunkerHint('\u26A0 Parsed numbers from CPC page but they fell outside plausible range &mdash; check manually.', '#e74c3c');
+    return;
+  }
+
+  vlsfoUsd = vlsfoUsd != null ? Math.round(vlsfoUsd) : null;
+  mgoUsd   = mgoUsd   != null ? Math.round(mgoUsd)   : null;
+
+  const payload = { ts: Date.now(), vlsfoUsd, mgoUsd };
+  try { localStorage.setItem(CPC_CACHE_KEY, JSON.stringify(payload)); } catch(e) {}
+
+  applyCpcPrices(payload);
+  const parts = [];
+  if (vlsfoUsd) parts.push(`VLSFO $${vlsfoUsd}/MT`);
+  if (mgoUsd)   parts.push(`MGO $${mgoUsd}/MT`);
+  setBunkerHint(`\u26FD CPC live (${new Date().toLocaleString()}) &mdash; ${parts.join(' &middot; ')}`, '#26a65b');
+}
+
+function applyCpcPrices(p) {
+  if (p.vlsfoUsd) document.getElementById('vlsfoPrice').value = p.vlsfoUsd;
+  if (p.mgoUsd)   document.getElementById('mgoPrice').value   = p.mgoUsd;
+}
+
+// Auto-run on page load
+fetchCPCPrices(false);
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function openModal(idx) {
+  const n = newsItems[idx];
+  const tagMap = { bb:'tag-bb', db:'tag-db', port:'tag-port', mkt:'tag-mkt', reg:'tag-reg' };
+  const tagLabel = { bb:'Breakbulk', db:'Drybulk', port:'Port/Route', mkt:'Market', reg:'Regulation' };
+  document.getElementById('modalTag').textContent = tagLabel[n.type];
+  document.getElementById('modalTag').className = `news-tag ${tagMap[n.type]}`;
+  document.getElementById('modalTitle').textContent = n.headline;
+  document.getElementById('modalMeta').textContent = `${n.source}  \u2022  ${n.time}`;
+  document.getElementById('modalBody').innerHTML = n.body.split('\n\n').map(p => `<p style="margin-bottom:12px">${p}</p>`).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e) { if(e.target.id==='modalOverlay') document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalBtn() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+// ─── VESSEL TYPE TOGGLE ───────────────────────────────────────────────────────
+let vesselType = 'geared';
+function setVesselType(t) {
+  vesselType = t;
+  ['geared','gearless','either'].forEach(v => {
+    document.getElementById('btn' + v.charAt(0).toUpperCase() + v.slice(1)).classList.toggle('active', v===t);
+  });
+  // Show crane-account chooser only for gearless (and "either" since it could be gearless)
+  const showCrane = (t === 'gearless' || t === 'either');
+  document.getElementById('craneAccountGroup').style.display = showCrane ? '' : 'none';
+}
+
+// ─── PORT COORDINATES (lat, lng) ─────────────────────────────────────────────
+const portCoords = {
+  // Existing ports
+  spore:         [1.29,   103.85],
+  port_klang:    [3.00,   101.40],
+  tanjung_manis: [2.18,   111.22],
+  bangkok:       [13.73,  100.57],
+  ho_chi_minh:   [10.78,  106.70],
+  cailan:        [20.97,  107.07],
+  jakarta:       [-6.10,  106.88],
+  surabaya:      [-7.21,  112.74],
+  manila:        [14.59,  120.97],
+  mundra:        [22.84,   69.70],
+  kandla:        [23.03,   70.21],
+  nhava_sheva:   [18.95,   72.95],
+  colombo:       [6.93,    79.85],
+  chittagong:    [22.33,   91.83],
+  shanghai:      [31.23,  121.47],
+  qingdao:       [36.10,  120.38],
+  guangzhou:     [23.10,  113.26],
+  busan:         [35.10,  129.04],
+  dubai:         [25.01,   55.06],
+  dammam:        [26.43,   50.10],
+  sohar:         [24.35,   56.64],
+  salalah:       [16.93,   54.00],
+  mombasa:       [-4.05,   39.67],
+  dar_es_salaam: [-6.82,   39.29],
+  lagos:         [6.45,     3.40],
+  durban:        [-29.87,  31.03],
+  rotterdam:     [51.93,    4.13],
+  antwerp:       [51.23,    4.42],
+  hamburg:       [53.55,    9.99],
+  genoa:         [44.41,    8.93],
+  istanbul:      [41.01,   28.97],
+  houston:       [29.75,  -95.27],
+  new_orleans:   [29.95,  -90.07],
+  baltimore:     [39.29,  -76.61],
+  savannah:      [32.08,  -81.10],
+  santos:        [-23.95, -46.33],
+  ensenada:      [31.86, -116.62],
+  guaymas:       [27.92, -110.89],
+  la_paz:        [24.14, -110.31],
+  // China (new)
+  tianjin:       [39.00,  117.75],
+  dalian:        [38.92,  121.65],
+  nanjing:       [32.06,  118.80],
+  zhanjiang:     [21.19,  110.40],
+  fangcheng:     [21.69,  108.35],
+  xiamen:        [24.45,  118.08],
+  shenzhen:      [22.56,  114.27],
+  ningbo:        [29.87,  121.88],
+  lianyungang:   [34.73,  119.45],
+  // Vietnam (new)
+  haiphong:      [20.86,  106.68],
+  danang:        [16.07,  108.22],
+  quynhon:       [13.77,  109.23],
+  vung_tau:      [10.35,  107.07],
+  // Malaysia (new)
+  penang:        [5.42,   100.35],
+  kuantan:       [3.97,   103.43],
+  bintulu:       [3.17,   113.05],
+  pasir_gudang:  [1.44,   103.90],
+  // Philippines (new)
+  cebu:          [10.30,  123.89],
+  davao:         [7.08,   125.63],
+  batangas:      [13.76,  121.05],
+  gensan:        [6.11,   125.17],
+  cdo:           [8.48,   124.65],
+  iloilo:        [10.70,  122.57],
+  // Indonesia (new)
+  semarang:      [-6.95,  110.43],
+  makassar:      [-5.14,  119.41],
+  banjarmasin:   [-3.33,  114.59],
+  belawan:       [3.79,    98.70],
+  balikpapan:    [-1.27,  116.83],
+  samarinda:     [-0.50,  117.15],
+  cilacap:       [-7.74,  109.02],
+};
+
+const portNames = {
+  spore:'Singapore', port_klang:'Port Klang', tanjung_manis:'Tanjung Manis',
+  bangkok:'Bangkok', ho_chi_minh:'Ho Chi Minh City', cailan:'Cai Lan',
+  jakarta:'Jakarta', surabaya:'Surabaya', manila:'Manila',
+  mundra:'Mundra', kandla:'Kandla', nhava_sheva:'Nhava Sheva',
+  colombo:'Colombo', chittagong:'Chittagong',
+  shanghai:'Shanghai', qingdao:'Qingdao', guangzhou:'Guangzhou', busan:'Busan',
+  dubai:'Dubai / Jebel Ali', dammam:'Dammam', sohar:'Sohar', salalah:'Salalah',
+  mombasa:'Mombasa', dar_es_salaam:'Dar es Salaam', lagos:'Lagos', durban:'Durban',
+  rotterdam:'Rotterdam', antwerp:'Antwerp', hamburg:'Hamburg', genoa:'Genoa', istanbul:'Istanbul',
+  houston:'Houston', new_orleans:'New Orleans', baltimore:'Baltimore', savannah:'Savannah', santos:'Santos',
+  ensenada:'Ensenada', guaymas:'Guaymas', la_paz:'La Paz',
+  // New ports
+  tianjin:'Tianjin / Xingang', dalian:'Dalian', nanjing:'Nanjing', zhanjiang:'Zhanjiang',
+  fangcheng:'Fangcheng', xiamen:'Xiamen', shenzhen:'Shenzhen / Yantian',
+  ningbo:'Ningbo / Zhoushan', lianyungang:'Lianyungang',
+  haiphong:'Hai Phong', danang:'Da Nang', quynhon:'Quy Nhon', vung_tau:'Vung Tau',
+  penang:'Penang', kuantan:'Kuantan', bintulu:'Bintulu', pasir_gudang:'Pasir Gudang',
+  cebu:'Cebu', davao:'Davao', batangas:'Batangas', gensan:'General Santos',
+  cdo:'Cagayan de Oro', iloilo:'Iloilo',
+  semarang:'Semarang', makassar:'Makassar', banjarmasin:'Banjarmasin',
+  belawan:'Belawan / Medan', balikpapan:'Balikpapan', samarinda:'Samarinda', cilacap:'Cilacap',
+};
+
+// ─── LEGACY DISTANCE TABLE (override lookup) ────────────────────────────────
+const distTable = {
+  spore:      { spore:0,     port_klang:160,  bangkok:900,   ho_chi_minh:580, jakarta:520,  surabaya:820,  manila:1350, mundra:3100, kandla:3050, nhava_sheva:3200, colombo:1500, chittagong:2200, shanghai:2280, qingdao:2550, guangzhou:1550, busan:2640, dubai:3400, dammam:3600, sohar:3300, salalah:2800, mombasa:3900, dar_es_salaam:4100, lagos:8500, durban:5800, rotterdam:9800, antwerp:9900, hamburg:10100, genoa:9500, istanbul:9000, houston:11500, new_orleans:11700, baltimore:11200, santos:10800 },
+  port_klang: { spore:160,   port_klang:0,    bangkok:740,   ho_chi_minh:430, jakarta:380,  surabaya:670,  manila:1190, mundra:2950, kandla:2900, nhava_sheva:3050, colombo:1340, chittagong:2040, shanghai:2190, qingdao:2460, guangzhou:1400, busan:2550, dubai:3250, dammam:3450, sohar:3150, salalah:2650, mombasa:3750, dar_es_salaam:3950, lagos:8350, durban:5650, rotterdam:9650, antwerp:9750, hamburg:9950, genoa:9350, istanbul:8850, houston:11350, new_orleans:11550, baltimore:11050, santos:10650 },
+  bangkok:    { spore:900,   port_klang:740,  bangkok:0,     ho_chi_minh:380, jakarta:1100, surabaya:1400, manila:1650, mundra:3600, kandla:3550, nhava_sheva:3700, colombo:2000, chittagong:1700, shanghai:2650, qingdao:2900, guangzhou:1900, busan:3050, dubai:3950, dammam:4150, sohar:3850, salalah:3350, mombasa:4450, dar_es_salaam:4650, lagos:9050, durban:6350, rotterdam:10350, antwerp:10450, hamburg:10650, genoa:10050, istanbul:9550, houston:12050, new_orleans:12250, baltimore:11750, santos:11350 },
+  ho_chi_minh:{ spore:580,   port_klang:430,  bangkok:380,   ho_chi_minh:0,   jakarta:780,  surabaya:1050, manila:1050, mundra:3280, kandla:3230, nhava_sheva:3380, colombo:1680, chittagong:1880, shanghai:2000, qingdao:2280, guangzhou:1250, busan:2550, dubai:3630, dammam:3830, sohar:3530, salalah:3030, mombasa:4130, dar_es_salaam:4330, lagos:8730, durban:6030, rotterdam:10030, antwerp:10130, hamburg:10330, genoa:9730, istanbul:9230, houston:11730, new_orleans:11930, baltimore:11430, santos:11030 },
+  jakarta:    { spore:520,   port_klang:380,  bangkok:1100,  ho_chi_minh:780, jakarta:0,    surabaya:300,  manila:1600, mundra:3450, kandla:3400, nhava_sheva:3550, colombo:1850, chittagong:2550, shanghai:2550, qingdao:2800, guangzhou:1850, busan:2900, dubai:3750, dammam:3950, sohar:3650, salalah:3150, mombasa:4250, dar_es_salaam:4450, lagos:8850, durban:6150, rotterdam:10150, antwerp:10250, hamburg:10450, genoa:9850, istanbul:9350, houston:11850, new_orleans:12050, baltimore:11550, santos:11150 },
+  surabaya:   { spore:820,   port_klang:670,  bangkok:1400,  ho_chi_minh:1050,jakarta:300,  surabaya:0,    manila:1700, mundra:3600, kandla:3550, nhava_sheva:3700, colombo:2000, chittagong:2700, shanghai:2700, qingdao:2950, guangzhou:2000, busan:3050, dubai:3900, dammam:4100, sohar:3800, salalah:3300, mombasa:4400, dar_es_salaam:4600, lagos:9000, durban:6300, rotterdam:10300, antwerp:10400, hamburg:10600, genoa:10000, istanbul:9500, houston:12000, new_orleans:12200, baltimore:11700, santos:11300 },
+  manila:     { spore:1350,  port_klang:1190, bangkok:1650,  ho_chi_minh:1050,jakarta:1600, surabaya:1700, manila:0,    mundra:4000, kandla:3950, nhava_sheva:4100, colombo:2400, chittagong:2800, shanghai:1200, qingdao:1450, guangzhou:850,  busan:1400, dubai:4250, dammam:4450, sohar:4150, salalah:3650, mombasa:4750, dar_es_salaam:4950, lagos:9450, durban:6750, rotterdam:10750, antwerp:10850, hamburg:11050, genoa:10450, istanbul:9950, houston:12450, new_orleans:12650, baltimore:12150, santos:11750 },
+  mundra:     { spore:3100,  port_klang:2950, bangkok:3600,  ho_chi_minh:3280,jakarta:3450, surabaya:3600, manila:4000, mundra:0,    kandla:90,   nhava_sheva:240,  colombo:900,  chittagong:1400, shanghai:4750, qingdao:5000, guangzhou:4400, busan:5150, dubai:650,  dammam:850,  sohar:550,  salalah:1000, mombasa:2100, dar_es_salaam:2300, lagos:6700, durban:4500, rotterdam:6700, antwerp:6800, hamburg:7000, genoa:6400, istanbul:5900, houston:9400, new_orleans:9600, baltimore:9100, santos:8700 },
+  kandla:     { spore:3050,  port_klang:2900, bangkok:3550,  ho_chi_minh:3230,jakarta:3400, surabaya:3550, manila:3950, mundra:90,   kandla:0,    nhava_sheva:260,  colombo:870,  chittagong:1350, shanghai:4700, qingdao:4950, guangzhou:4350, busan:5100, dubai:700,  dammam:900,  sohar:600,  salalah:1050, mombasa:2150, dar_es_salaam:2350, lagos:6750, durban:4550, rotterdam:6750, antwerp:6850, hamburg:7050, genoa:6450, istanbul:5950, houston:9450, new_orleans:9650, baltimore:9150, santos:8750 },
+  nhava_sheva:{ spore:3200,  port_klang:3050, bangkok:3700,  ho_chi_minh:3380,jakarta:3550, surabaya:3700, manila:4100, mundra:240,  kandla:260,  nhava_sheva:0,    colombo:780,  chittagong:1250, shanghai:4850, qingdao:5100, guangzhou:4500, busan:5250, dubai:880,  dammam:1080, sohar:780,  salalah:1230, mombasa:2280, dar_es_salaam:2480, lagos:6880, durban:4680, rotterdam:6880, antwerp:6980, hamburg:7180, genoa:6580, istanbul:6080, houston:9580, new_orleans:9780, baltimore:9280, santos:8880 },
+  colombo:    { spore:1500,  port_klang:1340, bangkok:2000,  ho_chi_minh:1680,jakarta:1850, surabaya:2000, manila:2400, mundra:900,  kandla:870,  nhava_sheva:780,  colombo:0,    chittagong:800,  shanghai:4050, qingdao:4300, guangzhou:3700, busan:4450, dubai:1560, dammam:1760, sohar:1460, salalah:1200, mombasa:1900, dar_es_salaam:2100, lagos:6500, durban:4300, rotterdam:7500, antwerp:7600, hamburg:7800, genoa:7200, istanbul:6700, houston:10200, new_orleans:10400, baltimore:9900, santos:9500 },
+  chittagong: { spore:2200,  port_klang:2040, bangkok:1700,  ho_chi_minh:1880,jakarta:2550, surabaya:2700, manila:2800, mundra:1400, kandla:1350, nhava_sheva:1250, colombo:800,  chittagong:0,    shanghai:3500, qingdao:3750, guangzhou:3150, busan:3900, dubai:2160, dammam:2360, sohar:2060, salalah:2000, mombasa:2700, dar_es_salaam:2900, lagos:7300, durban:5100, rotterdam:8300, antwerp:8400, hamburg:8600, genoa:8000, istanbul:7500, houston:10800, new_orleans:11000, baltimore:10500, santos:10100 },
+  shanghai:   { spore:2280,  port_klang:2190, bangkok:2650,  ho_chi_minh:2000,jakarta:2550, surabaya:2700, manila:1200, mundra:4750, kandla:4700, nhava_sheva:4850, colombo:4050, chittagong:3500, shanghai:0,    qingdao:350,  guangzhou:900,  busan:520,  dubai:5600, dammam:5800, sohar:5500, salalah:5000, mombasa:6100, dar_es_salaam:6300, lagos:10700, durban:7900, rotterdam:11900, antwerp:12000, hamburg:12200, genoa:11600, istanbul:11100, houston:13600, new_orleans:13800, baltimore:13300, santos:12900 },
+  qingdao:    { spore:2550,  port_klang:2460, bangkok:2900,  ho_chi_minh:2280,jakarta:2800, surabaya:2950, manila:1450, mundra:5000, kandla:4950, nhava_sheva:5100, colombo:4300, chittagong:3750, shanghai:350,  qingdao:0,    guangzhou:1100, busan:450,  dubai:5850, dammam:6050, sohar:5750, salalah:5250, mombasa:6350, dar_es_salaam:6550, lagos:10950, durban:8150, rotterdam:12150, antwerp:12250, hamburg:12450, genoa:11850, istanbul:11350, houston:13850, new_orleans:14050, baltimore:13550, santos:13150 },
+  guangzhou:  { spore:1550,  port_klang:1400, bangkok:1900,  ho_chi_minh:1250,jakarta:1850, surabaya:2000, manila:850,  mundra:4400, kandla:4350, nhava_sheva:4500, colombo:3700, chittagong:3150, shanghai:900,  qingdao:1100, guangzhou:0,    busan:1200, dubai:5100, dammam:5300, sohar:5000, salalah:4500, mombasa:5600, dar_es_salaam:5800, lagos:10200, durban:7400, rotterdam:11400, antwerp:11500, hamburg:11700, genoa:11100, istanbul:10600, houston:13100, new_orleans:13300, baltimore:12800, santos:12400 },
+  busan:      { spore:2640,  port_klang:2550, bangkok:3050,  ho_chi_minh:2550,jakarta:2900, surabaya:3050, manila:1400, mundra:5150, kandla:5100, nhava_sheva:5250, colombo:4450, chittagong:3900, shanghai:520,  qingdao:450,  guangzhou:1200, busan:0,    dubai:6000, dammam:6200, sohar:5900, salalah:5400, mombasa:6500, dar_es_salaam:6700, lagos:11100, durban:8300, rotterdam:12300, antwerp:12400, hamburg:12600, genoa:12000, istanbul:11500, houston:14000, new_orleans:14200, baltimore:13700, santos:13300 },
+  dubai:      { spore:3400,  port_klang:3250, bangkok:3950,  ho_chi_minh:3630,jakarta:3750, surabaya:3900, manila:4250, mundra:650,  kandla:700,  nhava_sheva:880,  colombo:1560, chittagong:2160, shanghai:5600, qingdao:5850, guangzhou:5100, busan:6000, dubai:0,    dammam:320,  sohar:150,  salalah:750,  mombasa:1650, dar_es_salaam:1850, lagos:6150, durban:4200, rotterdam:6550, antwerp:6650, hamburg:6850, genoa:6250, istanbul:5750, houston:9250, new_orleans:9450, baltimore:8950, santos:8550 },
+  dammam:     { spore:3600,  port_klang:3450, bangkok:4150,  ho_chi_minh:3830,jakarta:3950, surabaya:4100, manila:4450, mundra:850,  kandla:900,  nhava_sheva:1080, colombo:1760, chittagong:2360, shanghai:5800, qingdao:6050, guangzhou:5300, busan:6200, dubai:320,  dammam:0,    sohar:420,  salalah:1000, mombasa:1850, dar_es_salaam:2050, lagos:6350, durban:4400, rotterdam:6750, antwerp:6850, hamburg:7050, genoa:6450, istanbul:5950, houston:9450, new_orleans:9650, baltimore:9150, santos:8750 },
+  sohar:      { spore:3300,  port_klang:3150, bangkok:3850,  ho_chi_minh:3530,jakarta:3650, surabaya:3800, manila:4150, mundra:550,  kandla:600,  nhava_sheva:780,  colombo:1460, chittagong:2060, shanghai:5500, qingdao:5750, guangzhou:5000, busan:5900, dubai:150,  dammam:420,  sohar:0,    salalah:650,  mombasa:1550, dar_es_salaam:1750, lagos:6050, durban:4100, rotterdam:6450, antwerp:6550, hamburg:6750, genoa:6150, istanbul:5650, houston:9150, new_orleans:9350, baltimore:8850, santos:8450 },
+  salalah:    { spore:2800,  port_klang:2650, bangkok:3350,  ho_chi_minh:3030,jakarta:3150, surabaya:3300, manila:3650, mundra:1000, kandla:1050, nhava_sheva:1230, colombo:1200, chittagong:2000, shanghai:5000, qingdao:5250, guangzhou:4500, busan:5400, dubai:750,  dammam:1000, sohar:650,  salalah:0,    mombasa:1000, dar_es_salaam:1200, lagos:5500, durban:3700, rotterdam:5900, antwerp:6000, hamburg:6200, genoa:5600, istanbul:5100, houston:8600, new_orleans:8800, baltimore:8300, santos:7900 },
+  mombasa:    { spore:3900,  port_klang:3750, bangkok:4450,  ho_chi_minh:4130,jakarta:4250, surabaya:4400, manila:4750, mundra:2100, kandla:2150, nhava_sheva:2280, colombo:1900, chittagong:2700, shanghai:6100, qingdao:6350, guangzhou:5600, busan:6500, dubai:1650, dammam:1850, sohar:1550, salalah:1000, mombasa:0,    dar_es_salaam:200,  lagos:5200, durban:2800, rotterdam:7100, antwerp:7200, hamburg:7400, genoa:6800, istanbul:6300, houston:10600, new_orleans:10800, baltimore:10300, santos:7800 },
+  dar_es_salaam:{ spore:4100, port_klang:3950, bangkok:4650, ho_chi_minh:4330,jakarta:4450, surabaya:4600, manila:4950, mundra:2300, kandla:2350, nhava_sheva:2480, colombo:2100, chittagong:2900, shanghai:6300, qingdao:6550, guangzhou:5800, busan:6700, dubai:1850, dammam:2050, sohar:1750, salalah:1200, mombasa:200,  dar_es_salaam:0,    lagos:5400, durban:2600, rotterdam:7300, antwerp:7400, hamburg:7600, genoa:7000, istanbul:6500, houston:10800, new_orleans:11000, baltimore:10500, santos:7600 },
+  lagos:      { spore:8500,  port_klang:8350, bangkok:9050,  ho_chi_minh:8730,jakarta:8850, surabaya:9000, manila:9450, mundra:6700, kandla:6750, nhava_sheva:6880, colombo:6500, chittagong:7300, shanghai:10700,qingdao:10950,guangzhou:10200,busan:11100,dubai:6150,dammam:6350, sohar:6050, salalah:5500, mombasa:5200, dar_es_salaam:5400, lagos:0,    durban:5000, rotterdam:4500, antwerp:4600, hamburg:4800, genoa:4500, istanbul:5000, houston:5800, new_orleans:5900, baltimore:5400, santos:4200 },
+  durban:     { spore:5800,  port_klang:5650, bangkok:6350,  ho_chi_minh:6030,jakarta:6150, surabaya:6300, manila:6750, mundra:4500, kandla:4550, nhava_sheva:4680, colombo:4300, chittagong:5100, shanghai:7900, qingdao:8150, guangzhou:7400, busan:8300, dubai:4200, dammam:4400, sohar:4100, salalah:3700, mombasa:2800, dar_es_salaam:2600, lagos:5000, durban:0,    rotterdam:6400, antwerp:6500, hamburg:6700, genoa:6100, istanbul:5800, houston:8100, new_orleans:8300, baltimore:7800, santos:4800 },
+  rotterdam:  { spore:9800,  port_klang:9650, bangkok:10350, ho_chi_minh:10030,jakarta:10150,surabaya:10300,manila:10750,mundra:6700, kandla:6750, nhava_sheva:6880, colombo:7500, chittagong:8300, shanghai:11900,qingdao:12150,guangzhou:11400,busan:12300,dubai:6550,dammam:6750, sohar:6450, salalah:5900, mombasa:7100, dar_es_salaam:7300, lagos:4500, durban:6400, rotterdam:0,    antwerp:140,  hamburg:350,  genoa:1800, istanbul:2200, houston:5400, new_orleans:5550, baltimore:3800, santos:5800 },
+  antwerp:    { spore:9900,  port_klang:9750, bangkok:10450, ho_chi_minh:10130,jakarta:10250,surabaya:10400,manila:10850,mundra:6800, kandla:6850, nhava_sheva:6980, colombo:7600, chittagong:8400, shanghai:12000,qingdao:12250,guangzhou:11500,busan:12400,dubai:6650,dammam:6850, sohar:6550, salalah:6000, mombasa:7200, dar_es_salaam:7400, lagos:4600, durban:6500, rotterdam:140,  antwerp:0,    hamburg:450,  genoa:1900, istanbul:2300, houston:5500, new_orleans:5650, baltimore:3900, santos:5900 },
+  hamburg:    { spore:10100, port_klang:9950, bangkok:10650, ho_chi_minh:10330,jakarta:10450,surabaya:10600,manila:11050,mundra:7000, kandla:7050, nhava_sheva:7180, colombo:7800, chittagong:8600, shanghai:12200,qingdao:12450,guangzhou:11700,busan:12600,dubai:6850,dammam:7050, sohar:6750, salalah:6200, mombasa:7400, dar_es_salaam:7600, lagos:4800, durban:6700, rotterdam:350,  antwerp:450,  hamburg:0,    genoa:2000, istanbul:2400, houston:5600, new_orleans:5750, baltimore:4000, santos:6000 },
+  genoa:      { spore:9500,  port_klang:9350, bangkok:10050, ho_chi_minh:9730, jakarta:9850, surabaya:10000,manila:10450,mundra:6400, kandla:6450, nhava_sheva:6580, colombo:7200, chittagong:8000, shanghai:11600,qingdao:11850,guangzhou:11100,busan:12000,dubai:6250,dammam:6450, sohar:6150, salalah:5600, mombasa:6800, dar_es_salaam:7000, lagos:4500, durban:6100, rotterdam:1800, antwerp:1900, hamburg:2000, genoa:0,    istanbul:800,  houston:5800, new_orleans:5950, baltimore:4500, santos:5700 },
+  istanbul:   { spore:9000,  port_klang:8850, bangkok:9550,  ho_chi_minh:9230, jakarta:9350, surabaya:9500, manila:9950, mundra:5900, kandla:5950, nhava_sheva:6080, colombo:6700, chittagong:7500, shanghai:11100,qingdao:11350,guangzhou:10600,busan:11500,dubai:5750,dammam:5950, sohar:5650, salalah:5100, mombasa:6300, dar_es_salaam:6500, lagos:5000, durban:5800, rotterdam:2200, antwerp:2300, hamburg:2400, genoa:800,  istanbul:0,    houston:6200, new_orleans:6350, baltimore:4800, santos:6000 },
+  houston:    { spore:11500, port_klang:11350,bangkok:12050, ho_chi_minh:11730,jakarta:11850,surabaya:12000,manila:12450,mundra:9400, kandla:9450, nhava_sheva:9580, colombo:10200,chittagong:10800,shanghai:13600,qingdao:13850,guangzhou:13100,busan:14000,dubai:9250,dammam:9450, sohar:9150, salalah:8600, mombasa:10600,dar_es_salaam:10800,lagos:5800,durban:8100, rotterdam:5400, antwerp:5500, hamburg:5600, genoa:5800, istanbul:6200, houston:0,    new_orleans:300,  baltimore:1700, santos:4800 },
+  new_orleans:{ spore:11700, port_klang:11550,bangkok:12250, ho_chi_minh:11930,jakarta:12050,surabaya:12200,manila:12650,mundra:9600, kandla:9650, nhava_sheva:9780, colombo:10400,chittagong:11000,shanghai:13800,qingdao:14050,guangzhou:13300,busan:14200,dubai:9450,dammam:9650, sohar:9350, salalah:8800, mombasa:10800,dar_es_salaam:11000,lagos:5900,durban:8300, rotterdam:5550, antwerp:5650, hamburg:5750, genoa:5950, istanbul:6350, houston:300,  new_orleans:0,    baltimore:1500, santos:5000 },
+  baltimore:  { spore:11200, port_klang:11050,bangkok:11750, ho_chi_minh:11430,jakarta:11550,surabaya:11700,manila:12150,mundra:9100, kandla:9150, nhava_sheva:9280, colombo:9900, chittagong:10500,shanghai:13300,qingdao:13550,guangzhou:12800,busan:13700,dubai:8950,dammam:9150, sohar:8850, salalah:8300, mombasa:10300,dar_es_salaam:10500,lagos:5400,durban:7800, rotterdam:3800, antwerp:3900, hamburg:4000, genoa:4500, istanbul:4800, houston:1700, new_orleans:1500, baltimore:0,    santos:4500 },
+  santos:     { spore:10800, port_klang:10650,bangkok:11350, ho_chi_minh:11030,jakarta:11150,surabaya:11300,manila:11750,mundra:8700, kandla:8750, nhava_sheva:8880, colombo:9500, chittagong:10100,shanghai:12900,qingdao:13150,guangzhou:12400,busan:13300,dubai:8550,dammam:8750, sohar:8450, salalah:7900, mombasa:7800, dar_es_salaam:7600, lagos:4200, durban:4800, rotterdam:5800, antwerp:5900, hamburg:6000, genoa:5700, istanbul:6000, houston:4800, new_orleans:5000, baltimore:4500, santos:0 },
+  cailan:     { spore:1550, port_klang:1400, bangkok:600,   ho_chi_minh:870, jakarta:2150, surabaya:2450, manila:850,  mundra:4000, kandla:3950, nhava_sheva:4100, colombo:2850, chittagong:1650, shanghai:1050, qingdao:1200, guangzhou:560,  busan:1620, dubai:4500, dammam:4700, sohar:4400, salalah:3900, mombasa:5000, dar_es_salaam:5200, lagos:9700, durban:6800, rotterdam:11100,antwerp:11200,hamburg:11400,genoa:10700,istanbul:10200,houston:13200,new_orleans:13400,baltimore:12900,santos:12500 },
+  tanjung_manis:{ spore:650, port_klang:500, bangkok:1100, ho_chi_minh:700, jakarta:850,  surabaya:950,  manila:800,  mundra:3600, kandla:3550, nhava_sheva:3700, colombo:2100, chittagong:2200, shanghai:2500, qingdao:2750, guangzhou:1750, busan:2850, dubai:3850, dammam:4050, sohar:3750, salalah:3250, mombasa:4350, dar_es_salaam:4550, lagos:8950, durban:6250, rotterdam:10250,antwerp:10350,hamburg:10550,genoa:9950, istanbul:9450, houston:11950,new_orleans:12150,baltimore:11650,santos:11250 },
+};
+
+function getDistanceFromTable(a, b) {
+  if (a === b) return 0;
+  if (distTable[a] && distTable[a][b] !== undefined) return distTable[a][b];
+  if (distTable[b] && distTable[b][a] !== undefined) return distTable[b][a];
+  return null; // not found
+}
+
+// ─── MARITIME WAYPOINT ROUTING SYSTEM ────────────────────────────────────────
+const WP = {
+  north_sea:   [52.00, 3.50],
+  english_ch:  [50.50, 0.50],
+  biscay:      [46.00, -5.00],
+  gibraltar:   [36.00, -5.50],
+  med_c:       [37.00, 16.00],
+  med_e:       [34.00, 32.00],
+  suez_n:      [31.25, 32.35],
+  suez_s:      [29.95, 32.55],
+  red_sea_n:   [27.50, 34.00],
+  red_sea_s:   [15.00, 42.00],
+  bab_mandeb:  [12.60, 43.30],
+  gulf_aden:   [12.50, 48.00],
+  arabian_s:   [12.00, 60.00],
+  arabian_n:   [20.00, 65.00],
+  hormuz:      [26.00, 56.50],
+  sri_lanka_s: [5.80, 80.00],
+  bengal_e:    [8.00, 90.00],
+  bengal_ne:   [18.00, 88.00],
+  malacca_n:   [5.80, 97.50],
+  malacca_s:   [2.40, 101.50],
+  sg_strait:   [1.20, 103.85],
+  scs_south:   [3.50, 107.00],
+  scs_natuna:  [5.00, 109.00],
+  scs_central: [10.00, 112.00],
+  scs_paracel: [15.50, 114.00],
+  scs_north:   [18.50, 116.50],
+  taiwan_s:    [22.00, 118.50],
+  taiwan_str:  [24.80, 119.50],
+  ecs:         [28.00, 122.50],
+  ecs_n:       [32.00, 122.50],
+  yellow_s:    [34.00, 123.00],
+  yellow_n:    [36.50, 122.50],
+  bohai_e:     [38.80, 121.50],
+  korea_str:   [34.50, 129.00],
+  got_entrance:[6.00, 102.50],
+  got_mid:     [8.50, 101.50],
+  got_north:   [12.50, 100.50],
+  karimata:    [0.00, 108.50],
+  java_sea_w:  [-3.50, 107.00],
+  java_sea_c:  [-5.50, 110.00],
+  java_sea_e:  [-6.00, 112.50],
+  makassar_s:  [-5.00, 117.50],
+  makassar_n:  [-1.50, 117.50],
+  sulu_sea:    [7.50, 120.00],
+  visayas:     [10.50, 124.00],
+  mindanao_s:  [6.00, 126.00],
+  borneo_ne:   [5.00, 115.00],
+  borneo_e:    [-0.50, 117.50],
+  lombok:      [-8.40, 115.80],
+  flores:      [-7.00, 120.00],
+  indian_w:    [15.00, 68.00],
+  cape_good:   [-34.50, 18.50],
+  wa_app:      [5.00, -2.00],
+  sa_mid:      [-15.00, -25.00],
+  carib:       [15.00, -75.00],
+  florida:     [25.50, -80.00],
+  us_east_app: [35.00, -74.00],
+  gom:         [26.00, -90.00],
+  // Vietnamese coastal waypoints (for hugging the shore, avoids offshore SCS detour)
+  vn_n_off:    [19.50, 108.00],  // offshore NE Vietnam (off Hai Phong / Cai Lan)
+  vn_c_off:    [14.50, 110.00],  // offshore central Vietnam (off Quy Nhon / Da Nang)
+  vn_s_off:    [9.50,  108.00],  // offshore southern Vietnam (off Vung Tau)
+  vn_tip:      [7.50,  105.00],  // off Ca Mau, southern tip of Vietnam
+  qiongzhou:   [20.50, 110.30],  // Hainan (Qiongzhou) Strait
+  hainan_e:    [18.00, 111.50],  // east of Hainan
+  // Panama Canal transit (Atlantic to Pacific)
+  panama_atl:  [9.36, -79.92],   // Colon (Atlantic entrance)
+  panama_pac:  [8.89, -79.51],   // Balboa (Pacific entrance)
+  mx_pac_s:    [16.00, -100.00], // off southern Mexican Pacific coast
+  baja_tip:    [22.80, -110.00], // off Cabo San Lucas (Baja southern tip)
+  gulf_cal:    [25.50, -110.00], // mid Gulf of California
+  baja_nw:     [30.00, -117.50], // off NW Baja California (for Ensenada)
+  // Trans-Pacific waypoints (great-circle arc through North Pacific)
+  pac_japan_e: [35.00,  145.00], // east of Japan
+  pac_kuroshio:[38.00,  160.00], // Kuroshio Extension
+  pac_mid_n:   [45.00, -175.00], // mid North Pacific (near Aleutians S)
+  pac_ne_n:    [40.00, -150.00], // NE Pacific
+  pac_ne:      [30.00, -125.00], // east Pacific off California
+  // Cape of Good Hope waypoints (S.Indian / S.Atlantic)
+  s_indian:    [-28.00,  65.00], // south Indian Ocean
+  cape_agulhas:[-35.50,  20.00], // Cape Agulhas (true southern tip)
+  s_atl_w:     [-25.00, -10.00], // mid South Atlantic
+  s_atl_nw:    [-10.00, -25.00], // NW South Atlantic
+};
+
+const portZone = {
+  // China
+  shanghai:'CN_E', ningbo:'CN_E', nanjing:'CN_E', lianyungang:'CN_E',
+  qingdao:'CN_N', tianjin:'CN_N', dalian:'CN_N',
+  guangzhou:'CN_S', shenzhen:'CN_S', xiamen:'CN_S', zhanjiang:'CN_S', fangcheng:'CN_S',
+  // Vietnam
+  ho_chi_minh:'VN_S', vung_tau:'VN_S',
+  danang:'VN_C', quynhon:'VN_C',
+  cailan:'VN_N', haiphong:'VN_N',
+  // Malaysia + Singapore
+  spore:'SG', port_klang:'SG', pasir_gudang:'SG', kuantan:'SG',
+  penang:'MALACCA',
+  tanjung_manis:'SARAWAK', bintulu:'SARAWAK',
+  // Thailand
+  bangkok:'GOT',
+  // Philippines
+  manila:'PH_N', batangas:'PH_N',
+  cebu:'PH_C', iloilo:'PH_C',
+  davao:'PH_S', gensan:'PH_S', cdo:'PH_S',
+  // Indonesia
+  jakarta:'JAVA_W', semarang:'JAVA_W', cilacap:'JAVA_W',
+  surabaya:'JAVA_E',
+  belawan:'MALACCA',
+  makassar:'SULAWESI',
+  banjarmasin:'BORNEO_S',
+  balikpapan:'BORNEO_E', samarinda:'BORNEO_E',
+  // South Asia
+  mundra:'INDIA_W', kandla:'INDIA_W', nhava_sheva:'INDIA_W',
+  colombo:'SRI_LANKA',
+  chittagong:'BANGLADESH',
+  // Middle East
+  dubai:'PG', dammam:'PG', sohar:'PG',
+  salalah:'ADEN',
+  // Korea
+  busan:'KR',
+  // Africa
+  mombasa:'EAFRICA', dar_es_salaam:'EAFRICA',
+  lagos:'WAFRICA', durban:'SAFRICA',
+  // Europe
+  rotterdam:'NW_EU', antwerp:'NW_EU', hamburg:'NW_EU',
+  genoa:'MED', istanbul:'MED',
+  // Americas
+  houston:'US_GULF', new_orleans:'US_GULF',
+  baltimore:'US_EAST', savannah:'US_EAST',
+  santos:'BRAZIL',
+  ensenada:'MX_PAC_NW',
+  guaymas:'MX_GULF_CAL', la_paz:'MX_GULF_CAL',
+};
+
+// Backbone waypoints ordered west-to-east (NW Europe to North China)
+const backbone = [
+  /* 0  */ WP.north_sea,
+  /* 1  */ WP.english_ch,
+  /* 2  */ WP.biscay,
+  /* 3  */ WP.gibraltar,
+  /* 4  */ WP.med_c,
+  /* 5  */ WP.suez_n,
+  /* 6  */ WP.suez_s,
+  /* 7  */ WP.red_sea_s,
+  /* 8  */ WP.bab_mandeb,
+  /* 9  */ WP.gulf_aden,
+  /* 10 */ WP.arabian_s,
+  /* 11 */ WP.sri_lanka_s,
+  /* 12 */ WP.bengal_e,
+  /* 13 */ WP.malacca_n,
+  /* 14 */ WP.malacca_s,
+  /* 15 */ WP.sg_strait,
+  /* 16 */ WP.scs_south,
+  /* 17 */ WP.scs_central,
+  /* 18 */ WP.scs_paracel,
+  /* 19 */ WP.scs_north,
+  /* 20 */ WP.taiwan_s,
+  /* 21 */ WP.taiwan_str,
+  /* 22 */ WP.ecs,
+  /* 23 */ WP.ecs_n,
+  /* 24 */ WP.yellow_s,
+  /* 25 */ WP.yellow_n,
+  /* 26 */ WP.bohai_e,
+];
+
+const zoneConfig = {
+  NW_EU:      { bi: 0,  branch: [WP.north_sea] },
+  MED:        { bi: 3,  branch: [WP.med_c, WP.med_e] },
+  ADEN:       { bi: 8,  branch: [] },
+  PG:         { bi: 10, branch: [WP.arabian_n, WP.hormuz] },
+  INDIA_W:    { bi: 11, branch: [WP.indian_w] },
+  SRI_LANKA:  { bi: 11, branch: [] },
+  BANGLADESH: { bi: 12, branch: [WP.bengal_ne] },
+  MALACCA:    { bi: 13, branch: [] },
+  SG:         { bi: 15, branch: [] },
+  GOT:        { bi: 15, branch: [WP.got_entrance, WP.got_mid, WP.got_north] },
+  SARAWAK:    { bi: 16, branch: [WP.scs_natuna] },
+  VN_S:       { bi: 17, branch: [] },
+  VN_C:       { bi: 18, branch: [] },
+  VN_N:       { bi: 19, branch: [] },
+  CN_S:       { bi: 20, branch: [] },
+  PH_N:       { bi: 19, branch: [WP.scs_north] },
+  PH_C:       { bi: 17, branch: [WP.sulu_sea, WP.visayas] },
+  PH_S:       { bi: 17, branch: [WP.sulu_sea, WP.mindanao_s] },
+  JAVA_W:     { bi: 15, branch: [WP.karimata, WP.java_sea_w] },
+  JAVA_E:     { bi: 15, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e] },
+  BORNEO_S:   { bi: 16, branch: [WP.karimata] },
+  BORNEO_E:   { bi: 16, branch: [WP.makassar_n] },
+  SULAWESI:   { bi: 16, branch: [WP.karimata, WP.java_sea_c, WP.makassar_s] },
+  CN_E:       { bi: 22, branch: [] },
+  CN_N:       { bi: 26, branch: [] },
+  KR:         { bi: 24, branch: [WP.korea_str] },
+  EAFRICA:    { bi: 8,  branch: [] },
+  WAFRICA:    { bi: 3,  branch: [WP.wa_app] },
+  SAFRICA:    { bi: 8,  branch: [WP.cape_good] },
+  US_GULF:    { bi: 2,  branch: [WP.carib, WP.florida, WP.gom] },
+  US_EAST:    { bi: 2,  branch: [WP.carib, WP.florida, WP.us_east_app] },
+  BRAZIL:     { bi: 2,  branch: [WP.sa_mid] },
+  // Mexican Pacific coast — via Panama Canal from the Atlantic backbone
+  MX_PAC_NW:     { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw] },
+  MX_GULF_CAL:   { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.gulf_cal] },
+};
+
+// ─── CUSTOM ROUTE OVERRIDES ──────────────────────────────────────────────────
+// Key = "zoneA|zoneB" with zones sorted alphabetically.
+// Value = ordered array of intermediate waypoints from zoneA → zoneB.
+// If zone pair matches, these waypoints are used verbatim, bypassing the
+// backbone (which would otherwise force coastal ports through offshore detours).
+const customRoutes = {
+  // Intra-Vietnam (coastal hugging)
+  'VN_C|VN_N':     [WP.vn_c_off, WP.vn_n_off],
+  'VN_C|VN_S':     [WP.vn_c_off, WP.vn_s_off],
+  'VN_N|VN_S':     [WP.vn_n_off, WP.vn_c_off, WP.vn_s_off],
+
+  // Vietnam ↔ Sarawak (Malaysian Borneo) — via Natuna
+  'SARAWAK|VN_C':  [WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
+  'SARAWAK|VN_N':  [WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'SARAWAK|VN_S':  [WP.scs_natuna, WP.vn_s_off],
+
+  // Vietnam ↔ Singapore — via VN coast + SG Strait
+  'SG|VN_C':       [WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
+  'SG|VN_N':       [WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'SG|VN_S':       [WP.sg_strait, WP.vn_tip, WP.vn_s_off],
+
+  // Vietnam ↔ Gulf of Thailand (Bangkok etc.)
+  'GOT|VN_C':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
+  'GOT|VN_N':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'GOT|VN_S':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off],
+
+  // Vietnam ↔ Malacca Strait (Penang, Belawan)
+  'MALACCA|VN_C':  [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
+  'MALACCA|VN_N':  [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'MALACCA|VN_S':  [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off],
+
+  // Vietnam ↔ South Borneo (Banjarmasin)
+  'BORNEO_S|VN_C': [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
+  'BORNEO_S|VN_N': [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'BORNEO_S|VN_S': [WP.karimata, WP.scs_natuna, WP.vn_s_off],
+
+  // Vietnam ↔ West Java (Jakarta, Semarang, Cilacap)
+  'JAVA_W|VN_C':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
+  'JAVA_W|VN_N':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'JAVA_W|VN_S':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off],
+
+  // Vietnam ↔ East Java (Surabaya)
+  'JAVA_E|VN_C':   [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
+  'JAVA_E|VN_N':   [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'JAVA_E|VN_S':   [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off],
+
+  // Cai Lan / Hai Phong ↔ South China (via Qiongzhou / Hainan Strait)
+  'CN_S|VN_N':     [WP.qiongzhou],
+};
+
+function haversineNm(p1, p2) {
+  const R = 3440.065;
+  const dLat = (p2[0]-p1[0])*Math.PI/180;
+  const dLon = (p2[1]-p1[1])*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(p1[0]*Math.PI/180)*Math.cos(p2[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function getSeaRoute(portA, portB) {
+  const zA = portZone[portA];
+  const zB = portZone[portB];
+
+  if (!zA || !zB) return [portCoords[portA], portCoords[portB]];
+
+  // Same zone: direct
+  if (zA === zB) return [portCoords[portA], portCoords[portB]];
+
+  // Custom route override (coastal cases where backbone detours are wrong)
+  const sortedZ = [zA, zB].sort();
+  const key = sortedZ[0] + '|' + sortedZ[1];
+  const customWps = customRoutes[key];
+  if (customWps) {
+    const wps = (zA === sortedZ[0]) ? customWps : [...customWps].reverse();
+    return [portCoords[portA], ...wps, portCoords[portB]];
+  }
+
+  const cfgA = zoneConfig[zA];
+  const cfgB = zoneConfig[zB];
+  if (!cfgA || !cfgB) return [portCoords[portA], portCoords[portB]];
+
+  const route = [portCoords[portA]];
+
+  // Branch from port A to backbone
+  cfgA.branch.forEach(wp => route.push(wp));
+
+  // Backbone segment
+  const biA = cfgA.bi;
+  const biB = cfgB.bi;
+  if (biA <= biB) {
+    for (let i = biA; i <= biB; i++) route.push(backbone[i]);
+  } else {
+    for (let i = biA; i >= biB; i--) route.push(backbone[i]);
+  }
+
+  // Branch from backbone to port B (reversed)
+  const revB = [...cfgB.branch].reverse();
+  revB.forEach(wp => route.push(wp));
+
+  route.push(portCoords[portB]);
+  return route;
+}
+
+function routeDistanceNm(route) {
+  let d = 0;
+  for (let i = 0; i < route.length - 1; i++) {
+    d += haversineNm(route[i], route[i+1]);
+  }
+  return Math.round(d);
+}
+
+// ─── ALTERNATIVE ROUTES (Panama / Cape) ───────────────────────────────────────
+const ASIA_ZONES = ['CN_N','CN_E','CN_S','KR','VN_N','VN_C','VN_S','SG','GOT','MALACCA','SARAWAK','PH_N','PH_C','PH_S','JAVA_W','JAVA_E','BORNEO_S','BORNEO_E','SULAWESI'];
+const AMERICAS_ATL_ZONES = ['US_EAST','US_GULF','BRAZIL'];
+const AMERICAS_PAC_ZONES = ['MX_PAC_NW','MX_GULF_CAL'];
+const EUROPE_ZONES = ['NW_EU','MED'];
+const INDIAN_ZONES = ['INDIA_W','SRI_LANKA','BANGLADESH','PG','ADEN','EAFRICA'];
+
+function isAsia(z)    { return ASIA_ZONES.includes(z); }
+function isAmericasAtl(z) { return AMERICAS_ATL_ZONES.includes(z); }
+function isAmericasPac(z) { return AMERICAS_PAC_ZONES.includes(z); }
+function isAmericas(z)    { return isAmericasAtl(z) || isAmericasPac(z); }
+function isEurope(z)  { return EUROPE_ZONES.includes(z); }
+
+// Waypoints from an Asian-zone port to east-of-Japan (pac_japan_e) ready for trans-Pacific
+const asianToPacificGateway = {
+  CN_N:    [WP.bohai_e, WP.yellow_n, WP.ecs_n, WP.pac_japan_e],
+  CN_E:    [WP.ecs, WP.pac_japan_e],
+  CN_S:    [WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  KR:      [WP.korea_str, WP.pac_japan_e],
+  VN_N:    [WP.vn_n_off, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  VN_C:    [WP.vn_c_off, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  VN_S:    [WP.vn_s_off, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  SG:      [WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  GOT:     [WP.got_north, WP.got_mid, WP.got_entrance, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  MALACCA: [WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  SARAWAK: [WP.scs_natuna, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  PH_N:    [WP.scs_north, WP.taiwan_s, WP.pac_japan_e],
+  PH_C:    [WP.visayas, WP.pac_japan_e],
+  PH_S:    [WP.mindanao_s, WP.pac_japan_e],
+  JAVA_W:  [WP.java_sea_w, WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  JAVA_E:  [WP.java_sea_e, WP.flores, WP.mindanao_s, WP.pac_japan_e],
+  BORNEO_S:[WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  BORNEO_E:[WP.makassar_n, WP.sulu_sea, WP.mindanao_s, WP.pac_japan_e],
+  SULAWESI:[WP.makassar_s, WP.flores, WP.mindanao_s, WP.pac_japan_e],
+};
+
+// Trans-Pacific crossing (pac_japan_e → east Pacific)
+const pacificCrossing = [WP.pac_kuroshio, WP.pac_mid_n, WP.pac_ne_n, WP.pac_ne];
+
+// Panama transit (east Pacific → Panama → Caribbean)
+const panamaToAtl = [WP.panama_pac, WP.panama_atl, WP.carib];
+
+// From Caribbean to Atlantic Americas destination zones
+const atlanticBranchIn = {
+  US_EAST: [WP.florida, WP.us_east_app],
+  US_GULF: [WP.florida, WP.gom],
+  BRAZIL:  [WP.sa_mid],
+};
+
+// Waypoints from east Pacific to Mexican Pacific destinations (no Panama transit needed)
+const pacificBranchIn = {
+  MX_PAC_NW:   [WP.baja_nw],
+  MX_GULF_CAL: [WP.baja_tip, WP.gulf_cal],
+};
+
+// Build a Panama-via (trans-Pacific) route between Asia and Americas.
+// Returns null if not applicable.
+function buildPanamaRoute(portA, portB) {
+  const zA = portZone[portA], zB = portZone[portB];
+  if (!zA || !zB) return null;
+
+  // Identify asia side and americas side (either direction)
+  let asiaPort, asiaZ, amPort, amZ;
+  if (isAsia(zA) && isAmericas(zB)) { asiaPort=portA; asiaZ=zA; amPort=portB; amZ=zB; }
+  else if (isAsia(zB) && isAmericas(zA)) { asiaPort=portB; asiaZ=zB; amPort=portA; amZ=zA; }
+  else return null;
+
+  const asianWps = asianToPacificGateway[asiaZ];
+  if (!asianWps) return null;
+
+  let route;
+  if (isAmericasPac(amZ)) {
+    // Pacific destinations (Ensenada / Guaymas / La Paz) — no Panama transit
+    const branch = pacificBranchIn[amZ] || [];
+    route = [portCoords[asiaPort], ...asianWps, ...pacificCrossing, ...branch, portCoords[amPort]];
+  } else {
+    // Atlantic destinations — transit Panama
+    const branch = atlanticBranchIn[amZ] || [];
+    route = [portCoords[asiaPort], ...asianWps, ...pacificCrossing, ...panamaToAtl, ...branch, portCoords[amPort]];
+  }
+
+  // Reverse if we swapped (to keep portA→portB order)
+  if (asiaPort !== portA) route.reverse();
+  return route;
+}
+
+// Cape of Good Hope route: Asia → Malacca → S.Indian → Cape → S.Atlantic → dest
+function buildCapeRoute(portA, portB) {
+  const zA = portZone[portA], zB = portZone[portB];
+  if (!zA || !zB) return null;
+
+  // Most useful: Asia ↔ Atlantic Americas or Europe
+  let eastPort, eastZ, westPort, westZ;
+  if (isAsia(zA) && (isAmericasAtl(zB) || isEurope(zB))) { eastPort=portA; eastZ=zA; westPort=portB; westZ=zB; }
+  else if (isAsia(zB) && (isAmericasAtl(zA) || isEurope(zA))) { eastPort=portB; eastZ=zB; westPort=portA; westZ=zA; }
+  else return null;
+
+  // From Asian port south via Malacca to S.Indian
+  const asianToMalacca = {
+    CN_N: [WP.yellow_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    CN_E: [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    CN_S: [WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    KR:   [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    VN_N: [WP.vn_n_off, WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    VN_C: [WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    VN_S: [WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    SG:   [WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    GOT:  [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    MALACCA: [WP.malacca_s, WP.malacca_n],
+    SARAWAK: [WP.scs_natuna, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    PH_N: [WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    PH_C: [WP.visayas, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    PH_S: [WP.sulu_sea, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    JAVA_W: [WP.java_sea_w, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    JAVA_E: [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    BORNEO_S: [WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    BORNEO_E: [WP.makassar_n, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    SULAWESI: [WP.makassar_s, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+  }[eastZ];
+  if (!asianToMalacca) return null;
+
+  const capePath = [WP.s_indian, WP.cape_agulhas, WP.s_atl_w];
+
+  let westBranch;
+  if (isEurope(westZ)) {
+    // After Cape → North up Atlantic → approach Europe via Biscay
+    westBranch = [WP.s_atl_nw, WP.wa_app, WP.biscay];
+    const cfg = zoneConfig[westZ];
+    if (cfg && cfg.branch) westBranch = [...westBranch, ...[...cfg.branch].reverse()];
+  } else if (westZ === 'BRAZIL') {
+    westBranch = [WP.sa_mid];
+  } else {
+    // US_EAST / US_GULF — go N up Atlantic through Caribbean
+    westBranch = [WP.s_atl_nw, WP.carib];
+    const inB = atlanticBranchIn[westZ] || [];
+    westBranch = [...westBranch, ...inB];
+  }
+
+  let route = [portCoords[eastPort], ...asianToMalacca, ...capePath, ...westBranch, portCoords[westPort]];
+  if (eastPort !== portA) route.reverse();
+  return route;
+}
+
+// Route selection entry point. `via` can be 'auto' (default), 'suez', 'panama', 'cape'.
+function getSeaRouteVia(portA, portB, via) {
+  via = via || 'auto';
+  const suezRoute = getSeaRoute(portA, portB); // existing backbone-based (Suez for trans-ocean)
+
+  if (via === 'suez')   return suezRoute;
+  if (via === 'panama') return buildPanamaRoute(portA, portB) || suezRoute;
+  if (via === 'cape')   return buildCapeRoute(portA, portB)   || suezRoute;
+
+  // auto: pick shortest of {suez, panama, cape} where applicable
+  const candidates = [{ name:'suez', route: suezRoute }];
+  const p = buildPanamaRoute(portA, portB);
+  if (p) candidates.push({ name:'panama', route: p });
+  const c = buildCapeRoute(portA, portB);
+  if (c) candidates.push({ name:'cape', route: c });
+
+  candidates.sort((x,y) => routeDistanceNm(x.route) - routeDistanceNm(y.route));
+  return candidates[0].route;
+}
+
+// Compute distance for all route options (used for the comparison hint)
+function getRouteOptions(portA, portB) {
+  if (!portA || !portB || portA === portB) return [];
+  const opts = [];
+  const suez = getSeaRoute(portA, portB);
+  opts.push({ via:'suez', name:'Suez', nm: routeDistanceNm(suez) });
+  const p = buildPanamaRoute(portA, portB);
+  if (p) opts.push({ via:'panama', name:'Panama', nm: routeDistanceNm(p) });
+  const c = buildCapeRoute(portA, portB);
+  if (c) opts.push({ via:'cape', name:'Cape', nm: routeDistanceNm(c) });
+  return opts;
+}
+
+function getDistance(a, b, via) {
+  if (a === b) return 0;
+  // If a specific via is requested, always use waypoint-based distance (not legacy table).
+  if (via && via !== 'auto') {
+    return routeDistanceNm(getSeaRouteVia(a, b, via));
+  }
+  // Auto: try legacy table first (fast), then waypoint routing
+  const legacy = getDistanceFromTable(a, b);
+  if (legacy !== null) return legacy;
+  return routeDistanceNm(getSeaRouteVia(a, b, 'auto'));
+}
+
+// Update the route-comparison hint panel
+function updateRouteInfoHint(portA, portB, via) {
+  const el = document.getElementById('routeInfo');
+  if (!el) return;
+  const opts = getRouteOptions(portA, portB);
+  if (opts.length === 0) {
+    el.innerHTML = 'Select both ports to compare routes &hellip;';
+    return;
+  }
+  opts.sort((a,b) => a.nm - b.nm);
+  const shortest = opts[0];
+  const current = opts.find(o => o.via === via) || shortest;
+  const spd = parseFloat(document.getElementById('mapSpeed').value) || 11.5;
+  const days = (current.nm / (spd * 24)).toFixed(1);
+
+  const lines = opts.map(o => {
+    const mark = (o.via === current.via) ? '<b>&#9679; ' + o.name + '</b>' : o.name;
+    const d = (o.nm / (spd * 24)).toFixed(1);
+    const extra = (o.nm - shortest.nm);
+    const delta = extra === 0 ? '<span style="color:#26a65b">shortest</span>' : `+${extra.toLocaleString()} nm`;
+    return `<div>${mark}: ${o.nm.toLocaleString()} nm &mdash; ${d} d &mdash; <span style="opacity:.7">${delta}</span></div>`;
+  });
+  el.innerHTML = lines.join('');
+}
+
+// ─── FREIGHT CALCULATOR ───────────────────────────────────────────────────────
+function calculateFreight() {
+  const commodity = document.getElementById('commodity').value;
+  const quantity  = parseFloat(document.getElementById('quantity').value);
+  const loadPort  = document.getElementById('loadPort').value;
+  const dischPort = document.getElementById('dischargePort').value;
+  const loadRate  = parseFloat(document.getElementById('loadRate').value);
+  const dischRate = parseFloat(document.getElementById('dischRate').value);
+  const basis     = document.getElementById('freightBasis').value;
+  let   dwt       = document.getElementById('vesselSize').value;
+
+  // Validation
+  const errors = [];
+  if (!commodity) errors.push('Commodity');
+  if (!quantity || quantity < 100) errors.push('Quantity (min 100 MT)');
+  if (!loadPort) errors.push('Loading Port');
+  if (!dischPort) errors.push('Discharging Port');
+  if (!loadRate || loadRate < 50) errors.push('Loading Rate');
+  if (!dischRate || dischRate < 50) errors.push('Discharging Rate');
+  if (errors.length) { alert('Please fill in: ' + errors.join(', ')); return; }
+  if (loadPort === dischPort) { alert('Loading and discharging ports cannot be the same.'); return; }
+
+  // Auto vessel size
+  if (dwt === 'auto') {
+    if      (quantity <= 3000)  dwt = 3500;
+    else if (quantity <= 5000)  dwt = 5000;
+    else if (quantity <= 7000)  dwt = 7500;
+    else if (quantity <= 10000) dwt = 10000;
+    else if (quantity <= 12000) dwt = 12500;
+    else if (quantity <= 14000) dwt = 15000;
+    else if (quantity <= 19000) dwt = 20000;
+    else if (quantity <= 24000) dwt = 25000;
+    else if (quantity <= 30000) dwt = 30000;
+    else if (quantity <= 45000) dwt = 45000;
+    else                        dwt = 50000;
+  } else { dwt = parseFloat(dwt); }
+
+  const routeVia = document.getElementById('routeVia').value || 'auto';
+  const distance = getDistance(loadPort, dischPort, routeVia);
+  const speed    = parseFloat(document.getElementById('vesselSpeed').value) || 11.5;
+  document.getElementById('mapSpeed').value = speed;
+  const seaDays  = distance / (speed * 24);
+
+  // Port days
+  const loadDays  = quantity / loadRate;
+  const dischDays = quantity / dischRate;
+  const portDays  = loadDays + dischDays;
+  const totalDays = seaDays + portDays + 1.5;
+
+  // Bunker consumption — realistic VLSFO (main) + MGO (aux) at sea, MGO-only in port
+  // portVlsfo > 0 only for larger vessels that run VLSFO boilers/gensets in port
+  let seaVlsfo, seaMgo, portMgo, portVlsfo = 0;
+  if      (dwt <= 5500)  { seaVlsfo = 7.0;  seaMgo = 0.5; portMgo = 1.0; }  // 4-5K
+  else if (dwt <= 7800)  { seaVlsfo = 8.0;  seaMgo = 0.7; portMgo = 1.2; }  // 6-7K
+  else if (dwt <= 9500)  { seaVlsfo = 10.0; seaMgo = 1.0; portMgo = 1.5; }  // 8-9K
+  else if (dwt <= 13000) { seaVlsfo = 12.0; seaMgo = 1.3; portMgo = 1.8; }  // 10-13K
+  else if (dwt <= 15500) { seaVlsfo = 14.0; seaMgo = 1.0; portMgo = 2.0; }  // 13-15K
+  else if (dwt <= 17500) { seaVlsfo = 17.0; seaMgo = 0.1; portMgo = 2.2; }  // 16-17K
+  else if (dwt <= 19500) { seaVlsfo = 18.0; seaMgo = 0.1; portMgo = 2.5; }  // 18-19K
+  else if (dwt <= 25500) { seaVlsfo = 15.0; seaMgo = 1.5; portMgo = 2.8; }  // 20-25K
+  else if (dwt <= 30000) { seaVlsfo = 20.0; seaMgo = 0.2; portMgo = 3.2; }  // 26-30K
+  else                   { seaVlsfo = 22.5; seaMgo = 0.5; portMgo = 0.1; portVlsfo = 5.0; }  // 45-50K (working: 5.0 VLSFO 380cst + 0.1 MGO)
+
+  const vlsfoPrice = parseFloat(document.getElementById('vlsfoPrice').value) || 498;
+  const mgoPrice   = parseFloat(document.getElementById('mgoPrice').value)   || 685;
+
+  const seaVlsfoMt   = seaDays  * seaVlsfo;
+  const seaMgoMt     = seaDays  * seaMgo;
+  const portMgoMt    = portDays * portMgo;
+  const portVlsfoMt  = portDays * portVlsfo;
+
+  const seaVlsfoCost  = seaVlsfoMt  * vlsfoPrice;
+  const seaMgoCost    = seaMgoMt    * mgoPrice;
+  const portMgoCost   = portMgoMt   * mgoPrice;
+  const portVlsfoCost = portVlsfoMt * vlsfoPrice;
+  const bunkerCost    = seaVlsfoCost + seaMgoCost + portMgoCost + portVlsfoCost;
+
+  // Aggregated (for backwards-compatible display variables)
+  const seaBunkerMt    = seaVlsfoMt + seaMgoMt;
+  const portBunkerMt   = portMgoMt + portVlsfoMt;
+  const seaBunkerCost  = seaVlsfoCost + seaMgoCost;
+  const portBunkerCost = portMgoCost + portVlsfoCost;
+  const totalMgoMt     = seaMgoMt + portMgoMt;
+  const totalVlsfoMt   = seaVlsfoMt + portVlsfoMt;
+
+  // Vessel hire
+  let hireRateGeared;
+  if      (dwt <= 3800)  hireRateGeared = 2750;
+  else if (dwt <= 5500)  hireRateGeared = 3000;
+  else if (dwt <= 7800)  hireRateGeared = 3500;
+  else if (dwt <= 9500)  hireRateGeared = 4250;
+  else if (dwt <= 12800) hireRateGeared = 5200;
+  else if (dwt <= 13000) hireRateGeared = 5500;
+  else if (dwt <= 15500) hireRateGeared = 6250;
+  else if (dwt <= 17500) hireRateGeared = 7500;
+  else if (dwt <= 19500) hireRateGeared = 8750;
+  else if (dwt <= 25500) hireRateGeared = 10250;
+  else if (dwt <= 30000) hireRateGeared = 13000;
+  else                   hireRateGeared = 16000;
+
+  const hireRate = vesselType === 'gearless'
+    ? Math.round(hireRateGeared * 0.88)
+    : hireRateGeared;
+
+  const hireCost = hireRate * totalDays;
+
+  // Port costs — simplified: USD 1 × DWT per port × 2 ports
+  const portCostPerPort = dwt * 1;
+  const portCosts = portCostPerPort * 2;
+
+  // Shore crane (gearless only) — included only if booked to owner's account
+  const craneAccountEl = document.querySelector('input[name="craneAccount"]:checked');
+  const craneAccount = craneAccountEl ? craneAccountEl.value : 'charterer';
+  const includeCrane = (vesselType === 'gearless' || vesselType === 'either') && craneAccount === 'owner';
+  const gearlessSurcharge = includeCrane ? 800 * portDays : 0;
+
+  // Basis adjustment
+  let basisFactor = 1.0;
+  if (basis === 'gross')  basisFactor = 1.20;
+  if (basis === 'fio')    basisFactor = 1.00;
+  if (basis === 'fios')   basisFactor = 0.98;
+  if (basis === 'filo')   basisFactor = 1.08;
+
+  // Commodity factor
+  const commFactors = { steel:1.12, machinery:1.25, pipes:1.15, vehicles:1.30, timber:1.10, copper_conc:1.08, grain:1.0, rice:1.05, sugar:1.02, fertilizer:1.0, soybeans:1.0, iron_ore:0.95, clinker:1.0, cement:1.02, scrap:1.0, salt:0.95, coal:0.95, gypsum:0.95, pet_coke:0.95 };
+  const commFactor = commFactors[commodity] || 1.0;
+
+  const marginFactor = 1.10;
+
+  const totalCost   = (bunkerCost + hireCost + portCosts + gearlessSurcharge) * basisFactor * commFactor * marginFactor;
+  const freightRate = totalCost / quantity;
+  const freightLow  = (freightRate * 0.88).toFixed(1);
+  const freightHigh = (freightRate * 1.15).toFixed(1);
+
+  // Display
+  document.getElementById('freightRate').textContent = '$' + freightRate.toFixed(1);
+  document.getElementById('freightRange').textContent = `Market range: $${freightLow} \u2013 $${freightHigh} / MT`;
+
+  // Resolve actual via used (when routeVia = auto, show which one was picked)
+  let actualVia = routeVia;
+  if (routeVia === 'auto') {
+    const opts = getRouteOptions(loadPort, dischPort);
+    if (opts.length) {
+      opts.sort((a,b)=>a.nm-b.nm);
+      actualVia = opts[0].via;
+    }
+  }
+  const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Suez';
+
+  document.getElementById('voyageTags').innerHTML = `
+    <div class="vtag">\u2693 ${portNames[loadPort]||loadPort} \u2192 ${portNames[dischPort]||dischPort}</div>
+    <div class="vtag">\uD83D\uDCCF ${distance.toLocaleString()} nm</div>
+    <div class="vtag">\uD83D\uDEE4 via ${viaLabel}${routeVia==='auto'?' (auto)':''}</div>
+    <div class="vtag">\uD83D\uDE80 ${speed} kts</div>
+    <div class="vtag">\u23F1 ${totalDays.toFixed(1)} days total</div>
+    <div class="vtag">\uD83D\uDEA2 ${dwt.toLocaleString()} DWT</div>
+    <div class="vtag">${vesselType==='geared'?'\u2699\uFE0F Geared':vesselType==='gearless'?'\uD83C\uDFD7\uFE0F Gearless':'\u2699\uFE0F/\uD83C\uDFD7\uFE0F Both'}</div>
+  `;
+
+  document.getElementById('breakdown').innerHTML = `
+    <div class="breakdown-row"><span class="b-label">Sea VLSFO (main) @ $${vlsfoPrice}/MT &mdash; ${seaVlsfo} MT/d \u00D7 ${seaDays.toFixed(1)} d</span><span class="b-val">${seaVlsfoMt.toFixed(1)} MT / $${seaVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Sea MGO (aux) @ $${mgoPrice}/MT &mdash; ${seaMgo} MT/d \u00D7 ${seaDays.toFixed(1)} d</span><span class="b-val">${seaMgoMt.toFixed(1)} MT / $${seaMgoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Port MGO (aux) @ $${mgoPrice}/MT &mdash; ${portMgo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portMgoMt.toFixed(1)} MT / $${portMgoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    ${portVlsfo > 0 ? `<div class="breakdown-row"><span class="b-label">Port VLSFO 380cst (working) @ $${vlsfoPrice}/MT &mdash; ${portVlsfo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portVlsfoMt.toFixed(1)} MT / $${portVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
+    <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b> (${totalVlsfoMt.toFixed(1)} MT VLSFO + ${totalMgoMt.toFixed(1)} MT MGO)</span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
+    <div class="breakdown-row"><span class="b-label">Vessel hire equiv. ($${hireRate.toLocaleString()}/day \u00D7 ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Port costs ($1 \u00D7 ${dwt.toLocaleString()} DWT \u00D7 2 ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    ${(vesselType === 'gearless' || vesselType === 'either') ? `<div class="breakdown-row"><span class="b-label">Shore crane \u2014 ${craneAccount === 'owner' ? 'Owner\u2019s account' : 'Charterer\u2019s account'}</span><span class="b-val">${includeCrane ? '$'+gearlessSurcharge.toLocaleString('en',{maximumFractionDigits:0}) : 'Excluded (chrtrs acct)'}</span></div>` : ''}
+    <div class="breakdown-row"><span class="b-label">Port time: ${loadDays.toFixed(1)} d load + ${dischDays.toFixed(1)} d disch</span><span class="b-val">${portDays.toFixed(1)} days at berth</span></div>
+    <div class="breakdown-row"><span class="b-label">Basis adjustment (${basis.toUpperCase()})</span><span class="b-val">${((basisFactor-1)*100).toFixed(0)}%</span></div>
+    <div class="breakdown-row"><span class="b-label">Commodity premium factor</span><span class="b-val">${((commFactor-1)*100).toFixed(0)}%</span></div>
+    <div class="breakdown-row"><span class="b-label">Margin + commission (incl.)</span><span class="b-val">~10%</span></div>
+    <div class="breakdown-row total"><span class="b-label">TOTAL VOYAGE COST</span><span class="b-val">$${totalCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row total"><span class="b-label">FREIGHT RATE (\u00F7 ${quantity.toLocaleString()} MT)</span><span class="b-val">$${freightRate.toFixed(2)}/MT</span></div>
+  `;
+
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  updateMapRoute();
+}
+
+// ─── MAP ──────────────────────────────────────────────────────────────────────
+let leafletMap = null;
+let routeLayer = null;
+let markersLayer = null;
+let bgMarkersLayer = null;
+
+function initMap() {
+  if (leafletMap) return;
+  document.getElementById('routeMap').innerHTML = '';
+  leafletMap = L.map('routeMap', { zoomControl: true, scrollWheelZoom: true })
+    .setView([20, 80], 3);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '\u00A9 OpenStreetMap \u00A9 CARTO',
+    subdomains: 'abcd', maxZoom: 18
+  }).addTo(leafletMap);
+}
+
+// Great-circle interpolation between two points
+function gcInterpolate(p1, p2, steps) {
+  const pts = [];
+  const lat1 = p1[0]*Math.PI/180, lon1 = p1[1]*Math.PI/180;
+  const lat2 = p2[0]*Math.PI/180, lon2 = p2[1]*Math.PI/180;
+  const d = 2*Math.asin(Math.sqrt(
+    Math.pow(Math.sin((lat2-lat1)/2),2) +
+    Math.cos(lat1)*Math.cos(lat2)*Math.pow(Math.sin((lon2-lon1)/2),2)
+  ));
+  for (let i=0; i<=steps; i++) {
+    const f = i/steps;
+    if (d < 0.0001) { pts.push([p1[0], p1[1]]); continue; }
+    const A = Math.sin((1-f)*d)/Math.sin(d);
+    const B = Math.sin(f*d)/Math.sin(d);
+    const x = A*Math.cos(lat1)*Math.cos(lon1) + B*Math.cos(lat2)*Math.cos(lon2);
+    const y = A*Math.cos(lat1)*Math.sin(lon1) + B*Math.cos(lat2)*Math.sin(lon2);
+    const z = A*Math.sin(lat1)                + B*Math.sin(lat2);
+    const lat = Math.atan2(z, Math.sqrt(x*x+y*y))*180/Math.PI;
+    const lon = Math.atan2(y,x)*180/Math.PI;
+    pts.push([lat, lon]);
+  }
+  return pts;
+}
+
+// Build smooth polyline from waypoint array
+function buildSmoothRoute(waypoints) {
+  const allPts = [];
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const subPts = gcInterpolate(waypoints[i], waypoints[i+1], 12);
+    // Avoid duplicate junction points
+    if (i > 0) subPts.shift();
+    allPts.push(...subPts);
+  }
+  return allPts;
+}
+
+// Split polyline at antimeridian
+function splitAntimeridian(pts) {
+  const segments = [[]];
+  for (let i=0; i<pts.length; i++) {
+    segments[segments.length-1].push(pts[i]);
+    if (i<pts.length-1) {
+      const dLon = pts[i+1][1] - pts[i][1];
+      if (Math.abs(dLon) > 180) segments.push([]);
+    }
+  }
+  return segments.filter(s=>s.length>1);
+}
+
+function updateMapRoute() {
+  const lp  = document.getElementById('loadPort').value;
+  const dp  = document.getElementById('dischargePort').value;
+  const spd = parseFloat(document.getElementById('mapSpeed').value) || 11.5;
+
+  document.getElementById('vesselSpeed').value = spd;
+
+  if (!lp || !dp || !portCoords[lp] || !portCoords[dp]) return;
+
+  initMap();
+
+  // Clear old layers
+  if (routeLayer)   { routeLayer.forEach(l=>leafletMap.removeLayer(l));   routeLayer=null; }
+  if (markersLayer) { markersLayer.forEach(l=>leafletMap.removeLayer(l)); markersLayer=null; }
+  if (bgMarkersLayer) { bgMarkersLayer.forEach(l=>leafletMap.removeLayer(l)); bgMarkersLayer=null; }
+
+  const c1 = portCoords[lp], c2 = portCoords[dp];
+  const routeViaEl = document.getElementById('routeVia');
+  const routeVia = routeViaEl ? routeViaEl.value || 'auto' : 'auto';
+  const dist = getDistance(lp, dp, routeVia);
+  const seaDays = dist / (spd * 24);
+
+  // Update route comparison hint
+  updateRouteInfoHint(lp, dp, routeVia);
+
+  // Get sea route waypoints and build smooth polyline
+  const waypoints = getSeaRouteVia(lp, dp, routeVia);
+  const smoothPts = buildSmoothRoute(waypoints);
+  const segments = splitAntimeridian(smoothPts);
+
+  const routeLines = segments.map(seg =>
+    L.polyline(seg, { color:'#2196f3', weight:2.5, opacity:.85, dashArray:'8,5' })
+      .addTo(leafletMap)
+  );
+
+  // Midpoint marker
+  const midPt = smoothPts[Math.floor(smoothPts.length/2)];
+  const midIcon = L.divIcon({ className:'', html:'<div style="width:10px;height:10px;background:#f5a623;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px #f5a623"></div>', iconSize:[10,10], iconAnchor:[5,5] });
+  const midMarker = L.marker(midPt, { icon:midIcon }).addTo(leafletMap);
+
+  // Port markers for selected route
+  const loadIcon = L.divIcon({ className:'', html:`<div style="background:#26a65b;color:#fff;padding:3px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5)">\u2B06 ${portNames[lp]}</div>`, iconAnchor:[0,20] });
+  const dischIcon = L.divIcon({ className:'', html:`<div style="background:#e74c3c;color:#fff;padding:3px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5)">\u2B07 ${portNames[dp]}</div>`, iconAnchor:[0,20] });
+
+  const m1 = L.marker(c1, { icon:loadIcon }).addTo(leafletMap);
+  const m2 = L.marker(c2, { icon:dischIcon }).addTo(leafletMap);
+
+  const dot1 = L.circleMarker(c1, { radius:7, color:'#26a65b', fillColor:'#26a65b', fillOpacity:1, weight:2 }).addTo(leafletMap);
+  const dot2 = L.circleMarker(c2, { radius:7, color:'#e74c3c', fillColor:'#e74c3c', fillOpacity:1, weight:2 }).addTo(leafletMap);
+
+  routeLayer   = [...routeLines, midMarker];
+  markersLayer = [m1, m2, dot1, dot2];
+
+  // Background port dots
+  bgMarkersLayer = [];
+  Object.keys(portCoords).forEach(pKey => {
+    if (pKey === lp || pKey === dp) return;
+    const pc = portCoords[pKey];
+    const cm = L.circleMarker(pc, {
+      radius: 3, color:'#4a5568', fillColor:'#4a5568', fillOpacity:0.6, weight:1
+    }).bindTooltip(portNames[pKey] || pKey, {
+      className: '', direction: 'top', offset: [0, -5],
+      opacity: 0.9
+    }).addTo(leafletMap);
+    bgMarkersLayer.push(cm);
+  });
+
+  // Fit map to route
+  const allLatLngs = smoothPts.map(p => L.latLng(p[0], p[1]));
+  const bounds = L.latLngBounds(allLatLngs);
+  leafletMap.fitBounds(bounds, { padding:[50,50] });
+
+  // Update stats
+  document.getElementById('mapDist').textContent = dist.toLocaleString() + ' nm';
+  document.getElementById('mapDays').textContent = seaDays.toFixed(1) + ' d';
+  const eta = new Date(); eta.setDate(eta.getDate() + Math.ceil(seaDays));
+  document.getElementById('mapEta').textContent = eta.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+}
+
+function syncSpeed(el) {
+  document.getElementById('vesselSpeed').value = el.value;
+}
+
+// Live update map when ports change
+document.getElementById('loadPort').addEventListener('change', updateMapRoute);
+document.getElementById('dischargePort').addEventListener('change', updateMapRoute);
+</script>
+
+</body>
+</html>
