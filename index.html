@@ -1655,6 +1655,21 @@ const customRoutes = {
 
   // Cai Lan / Hai Phong ↔ South China (via Qiongzhou / Hainan Strait)
   'CN_S|VN_N':     [WP.qiongzhou],
+
+  // ── Gulf of Thailand (Bangkok) ↔ Philippines (direct via Ca Mau, skip Singapore)
+  'GOT|PH_N':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip],
+  'GOT|PH_C':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.sulu_sea, WP.visayas],
+  'GOT|PH_S':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.sulu_sea, WP.mindanao_s],
+
+  // ── Gulf of Thailand ↔ China / Korea (hug Vietnam coast instead of Singapore dip)
+  'CN_S|GOT':      [WP.hainan_e, WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.got_entrance, WP.got_mid, WP.got_north],
+  'CN_E|GOT':      [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.vn_tip, WP.got_entrance, WP.got_mid, WP.got_north],
+  'CN_N|GOT':      [WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.vn_tip, WP.got_entrance, WP.got_mid, WP.got_north],
+  'GOT|KR':        [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
+
+  // ── Gulf of Thailand ↔ East Borneo (Balikpapan): old path cut across Borneo land.
+  // Route via Singapore Strait → Karimata → Makassar Strait instead.
+  'BORNEO_E|GOT':  [WP.makassar_n, WP.karimata, WP.sg_strait, WP.got_entrance, WP.got_mid, WP.got_north],
 };
 
 function haversineNm(p1, p2) {
@@ -1689,8 +1704,9 @@ function getSeaRoute(portA, portB) {
 
   const route = [portCoords[portA]];
 
-  // Branch from port A to backbone
-  cfgA.branch.forEach(wp => route.push(wp));
+  // Branch from port A to backbone.
+  // Branches are stored in backbone→port order, so reverse for outbound.
+  [...cfgA.branch].reverse().forEach(wp => route.push(wp));
 
   // Backbone segment
   const biA = cfgA.bi;
@@ -1701,9 +1717,8 @@ function getSeaRoute(portA, portB) {
     for (let i = biA; i >= biB; i--) route.push(backbone[i]);
   }
 
-  // Branch from backbone to port B (reversed)
-  const revB = [...cfgB.branch].reverse();
-  revB.forEach(wp => route.push(wp));
+  // Branch from backbone to port B (stored backbone→port, use as-is)
+  cfgB.branch.forEach(wp => route.push(wp));
 
   route.push(portCoords[portB]);
   return route;
