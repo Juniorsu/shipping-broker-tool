@@ -2332,9 +2332,16 @@ function initMap() {
   document.getElementById('routeMap').innerHTML = '';
   leafletMap = L.map('routeMap', { zoomControl: true, scrollWheelZoom: true })
     .setView([20, 80], 3);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '\u00A9 OpenStreetMap \u00A9 CARTO',
-    subdomains: 'abcd', maxZoom: 18
+  // Ocean base layer — shows bathymetry (depth) in blue/teal shades
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; GEBCO, NOAA, CHS, OSU, UNH, CSUMB, Nat.Geographic, DeLorme, NAVTEQ',
+    maxZoom: 13
+  }).addTo(leafletMap);
+  // Reference overlay — coastlines, labels, borders on top
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '',
+    maxZoom: 13,
+    opacity: 0.85
   }).addTo(leafletMap);
 }
 
@@ -2418,13 +2425,13 @@ function updateMapRoute() {
   const segments = splitAntimeridian(smoothPts);
 
   const routeLines = segments.map(seg =>
-    L.polyline(seg, { color:'#b8620a', weight:2.5, opacity:.9, dashArray:'8,5' })
+    L.polyline(seg, { color:'#ff5500', weight:3, opacity:.95, dashArray:'10,6' })
       .addTo(leafletMap)
   );
 
   // Midpoint marker
   const midPt = smoothPts[Math.floor(smoothPts.length/2)];
-  const midIcon = L.divIcon({ className:'', html:'<div style="width:10px;height:10px;background:#f5a623;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px #f5a623"></div>', iconSize:[10,10], iconAnchor:[5,5] });
+  const midIcon = L.divIcon({ className:'', html:'<div style="width:12px;height:12px;background:#fff;border-radius:50%;border:3px solid #ff5500;box-shadow:0 0 10px rgba(255,85,0,.7)"></div>', iconSize:[12,12], iconAnchor:[6,6] });
   const midMarker = L.marker(midPt, { icon:midIcon }).addTo(leafletMap);
 
   // Port markers for selected route
