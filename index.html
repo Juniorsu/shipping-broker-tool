@@ -1409,6 +1409,7 @@ const WP = {
   baja_tip:    [22.80, -110.00], // off Cabo San Lucas (Baja southern tip)
   gulf_cal:    [25.50, -110.00], // mid Gulf of California
   baja_nw:     [30.00, -117.50], // off NW Baja California (for Ensenada)
+  ca_pac:      [ 7.50,  -82.50], // Pacific approach to Panama — Gulf of Chiriquí, offshore W Panama
   // Trans-Pacific waypoints (great-circle arc through North Pacific)
   pac_japan_e: [35.00,  145.00], // east of Japan
   pac_kuroshio:[38.00,  160.00], // Kuroshio Extension
@@ -1860,6 +1861,46 @@ const customRoutes = {
   'MAL_E|PH_N':     [WP.scs_central, WP.scs_paracel, WP.scs_north], // along SCS spine to Luzon
   'MAL_E|PH_C':     [WP.scs_central, WP.visayas],
   'MAL_E|PH_S':     [WP.scs_central, WP.sulu_sea, WP.mindanao_s],
+
+  // ── India West ↔ Persian Gulf — direct across Arabian Sea via Strait of Hormuz.
+  // Default backbone routes via sri_lanka_s (bi=11→10 dips south to 6.5°N, 80°E) — ×4.76!
+  // Direct Mundra/Kandla/Nhava Sheva → Hormuz entrance → Dubai/Dammam/Sohar stays
+  // entirely in the Arabian Sea; no land between India's west coast and the Gulf.
+  'INDIA_W|PG': [WP.hormuz],
+
+  // ── Intra-Americas: fix same-backbone-index (bi=2) detour via Bay of Biscay ──────
+  // US_EAST / US_GULF / BRAZIL / MX_PAC_NW / MX_GULF_CAL all share bi=2 (biscay[46,-5]).
+  // Without custom routes, backbone logic routes every intra-Americas pair through
+  // backbone[2] = biscay (Bay of Biscay, Europe!) — producing ×10–36 ratios.
+
+  // US East coast ↔ US Gulf — south past Florida into Gulf of Mexico
+  'US_EAST|US_GULF':       [WP.florida, WP.gom],
+
+  // Brazil ↔ US East / Gulf — direct NW across Atlantic into Caribbean, then coast
+  // (sa_mid[-15,-25] is a mid-Atlantic waypoint that adds an unnecessary eastward detour
+  //  for these direct Brazil↔US lanes; go straight from Santos to Caribbean/Florida)
+  'BRAZIL|US_EAST':        [WP.carib, WP.florida, WP.us_east_app],
+  'BRAZIL|US_GULF':        [WP.carib, WP.florida, WP.gom],
+
+  // Mexico Pacific NW (Ensenada) ↔ Mexico Gulf of California (Guaymas / La Paz)
+  // — around the southern tip of the Baja Peninsula
+  'MX_GULF_CAL|MX_PAC_NW':  [WP.baja_tip, WP.baja_nw],
+
+  // Mexico Pacific ↔ US East / Gulf — south along Baja + Mexican coast, through Panama
+  'MX_PAC_NW|US_EAST':
+    [WP.baja_nw, WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.us_east_app],
+  'MX_PAC_NW|US_GULF':
+    [WP.baja_nw, WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.gom],
+  'MX_GULF_CAL|US_EAST':
+    [WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.us_east_app],
+  'MX_GULF_CAL|US_GULF':
+    [WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.gom],
+
+  // Brazil ↔ Mexico Pacific — Caribbean then through Panama westward
+  'BRAZIL|MX_PAC_NW':
+    [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw],
+  'BRAZIL|MX_GULF_CAL':
+    [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.gulf_cal],
 };
 
 function haversineNm(p1, p2) {
@@ -1964,7 +2005,7 @@ const asianToPacificGateway = {
 const pacificCrossing = [WP.pac_kuroshio, WP.pac_mid_n, WP.pac_ne_n, WP.pac_ne];
 
 // Panama transit (east Pacific → Panama → Caribbean)
-const panamaToAtl = [WP.panama_pac, WP.panama_atl, WP.carib];
+const panamaToAtl = [WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib];
 
 // From Caribbean to Atlantic Americas destination zones
 const atlanticBranchIn = {
