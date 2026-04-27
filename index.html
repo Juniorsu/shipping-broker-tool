@@ -1849,6 +1849,39 @@ const customRoutes = {
   // ── Taiwan ↔ Philippines (North/Manila) — direct via Luzon Strait (Bashi Channel).
   // Direct great-circle stays offshore; Luzon Strait is open water between Taiwan and Luzon.
   'PH_N|TAIWAN':  [],
+  // Central/South Philippines → Taiwan: direct across Philippine Sea (east of Luzon archipelago).
+  'PH_C|TAIWAN':  [],
+  'PH_S|TAIWAN':  [],
+
+  // ── Taiwan ↔ Vietnam — direct path across SCS avoiding full scs_north backbone detour.
+  // Stored TAIWAN→VN direction (T < V). Reversed automatically for VN→TAIWAN queries.
+  'TAIWAN|VN_N':  [WP.taiwan_s, WP.scs_north, WP.vn_n_off],
+  'TAIWAN|VN_C':  [WP.taiwan_s, WP.scs_paracel, WP.vn_c_off],
+  'TAIWAN|VN_S':  [WP.taiwan_s, WP.scs_central, WP.vn_s_off],
+
+  // ── Taiwan ↔ Gulf of Thailand (Bangkok, Laem Chabang) — mirror of GOT|KR but ending at taiwan_s.
+  // Without custom: GOT detours south to sg_strait(bi=15) then north through entire SCS — ratio ~2.1.
+  'GOT|TAIWAN':   [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s],
+
+  // ── Taiwan ↔ Malacca Strait (Penang, Port Klang, Belawan) — via SG Strait then up SCS.
+  // Without custom: backbone detours via malacca_n + entire SCS bottom — ratio ~1.6.
+  'MALACCA|TAIWAN': [WP.malacca_s, WP.sg_strait, WP.scs_central, WP.scs_north, WP.taiwan_s],
+
+  // ── Taiwan ↔ Sarawak — north through central SCS, skip scs_south back-step.
+  // Without custom: Sarawak branch pushes to scs_natuna then scs_south before going north — ratio ~1.6.
+  'SARAWAK|TAIWAN': [WP.scs_natuna, WP.scs_central, WP.scs_north, WP.taiwan_s],
+
+  // ── Taiwan ↔ Sabah — straight north through SCS via scs_north.
+  // Without custom: backbone hits scs_south(bi=16) then full SCS spine south-to-north — ratio ~2.1.
+  'SABAH|TAIWAN': [WP.scs_north, WP.taiwan_s],
+
+  // ── Taiwan ↔ Indonesia — all routes skip sg_strait dip and head directly up SCS.
+  // Without customs: branch logic forces detour to sg_strait(bi=15) — ratios 1.4–1.7.
+  'BORNEO_S|TAIWAN': [WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s],
+  'JAVA_W|TAIWAN':   [WP.java_sea_w, WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s],
+  'JAVA_E|TAIWAN':   [WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s],
+  'BORNEO_E|TAIWAN': [WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s],
+  'SULAWESI|TAIWAN': [WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s],
 
   // ── MAL_E (Kuantan / Kemaman) — east coast Peninsular Malaysia on the South China Sea.
   // Anchored at scs_south (bi=16). Default backbone routing handles CN_*/KR fine
