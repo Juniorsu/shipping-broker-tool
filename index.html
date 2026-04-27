@@ -8,18 +8,18 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
-    --navy: #0a1628;
-    --navy2: #112240;
-    --blue: #1e3a5f;
-    --accent: #2196f3;
-    --accent2: #00bcd4;
-    --gold: #f5a623;
-    --green: #26a65b;
+    --navy: #13100b;
+    --navy2: #1e1810;
+    --blue: #2e1e0e;
+    --accent: #e8922a;
+    --accent2: #f0b040;
+    --gold: #f5c440;
+    --green: #2eb87a;
     --red: #e74c3c;
-    --text: #e0e6f0;
-    --muted: #7f8fa6;
-    --border: #1e3a5f;
-    --card: #0d1e35;
+    --text: #f0e8d8;
+    --muted: #9a8870;
+    --border: #3a2610;
+    --card: #1a120a;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--navy); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
@@ -33,7 +33,7 @@
     align-items: center;
     justify-content: space-between;
     position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 20px rgba(33,150,243,0.15);
+    box-shadow: 0 2px 20px rgba(232,146,42,0.18);
   }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { font-size: 28px; }
@@ -43,29 +43,8 @@
   .header-meta .date { font-size: .8rem; color: var(--muted); }
   .header-meta .segment { font-size: .75rem; color: var(--gold); font-weight: 600; letter-spacing: .5px; }
 
-  /* TICKER */
-  .ticker-bar {
-    background: var(--blue);
-    padding: 8px 0;
-    overflow: hidden;
-    border-bottom: 1px solid var(--border);
-  }
-  .ticker-track {
-    display: flex;
-    white-space: nowrap;
-    animation: ticker 60s linear infinite;
-  }
-  .ticker-track:hover { animation-play-state: paused; }
-  .ticker-item {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 0 32px; font-size: .78rem; color: var(--text);
-  }
-  .ticker-item .label { color: var(--muted); font-size: .7rem; }
-  .ticker-item .val { font-weight: 600; }
   .up { color: var(--green); }
   .dn { color: var(--red); }
-  .sep { color: var(--border); }
-  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
   /* LAYOUT */
   .main { display: grid; grid-template-columns: 1fr 420px; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
@@ -128,9 +107,9 @@
     font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
   }
   .tag-bb { background: rgba(245,166,35,.15); color: var(--gold); }
-  .tag-db { background: rgba(33,150,243,.15); color: var(--accent); }
+  .tag-db { background: rgba(232,146,42,.15); color: var(--accent); }
   .tag-port { background: rgba(38,166,91,.15); color: var(--green); }
-  .tag-mkt { background: rgba(0,188,212,.15); color: var(--accent2); }
+  .tag-mkt { background: rgba(240,176,64,.15); color: var(--accent2); }
   .tag-reg { background: rgba(231,76,60,.15); color: var(--red); }
   .tag-live { background: rgba(0,230,118,.2); color: #00e676; }
 
@@ -211,7 +190,7 @@
     cursor: pointer; transition: all .2s; letter-spacing: .5px; margin-top: 4px;
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(33,150,243,.4); }
+  .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(232,146,42,.4); }
 
   /* RESULTS */
   .results { display: none; padding: 0 20px 20px; }
@@ -219,7 +198,7 @@
   .result-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0 16px; }
 
   .freight-display {
-    background: linear-gradient(135deg, #0d2d1a, #0a1628);
+    background: linear-gradient(135deg, #0d2d1a, #13100b);
     border: 1px solid var(--green); border-radius: 8px; padding: 16px;
     text-align: center; margin-bottom: 14px;
   }
@@ -238,13 +217,13 @@
   .breakdown-row:last-child { border-bottom: none; }
   .breakdown-row .b-label { color: var(--muted); }
   .breakdown-row .b-val { color: var(--text); font-weight: 600; font-family: 'Courier New', monospace; }
-  .breakdown-row.total { background: rgba(33,150,243,.1); }
+  .breakdown-row.total { background: rgba(232,146,42,.1); }
   .breakdown-row.total .b-label { color: var(--accent2); font-weight: 700; }
   .breakdown-row.total .b-val { color: var(--accent); font-size: .85rem; }
 
   .voyage-tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
   .vtag {
-    background: rgba(33,150,243,.1); border: 1px solid rgba(33,150,243,.3);
+    background: rgba(232,146,42,.1); border: 1px solid rgba(232,146,42,.3);
     border-radius: 4px; padding: 4px 10px; font-size: .68rem; color: var(--accent2);
     display: flex; align-items: center; gap: 4px;
   }
@@ -318,10 +297,6 @@
   </div>
 </header>
 
-<!-- MARKET TICKER -->
-<div class="ticker-bar">
-  <div class="ticker-track" id="tickerTrack"></div>
-</div>
 
 <!-- MAIN -->
 <div class="main">
@@ -530,7 +505,7 @@
           </div>
           <div class="form-group">
             <label>&nbsp;</label>
-            <div id="routeInfo" class="form-hint" style="padding:8px;background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.25);border-radius:6px;color:#8dd;min-height:36px">
+            <div id="routeInfo" class="form-hint" style="padding:8px;background:rgba(232,146,42,.08);border:1px solid rgba(232,146,42,.25);border-radius:6px;color:#d4a870;min-height:36px">
               Select ports to see route comparison &hellip;
             </div>
           </div>
@@ -555,8 +530,8 @@
             &#8635; Refresh Live CPC Prices
           </button>
           <a href="https://www.cpc.com.tw/en/News_Content.aspx?n=2671&s=3104" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(33,150,243,0.15);border:1px solid rgba(33,150,243,0.4);border-radius:6px;color:#2196f3;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
-             onmouseover="this.style.background='rgba(33,150,243,0.3)'" onmouseout="this.style.background='rgba(33,150,243,0.15)'">
+             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(232,146,42,0.15);border:1px solid rgba(232,146,42,0.4);border-radius:6px;color:#e8922a;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
+             onmouseover="this.style.background='rgba(232,146,42,0.3)'" onmouseout="this.style.background='rgba(232,146,42,0.15)'">
             &#9981; Open CPC Page
           </a>
           <div id="bunkerPriceHint" class="form-hint" style="margin:0;font-size:11px;color:#f5a623">&#9203; Preparing to fetch CPC bunker prices&hellip;</div>
@@ -658,35 +633,6 @@
 document.getElementById('curDate').textContent =
   new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
 
-// ─── TICKER DATA ─────────────────────────────────────────────────────────────
-const tickerData = [
-  { label: 'BSI-58', val: '1,024', chg: '+12', dir: 'up' },
-  { label: 'BHSI (Handysize)', val: '413', chg: '-3', dir: 'dn' },
-  { label: 'BPCI (Small)', val: '892', chg: '+5', dir: 'up' },
-  { label: 'VLSFO SG', val: '$498/MT', chg: '+2', dir: 'up' },
-  { label: 'MGO SG', val: '$685/MT', chg: '-4', dir: 'dn' },
-  { label: 'VLSFO ARA', val: '$512/MT', chg: '+1', dir: 'up' },
-  { label: 'SGD/USD', val: '0.748', chg: '0.00', dir: 'up' },
-  { label: 'USD/INR', val: '83.42', chg: '-0.05', dir: 'dn' },
-  { label: 'Malay Straits Congestion', val: 'Moderate', chg: '', dir: '' },
-  { label: 'Red Sea Status', val: 'High Risk', chg: '', dir: 'dn' },
-  { label: 'Suez Canal', val: 'Operational', chg: '', dir: 'up' },
-  { label: 'WTI Crude', val: '$82.4/bbl', chg: '+0.6', dir: 'up' },
-];
-
-function buildTicker() {
-  const track = document.getElementById('tickerTrack');
-  const items = [...tickerData, ...tickerData];
-  track.innerHTML = items.map(d => `
-    <span class="ticker-item">
-      <span class="label">${d.label}</span>
-      <span class="val ${d.dir}">${d.val}</span>
-      ${d.chg ? `<span class="${d.dir}">${d.dir==='up'?'\u25B2':'\u25BC'} ${d.chg}</span>` : ''}
-      <span class="sep">|</span>
-    </span>
-  `).join('');
-}
-buildTicker();
 
 // ─── NEWS DATA ───────────────────────────────────────────────────────────────
 const newsItems = [
@@ -827,9 +773,19 @@ function filterNews(type, btn) {
   renderNews();
 }
 
+function parseHoursAgo(t) {
+  if (!t) return 0;
+  const m = t.match(/(\d+)h/);
+  if (m) return parseInt(m[1]);
+  if (t === 'Just now') return 0;
+  if (/1\s*day/i.test(t)) return 24;
+  if (/2\s*day/i.test(t)) return 48;
+  return 0;
+}
 function renderNews() {
   const list = document.getElementById('newsList');
-  const filtered = activeFilter === 'all' ? newsItems : newsItems.filter(n => n.type === activeFilter);
+  const recent = newsItems.filter(n => parseHoursAgo(n.time) <= 48);
+  const filtered = activeFilter === 'all' ? recent : recent.filter(n => n.type === activeFilter);
   list.innerHTML = filtered.map((n, i) => {
     const tagMap = { bb:'tag-bb', db:'tag-db', port:'tag-port', mkt:'tag-mkt', reg:'tag-reg' };
     const tagLabel = { bb:'Breakbulk', db:'Drybulk', port:'Port/Route', mkt:'Market', reg:'Regulation' };
@@ -864,11 +820,12 @@ async function fetchLiveNews() {
     let liveCount = 0;
     results.forEach(result => {
       if (result.status === 'fulfilled' && result.value && result.value.items) {
-        result.value.items.slice(0, 5).forEach(item => {
+        result.value.items.slice(0, 10).forEach(item => {
           const exists = newsItems.some(n => n.headline === item.title);
           if (!exists && item.title) {
             const pubDate = new Date(item.pubDate);
             const hoursAgo = Math.round((Date.now() - pubDate.getTime()) / 3600000);
+            if (hoursAgo > 48) return; // skip items older than 2 days
             const timeStr = hoursAgo < 1 ? 'Just now' : hoursAgo + 'h ago';
             newsItems.unshift({
               type: 'mkt', hot: false, alert: false, live: true,
@@ -1012,7 +969,7 @@ async function fetchCPCPrices(forceRefresh) {
     }
   } catch(e) {}
 
-  setBunkerHint('\u23F3 Fetching live CPC bunker prices&hellip;', '#2196f3');
+  setBunkerHint('\u23F3 Fetching live CPC bunker prices&hellip;', '#e8922a');
 
   const html = await fetchCPCHtml();
   if (!html) {
@@ -2461,7 +2418,7 @@ function updateMapRoute() {
   const segments = splitAntimeridian(smoothPts);
 
   const routeLines = segments.map(seg =>
-    L.polyline(seg, { color:'#2196f3', weight:2.5, opacity:.85, dashArray:'8,5' })
+    L.polyline(seg, { color:'#e8922a', weight:2.5, opacity:.85, dashArray:'8,5' })
       .addTo(leafletMap)
   );
 
