@@ -1642,8 +1642,14 @@ const customRoutes = {
   'CN_N|JAVA_W':   [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
   'CN_E|JAVA_E':   [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
   'CN_E|JAVA_W':   [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
-  'CN_S|JAVA_E':   [WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
-  'CN_S|JAVA_W':   [WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
+  // CN_S covers ports from HK (114°E) to Fangcheng/Beihai (108°E).
+  // Fangcheng/Qinzhou/Beihai are WEST of Hainan Island in the Gulf of Tonkin.
+  // Routing directly to scs_north[21,116] (east of Hainan) forces a 7°-westward
+  // backtrack for these ports, creating a V-shape.  Fix: go east of Hainan via
+  // hainan_e[18,111.5] then through the Qiongzhou Strait (qiongzhou[20.5,110.3]).
+  // For HK/Guangzhou (114°E), this adds only ~80nm — acceptable.
+  'CN_S|JAVA_E':   [WP.qiongzhou, WP.hainan_e, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
+  'CN_S|JAVA_W':   [WP.qiongzhou, WP.hainan_e, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
 
   // ── Korea ↔ Java
   'JAVA_E|KR':     [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
@@ -1678,7 +1684,7 @@ const customRoutes = {
   // ── East Borneo ↔ China / Korea — via Borneo's NE tip (don't cut across Kalimantan land)
   'BORNEO_E|CN_N': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n, WP.bohai_e],
   'BORNEO_E|CN_E': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs],
-  'BORNEO_E|CN_S': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north],
+  'BORNEO_E|CN_S': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.hainan_e, WP.qiongzhou],
   'BORNEO_E|KR':   [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
 
   // ── East Borneo ↔ Philippines — via Sulu Sea
@@ -1746,7 +1752,7 @@ const customRoutes = {
   // ── South Borneo ↔ China / Korea — via Karimata + east SCS backbone
   'BORNEO_S|CN_N': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n, WP.bohai_e],
   'BORNEO_S|CN_E': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs],
-  'BORNEO_S|CN_S': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north],
+  'BORNEO_S|CN_S': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.hainan_e, WP.qiongzhou],
 
   // ── Sarawak (Tanjung Manis / Bintulu / Kuching / Miri) ↔ Java — direct via Karimata
   // Stored in sortedZ[0] → sortedZ[1] direction (JAVA → SARAWAK here).
@@ -1785,7 +1791,7 @@ const customRoutes = {
   'PH_N|SABAH':    [WP.scs_north, WP.scs_paracel, WP.borneo_ne],
   'CN_N|SABAH':    [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
   'CN_E|SABAH':    [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
-  'CN_S|SABAH':    [WP.scs_north, WP.scs_paracel, WP.borneo_ne],
+  'CN_S|SABAH':    [WP.qiongzhou, WP.hainan_e, WP.scs_paracel, WP.borneo_ne],
   'KR|SABAH':      [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
   'SABAH|SG':      [WP.borneo_ne, WP.scs_natuna, WP.sg_strait],
   'GOT|SABAH':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],
