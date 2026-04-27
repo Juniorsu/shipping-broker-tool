@@ -178,6 +178,26 @@
   select option { background: var(--navy); }
   .form-hint { font-size: .65rem; color: var(--muted); margin-top: 3px; }
 
+  /* Port autocomplete dropdown */
+  .port-wrap { position: relative; }
+  .port-suggestions {
+    position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 999;
+    background: var(--navy2); border: 1px solid var(--accent); border-radius: 6px;
+    overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,.5);
+    max-height: 220px; overflow-y: auto;
+  }
+  .port-suggestions .ps-item {
+    padding: 8px 12px; cursor: pointer; font-size: .82rem; color: var(--text);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .port-suggestions .ps-item:last-child { border-bottom: none; }
+  .port-suggestions .ps-item:hover, .port-suggestions .ps-item.active { background: var(--blue); }
+  .port-suggestions .ps-name { font-weight: 600; }
+  .port-suggestions .ps-name em { color: var(--accent); font-style: normal; }
+  .port-suggestions .ps-country { font-size: .7rem; color: var(--muted); white-space: nowrap; }
+
   .vessel-toggle { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .vessel-toggle button {
     flex: 1; padding: 9px; border: none; background: var(--navy); color: var(--muted);
@@ -440,205 +460,19 @@
         <div class="form-row">
           <div class="form-group">
             <label>Loading Port</label>
-            <select id="loadPort">
-              <option value="">&mdash; Select port &mdash;</option>
-              <optgroup label="China">
-                <option value="shanghai">Shanghai</option>
-                <option value="ningbo">Ningbo / Zhoushan</option>
-                <option value="qingdao">Qingdao</option>
-                <option value="tianjin">Tianjin / Xingang</option>
-                <option value="dalian">Dalian</option>
-                <option value="guangzhou">Guangzhou</option>
-                <option value="shenzhen">Shenzhen / Yantian</option>
-                <option value="xiamen">Xiamen</option>
-                <option value="nanjing">Nanjing</option>
-                <option value="lianyungang">Lianyungang</option>
-                <option value="zhanjiang">Zhanjiang</option>
-                <option value="fangcheng">Fangcheng</option>
-              </optgroup>
-              <optgroup label="Vietnam">
-                <option value="ho_chi_minh">Ho Chi Minh City</option>
-                <option value="haiphong">Hai Phong</option>
-                <option value="cailan">Cai Lan</option>
-                <option value="danang">Da Nang</option>
-                <option value="quynhon">Quy Nhon</option>
-                <option value="vung_tau">Vung Tau</option>
-              </optgroup>
-              <optgroup label="Malaysia">
-                <option value="spore">Singapore</option>
-                <option value="port_klang">Port Klang</option>
-                <option value="penang">Penang</option>
-                <option value="kuantan">Kuantan</option>
-                <option value="pasir_gudang">Pasir Gudang / Johor</option>
-                <option value="tanjung_manis">Tanjung Manis</option>
-                <option value="bintulu">Bintulu</option>
-              </optgroup>
-              <optgroup label="Philippines">
-                <option value="manila">Manila</option>
-                <option value="batangas">Batangas</option>
-                <option value="cebu">Cebu</option>
-                <option value="iloilo">Iloilo</option>
-                <option value="davao">Davao</option>
-                <option value="gensan">General Santos</option>
-                <option value="cdo">Cagayan de Oro</option>
-              </optgroup>
-              <optgroup label="Indonesia">
-                <option value="jakarta">Jakarta / Tanjung Priok</option>
-                <option value="surabaya">Surabaya</option>
-                <option value="semarang">Semarang</option>
-                <option value="belawan">Belawan / Medan</option>
-                <option value="makassar">Makassar</option>
-                <option value="banjarmasin">Banjarmasin</option>
-                <option value="balikpapan">Balikpapan</option>
-                <option value="samarinda">Samarinda</option>
-                <option value="cilacap">Cilacap</option>
-              </optgroup>
-              <optgroup label="South Asia">
-                <option value="mundra">Mundra</option>
-                <option value="kandla">Kandla</option>
-                <option value="nhava_sheva">Nhava Sheva / Mumbai</option>
-                <option value="colombo">Colombo</option>
-                <option value="chittagong">Chittagong</option>
-              </optgroup>
-              <optgroup label="Middle East">
-                <option value="dubai">Dubai / Jebel Ali</option>
-                <option value="dammam">Dammam / King Abdul Aziz</option>
-                <option value="sohar">Sohar</option>
-                <option value="salalah">Salalah</option>
-              </optgroup>
-              <optgroup label="Africa">
-                <option value="mombasa">Mombasa</option>
-                <option value="dar_es_salaam">Dar es Salaam</option>
-                <option value="lagos">Lagos / Apapa</option>
-                <option value="durban">Durban</option>
-              </optgroup>
-              <optgroup label="Europe / Med">
-                <option value="rotterdam">Rotterdam</option>
-                <option value="antwerp">Antwerp</option>
-                <option value="hamburg">Hamburg</option>
-                <option value="genoa">Genoa</option>
-                <option value="istanbul">Istanbul</option>
-              </optgroup>
-              <optgroup label="Americas">
-                <option value="houston">Houston</option>
-                <option value="new_orleans">New Orleans</option>
-                <option value="baltimore">Baltimore</option>
-                <option value="savannah">Savannah</option>
-                <option value="santos">Santos</option>
-              </optgroup>
-              <optgroup label="Mexico">
-                <option value="ensenada">Ensenada</option>
-                <option value="guaymas">Guaymas</option>
-                <option value="la_paz">La Paz</option>
-              </optgroup>
-              <optgroup label="South Korea">
-                <option value="busan">Busan</option>
-              </optgroup>
-              <optgroup label="Thailand">
-                <option value="bangkok">Bangkok</option>
-              </optgroup>
-            </select>
+            <div class="port-wrap">
+              <input type="text" id="loadPort" placeholder="e.g. Bangkok" autocomplete="off" spellcheck="false">
+              <div class="port-suggestions" id="loadPort-sugg" style="display:none"></div>
+            </div>
+            <div class="form-hint">Type to search port name</div>
           </div>
           <div class="form-group">
             <label>Discharging Port</label>
-            <select id="dischargePort">
-              <option value="">&mdash; Select port &mdash;</option>
-              <optgroup label="China">
-                <option value="shanghai">Shanghai</option>
-                <option value="ningbo">Ningbo / Zhoushan</option>
-                <option value="qingdao">Qingdao</option>
-                <option value="tianjin">Tianjin / Xingang</option>
-                <option value="dalian">Dalian</option>
-                <option value="guangzhou">Guangzhou</option>
-                <option value="shenzhen">Shenzhen / Yantian</option>
-                <option value="xiamen">Xiamen</option>
-                <option value="nanjing">Nanjing</option>
-                <option value="lianyungang">Lianyungang</option>
-                <option value="zhanjiang">Zhanjiang</option>
-                <option value="fangcheng">Fangcheng</option>
-              </optgroup>
-              <optgroup label="Vietnam">
-                <option value="ho_chi_minh">Ho Chi Minh City</option>
-                <option value="haiphong">Hai Phong</option>
-                <option value="cailan">Cai Lan</option>
-                <option value="danang">Da Nang</option>
-                <option value="quynhon">Quy Nhon</option>
-                <option value="vung_tau">Vung Tau</option>
-              </optgroup>
-              <optgroup label="Malaysia">
-                <option value="spore">Singapore</option>
-                <option value="port_klang">Port Klang</option>
-                <option value="penang">Penang</option>
-                <option value="kuantan">Kuantan</option>
-                <option value="pasir_gudang">Pasir Gudang / Johor</option>
-                <option value="tanjung_manis">Tanjung Manis</option>
-                <option value="bintulu">Bintulu</option>
-              </optgroup>
-              <optgroup label="Philippines">
-                <option value="manila">Manila</option>
-                <option value="batangas">Batangas</option>
-                <option value="cebu">Cebu</option>
-                <option value="iloilo">Iloilo</option>
-                <option value="davao">Davao</option>
-                <option value="gensan">General Santos</option>
-                <option value="cdo">Cagayan de Oro</option>
-              </optgroup>
-              <optgroup label="Indonesia">
-                <option value="jakarta">Jakarta / Tanjung Priok</option>
-                <option value="surabaya">Surabaya</option>
-                <option value="semarang">Semarang</option>
-                <option value="belawan">Belawan / Medan</option>
-                <option value="makassar">Makassar</option>
-                <option value="banjarmasin">Banjarmasin</option>
-                <option value="balikpapan">Balikpapan</option>
-                <option value="samarinda">Samarinda</option>
-                <option value="cilacap">Cilacap</option>
-              </optgroup>
-              <optgroup label="South Asia">
-                <option value="mundra">Mundra</option>
-                <option value="kandla">Kandla</option>
-                <option value="nhava_sheva">Nhava Sheva / Mumbai</option>
-                <option value="colombo">Colombo</option>
-                <option value="chittagong">Chittagong</option>
-              </optgroup>
-              <optgroup label="Middle East">
-                <option value="dubai">Dubai / Jebel Ali</option>
-                <option value="dammam">Dammam / King Abdul Aziz</option>
-                <option value="sohar">Sohar</option>
-                <option value="salalah">Salalah</option>
-              </optgroup>
-              <optgroup label="Africa">
-                <option value="mombasa">Mombasa</option>
-                <option value="dar_es_salaam">Dar es Salaam</option>
-                <option value="lagos">Lagos / Apapa</option>
-                <option value="durban">Durban</option>
-              </optgroup>
-              <optgroup label="Europe / Med">
-                <option value="rotterdam">Rotterdam</option>
-                <option value="antwerp">Antwerp</option>
-                <option value="hamburg">Hamburg</option>
-                <option value="genoa">Genoa</option>
-                <option value="istanbul">Istanbul</option>
-              </optgroup>
-              <optgroup label="Americas">
-                <option value="houston">Houston</option>
-                <option value="new_orleans">New Orleans</option>
-                <option value="baltimore">Baltimore</option>
-                <option value="savannah">Savannah</option>
-                <option value="santos">Santos</option>
-              </optgroup>
-              <optgroup label="Mexico">
-                <option value="ensenada">Ensenada</option>
-                <option value="guaymas">Guaymas</option>
-                <option value="la_paz">La Paz</option>
-              </optgroup>
-              <optgroup label="South Korea">
-                <option value="busan">Busan</option>
-              </optgroup>
-              <optgroup label="Thailand">
-                <option value="bangkok">Bangkok</option>
-              </optgroup>
-            </select>
+            <div class="port-wrap">
+              <input type="text" id="dischargePort" placeholder="e.g. Manila" autocomplete="off" spellcheck="false">
+              <div class="port-suggestions" id="dischargePort-sugg" style="display:none"></div>
+            </div>
+            <div class="form-hint">Type to search port name</div>
           </div>
         </div>
 
@@ -1301,8 +1135,10 @@ const portCoords = {
   nanjing:       [32.06,  118.80],
   zhanjiang:     [21.19,  110.40],
   fangcheng:     [21.69,  108.35],
+  qinzhou:       [21.97,  108.62],
   xiamen:        [24.45,  118.08],
   shenzhen:      [22.56,  114.27],
+  hong_kong:     [22.30,  114.17],
   ningbo:        [29.87,  121.88],
   lianyungang:   [34.73,  119.45],
   // Vietnam (new)
@@ -1330,6 +1166,64 @@ const portCoords = {
   balikpapan:    [-1.27,  116.83],
   samarinda:     [-0.50,  117.15],
   cilacap:       [-7.74,  109.02],
+  // Indonesia (expanded)
+  tarjun:        [-3.55,  115.76],
+  bontang:       [ 0.13,  117.47],
+  gresik:        [-7.15,  112.65],
+  tuban:         [-6.88,  112.05],
+  probolinggo:   [-7.73,  113.22],
+  ciwandan:      [-6.00,  105.96],
+  panjang:       [-5.47,  105.32],
+  palembang:     [-2.99,  104.77],
+  taboneo:       [-3.62,  114.50],
+  muara_pantai:  [-3.70,  114.63],
+  morowali:      [-2.80,  122.27],
+  kendari:       [-3.97,  122.52],
+  pomalaa:       [-4.18,  121.60],
+  dumai:         [ 1.67,  101.43],
+  lhokseumawe:   [ 5.18,   97.14],
+  // Malaysia (Sabah + Sarawak expansion)
+  labuan:        [ 5.28,  115.24],
+  kota_kinabalu: [ 5.99,  116.07],
+  sandakan:      [ 5.84,  118.12],
+  lahad_datu:    [ 5.03,  118.33],
+  tawau:         [ 4.24,  117.88],
+  kuching:       [ 1.55,  110.35],
+  miri:          [ 4.38,  113.97],
+  kemaman:       [ 4.23,  103.44],
+  // Thailand
+  laem_chabang:  [13.10,  100.90],
+  map_ta_phut:   [12.67,  101.14],
+  songkhla:      [ 7.20,  100.57],
+  // Vietnam
+  phu_my:        [10.57,  107.05],
+  cam_pha:       [21.02,  107.32],
+  nghi_son:      [19.35,  105.80],
+  dung_quat:     [15.40,  108.80],
+  // China (expanded)
+  rizhao:        [35.38,  119.53],
+  yantai:        [37.55,  121.38],
+  nantong:       [32.02,  120.88],
+  wenzhou:       [28.00,  120.85],
+  fuzhou:        [26.08,  119.33],
+  quanzhou:      [24.90,  118.58],
+  beihai:        [21.48,  109.12],
+  // Korea (expanded)
+  incheon:       [37.45,  126.60],
+  ulsan:         [35.50,  129.37],
+  pohang:        [36.03,  129.38],
+  gwangyang:     [34.90,  127.72],
+  // Philippines (expanded)
+  subic:         [14.82,  120.27],
+  limay:         [14.57,  120.60],
+  zamboanga:     [ 6.92,  122.07],
+  sual:          [16.12,  120.10],
+  // Taiwan
+  kaohsiung:     [22.62,  120.28],
+  taichung:      [24.27,  120.52],
+  keelung:       [25.13,  121.74],
+  taipei:        [25.15,  121.37],
+  suao:          [24.60,  121.87],
 };
 
 const portNames = {
@@ -1347,6 +1241,7 @@ const portNames = {
   // New ports
   tianjin:'Tianjin / Xingang', dalian:'Dalian', nanjing:'Nanjing', zhanjiang:'Zhanjiang',
   fangcheng:'Fangcheng', xiamen:'Xiamen', shenzhen:'Shenzhen / Yantian',
+  hong_kong:'Hong Kong',
   ningbo:'Ningbo / Zhoushan', lianyungang:'Lianyungang',
   haiphong:'Hai Phong', danang:'Da Nang', quynhon:'Quy Nhon', vung_tau:'Vung Tau',
   penang:'Penang', kuantan:'Kuantan', bintulu:'Bintulu', pasir_gudang:'Pasir Gudang',
@@ -1354,7 +1249,85 @@ const portNames = {
   cdo:'Cagayan de Oro', iloilo:'Iloilo',
   semarang:'Semarang', makassar:'Makassar', banjarmasin:'Banjarmasin',
   belawan:'Belawan / Medan', balikpapan:'Balikpapan', samarinda:'Samarinda', cilacap:'Cilacap',
+  // Indonesia (expanded)
+  tarjun:'Tarjun', bontang:'Bontang', palembang:'Palembang', gresik:'Gresik', tuban:'Tuban', probolinggo:'Probolinggo',
+  ciwandan:'Ciwandan / Merak', panjang:'Panjang', taboneo:'Taboneo (anch.)', muara_pantai:'Muara Pantai',
+  morowali:'Morowali', kendari:'Kendari', pomalaa:'Pomalaa', dumai:'Dumai', lhokseumawe:'Lhokseumawe',
+  // Malaysia (Sabah / Sarawak expansion)
+  labuan:'Labuan', kota_kinabalu:'Kota Kinabalu', sandakan:'Sandakan',
+  lahad_datu:'Lahad Datu', tawau:'Tawau', kuching:'Kuching', miri:'Miri', kemaman:'Kemaman',
+  // Thailand
+  laem_chabang:'Laem Chabang', map_ta_phut:'Map Ta Phut', songkhla:'Songkhla',
+  // Vietnam
+  phu_my:'Phu My', cam_pha:'Cam Pha', nghi_son:'Nghi Son', dung_quat:'Dung Quat',
+  // China (expanded)
+  rizhao:'Rizhao', yantai:'Yantai', nantong:'Nantong', wenzhou:'Wenzhou',
+  fuzhou:'Fuzhou', quanzhou:'Quanzhou', beihai:'Beihai',
+  // Korea (expanded)
+  incheon:'Incheon', ulsan:'Ulsan', pohang:'Pohang', gwangyang:'Gwangyang',
+  // Philippines (expanded)
+  subic:'Subic Bay', limay:'Limay / Bataan', zamboanga:'Zamboanga', sual:'Sual',
+  // China (Qinzhou) + Taiwan
+  qinzhou:'Qinzhou',
+  kaohsiung:'Kaohsiung', taichung:'Taichung', keelung:'Keelung', taipei:'Taipei', suao:'Suao',
 };
+
+// ─── PORT AUTOCOMPLETE (datalist + resolver) ────────────────────────────────
+function populatePortsList() {
+  const dl = document.getElementById('portsList');
+  if (!dl) return;
+  const entries = Object.entries(portNames).sort((a,b)=>a[1].localeCompare(b[1]));
+  dl.innerHTML = entries.map(([key,label]) =>
+    `<option value="${label}" data-key="${key}"></option>`
+  ).join('');
+}
+
+// Resolve a typed string from the port input box into a port key.
+// Supports: exact label match (case-insensitive), exact key match,
+// unique prefix match, or unique substring match. Returns '' if
+// ambiguous or not found.
+function resolvePortKey(text) {
+  if (!text) return '';
+  const t = text.trim().toLowerCase();
+  if (!t) return '';
+  // Normalized form: strip spaces, underscores, hyphens, slashes and punctuation.
+  // Lets "hongkong", "hong kong", "hong-kong", "hong_kong" all match "Hong Kong".
+  const norm = s => s.toLowerCase().replace(/[\s_\-\/.,'"()]+/g, '');
+  const tn = norm(t);
+  // exact key match
+  if (portNames[t]) return t;
+  // normalized key match (e.g. "hongkong" -> hong_kong)
+  for (const key of Object.keys(portNames)) {
+    if (norm(key) === tn) return key;
+  }
+  // exact label match
+  for (const [key, label] of Object.entries(portNames)) {
+    if (label.toLowerCase() === t) return key;
+  }
+  // normalized label match
+  for (const [key, label] of Object.entries(portNames)) {
+    if (norm(label) === tn) return key;
+  }
+  // prefix match on label (normalized)
+  let hits = [];
+  for (const [key, label] of Object.entries(portNames)) {
+    if (norm(label).startsWith(tn)) hits.push(key);
+  }
+  if (hits.length === 1) return hits[0];
+  // substring match on label (normalized)
+  hits = [];
+  for (const [key, label] of Object.entries(portNames)) {
+    if (norm(label).includes(tn)) hits.push(key);
+  }
+  if (hits.length === 1) return hits[0];
+  return '';
+}
+
+// Wrapper that reads an input by id and returns the resolved port key.
+function readPort(id) {
+  const el = document.getElementById(id);
+  return el ? resolvePortKey(el.value) : '';
+}
 
 // ─── LEGACY DISTANCE TABLE (override lookup) ────────────────────────────────
 const distTable = {
@@ -1432,6 +1405,9 @@ const WP = {
   scs_north:   [18.50, 116.50],
   taiwan_s:    [22.00, 118.50],
   taiwan_str:  [24.80, 119.50],
+  taiwan_e:    [25.00, 124.00],  // east of Taiwan, in Philippine Sea
+  luzon_w:     [18.00, 118.00],  // offshore NW of Luzon in SCS
+  manila_exit: [14.30, 120.20],  // just outside Manila Bay mouth, avoids Bataan peninsula
   ecs:         [28.00, 122.50],
   ecs_n:       [32.00, 122.50],
   yellow_s:    [34.00, 123.00],
@@ -1491,30 +1467,37 @@ const WP = {
 
 const portZone = {
   // China
-  shanghai:'CN_E', ningbo:'CN_E', nanjing:'CN_E', lianyungang:'CN_E',
-  qingdao:'CN_N', tianjin:'CN_N', dalian:'CN_N',
-  guangzhou:'CN_S', shenzhen:'CN_S', xiamen:'CN_S', zhanjiang:'CN_S', fangcheng:'CN_S',
+  shanghai:'CN_E', ningbo:'CN_E', nanjing:'CN_E', lianyungang:'CN_E', nantong:'CN_E', wenzhou:'CN_E',
+  qingdao:'CN_N', tianjin:'CN_N', dalian:'CN_N', rizhao:'CN_N', yantai:'CN_N',
+  guangzhou:'CN_S', shenzhen:'CN_S', hong_kong:'CN_S', xiamen:'CN_S', zhanjiang:'CN_S', fangcheng:'CN_S',
+  fuzhou:'CN_S', quanzhou:'CN_S', beihai:'CN_S', qinzhou:'CN_S',
+  // Taiwan
+  kaohsiung:'TAIWAN', taichung:'TAIWAN', keelung:'TAIWAN', taipei:'TAIWAN', suao:'TAIWAN',
   // Vietnam
-  ho_chi_minh:'VN_S', vung_tau:'VN_S',
-  danang:'VN_C', quynhon:'VN_C',
-  cailan:'VN_N', haiphong:'VN_N',
+  ho_chi_minh:'VN_S', vung_tau:'VN_S', phu_my:'VN_S',
+  danang:'VN_C', quynhon:'VN_C', dung_quat:'VN_C',
+  cailan:'VN_N', haiphong:'VN_N', cam_pha:'VN_N', nghi_son:'VN_N',
   // Malaysia + Singapore
-  spore:'SG', port_klang:'SG', pasir_gudang:'SG', kuantan:'SG',
-  penang:'MALACCA',
-  tanjung_manis:'SARAWAK', bintulu:'SARAWAK',
+  spore:'SG', pasir_gudang:'SG',
+  // East coast Peninsular Malaysia — on the South China Sea side, NOT in the Gulf of Thailand.
+  kuantan:'MAL_E', kemaman:'MAL_E',
+  // West coast Peninsular Malaysia on Malacca Strait — Port Klang belongs here, not Singapore.
+  penang:'MALACCA', port_klang:'MALACCA',
+  tanjung_manis:'SARAWAK', bintulu:'SARAWAK', kuching:'SARAWAK', miri:'SARAWAK',
+  labuan:'SABAH', kota_kinabalu:'SABAH', sandakan:'SABAH', lahad_datu:'SABAH', tawau:'SABAH',
   // Thailand
-  bangkok:'GOT',
+  bangkok:'GOT', laem_chabang:'GOT', map_ta_phut:'GOT', songkhla:'GOT',
   // Philippines
-  manila:'PH_N', batangas:'PH_N',
+  manila:'PH_N', batangas:'PH_N', subic:'PH_N', limay:'PH_N', sual:'PH_N',
   cebu:'PH_C', iloilo:'PH_C',
-  davao:'PH_S', gensan:'PH_S', cdo:'PH_S',
+  davao:'PH_S', gensan:'PH_S', cdo:'PH_S', zamboanga:'PH_S',
   // Indonesia
-  jakarta:'JAVA_W', semarang:'JAVA_W', cilacap:'JAVA_W',
-  surabaya:'JAVA_E',
-  belawan:'MALACCA',
-  makassar:'SULAWESI',
-  banjarmasin:'BORNEO_S',
-  balikpapan:'BORNEO_E', samarinda:'BORNEO_E',
+  jakarta:'JAVA_W', semarang:'JAVA_W', cilacap:'JAVA_W', ciwandan:'JAVA_W', panjang:'JAVA_W', palembang:'JAVA_W',
+  surabaya:'JAVA_E', gresik:'JAVA_E', tuban:'JAVA_E', probolinggo:'JAVA_E',
+  belawan:'MALACCA', lhokseumawe:'MALACCA', dumai:'MALACCA',
+  makassar:'SULAWESI', morowali:'SULAWESI', kendari:'SULAWESI', pomalaa:'SULAWESI',
+  banjarmasin:'BORNEO_S', tarjun:'BORNEO_S', taboneo:'BORNEO_S', muara_pantai:'BORNEO_S',
+  balikpapan:'BORNEO_E', samarinda:'BORNEO_E', bontang:'BORNEO_E',
   // South Asia
   mundra:'INDIA_W', kandla:'INDIA_W', nhava_sheva:'INDIA_W',
   colombo:'SRI_LANKA',
@@ -1523,7 +1506,7 @@ const portZone = {
   dubai:'PG', dammam:'PG', sohar:'PG',
   salalah:'ADEN',
   // Korea
-  busan:'KR',
+  busan:'KR', incheon:'KR', ulsan:'KR', pohang:'KR', gwangyang:'KR',
   // Africa
   mombasa:'EAFRICA', dar_es_salaam:'EAFRICA',
   lagos:'WAFRICA', durban:'SAFRICA',
@@ -1580,12 +1563,16 @@ const zoneConfig = {
   MALACCA:    { bi: 13, branch: [] },
   SG:         { bi: 15, branch: [] },
   GOT:        { bi: 15, branch: [WP.got_entrance, WP.got_mid, WP.got_north] },
+  // East coast Peninsular Malaysia (Kuantan, Kemaman) — anchored at scs_south on the SCS backbone.
+  MAL_E:      { bi: 16, branch: [] },
   SARAWAK:    { bi: 16, branch: [WP.scs_natuna] },
+  SABAH:      { bi: 16, branch: [WP.borneo_ne] },
   VN_S:       { bi: 17, branch: [] },
   VN_C:       { bi: 18, branch: [] },
   VN_N:       { bi: 19, branch: [] },
   CN_S:       { bi: 20, branch: [] },
-  PH_N:       { bi: 19, branch: [WP.scs_north] },
+  // PH_N (Manila / Subic) is anchored directly at scs_north on the backbone — no extra branch.
+  PH_N:       { bi: 19, branch: [] },
   PH_C:       { bi: 17, branch: [WP.sulu_sea, WP.visayas] },
   PH_S:       { bi: 17, branch: [WP.sulu_sea, WP.mindanao_s] },
   JAVA_W:     { bi: 15, branch: [WP.karimata, WP.java_sea_w] },
@@ -1596,6 +1583,8 @@ const zoneConfig = {
   CN_E:       { bi: 22, branch: [] },
   CN_N:       { bi: 26, branch: [] },
   KR:         { bi: 24, branch: [WP.korea_str] },
+  // Taiwan ports anchor at taiwan_str (bi=21) — mid-Taiwan Strait, centre of gravity for all five ports.
+  TAIWAN:     { bi: 21, branch: [] },
   EAFRICA:    { bi: 8,  branch: [] },
   WAFRICA:    { bi: 3,  branch: [WP.wa_app] },
   SAFRICA:    { bi: 8,  branch: [WP.cape_good] },
@@ -1648,13 +1637,30 @@ const customRoutes = {
   'JAVA_W|VN_N':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
   'JAVA_W|VN_S':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off],
 
-  // Vietnam ↔ East Java (Surabaya)
-  'JAVA_E|VN_C':   [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
-  'JAVA_E|VN_N':   [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'JAVA_E|VN_S':   [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off],
+  // Vietnam ↔ East Java (Surabaya) — direct across Java Sea to Karimata
+  'JAVA_E|VN_C':   [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
+  'JAVA_E|VN_N':   [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'JAVA_E|VN_S':   [WP.karimata, WP.scs_natuna, WP.vn_s_off],
 
   // Cai Lan / Hai Phong ↔ South China (via Qiongzhou / Hainan Strait)
   'CN_S|VN_N':     [WP.qiongzhou],
+
+  // ── South China (Hong Kong / Shenzhen / Guangzhou) ↔ South / Central Vietnam.
+  // Direct great-circle lines across SCS pass east of Hainan and west of Paracels — all open water.
+  'CN_S|VN_S':     [],                 // direct HK → Phu My / HCM / Vung Tau across open SCS
+  'CN_S|VN_C':     [WP.hainan_e],      // Da Nang / Quy Nhon — hainan_e keeps the line safely east of Hainan
+
+  // ── South China ↔ MAL_E / Singapore / Malacca / Sarawak — route through western SCS
+  // (direct lines would cut across southern Vietnam / Cambodia / Malay Peninsula).
+  'CN_S|MAL_E':    [WP.scs_central],                                                    // HK → scs_central → Kuantan
+  'CN_S|SG':       [WP.scs_central, WP.scs_south, WP.sg_strait],
+  'CN_S|MALACCA':  [WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+  'CN_S|SARAWAK':  [WP.scs_natuna],                                                     // HK → scs_natuna → Tanjung Manis
+
+  // ── South China ↔ Philippines — via Bashi Channel / Luzon Strait area
+  'CN_S|PH_N':     [WP.scs_north],                                                      // HK → scs_north → Manila (open SCS)
+  'CN_S|PH_C':     [WP.scs_north, WP.visayas],
+  'CN_S|PH_S':     [WP.scs_north, WP.scs_paracel, WP.sulu_sea, WP.mindanao_s],
 
   // ── Gulf of Thailand (Bangkok) ↔ Philippines (direct via Ca Mau, skip Singapore)
   'GOT|PH_N':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip],
@@ -1670,6 +1676,200 @@ const customRoutes = {
   // ── Gulf of Thailand ↔ East Borneo (Balikpapan): old path cut across Borneo land.
   // Route via Singapore Strait → Karimata → Makassar Strait instead.
   'BORNEO_E|GOT':  [WP.makassar_n, WP.karimata, WP.sg_strait, WP.got_entrance, WP.got_mid, WP.got_north],
+
+  // ── China ↔ Java (skip the Singapore dip — exit SCS directly to Karimata)
+  // JAVA_E side: karimata → Surabaya is open Java Sea so no extra waypoints needed.
+  // JAVA_W side: keep java_sea_w to pass safely west of Belitung Island.
+  'CN_N|JAVA_E':   [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
+  'CN_N|JAVA_W':   [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
+  'CN_E|JAVA_E':   [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
+  'CN_E|JAVA_W':   [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
+  'CN_S|JAVA_E':   [WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
+  'CN_S|JAVA_W':   [WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
+
+  // ── Korea ↔ Java
+  'JAVA_E|KR':     [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
+  'JAVA_W|KR':     [WP.java_sea_w, WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
+
+  // ── East Borneo (Balikpapan / Samarinda / Bontang) ↔ Java — round Pulau Laut via Makassar Strait south
+  'BORNEO_E|JAVA_E': [WP.makassar_s],
+  'BORNEO_E|JAVA_W': [WP.makassar_s],
+
+  // ── South Borneo (Banjarmasin / Tarjun / Taboneo) ↔ Java — direct across Java Sea
+  'BORNEO_S|JAVA_E': [],
+  'BORNEO_S|JAVA_W': [],
+
+  // ── Sulawesi (Makassar) ↔ Java — direct across Java / Flores Sea
+  'JAVA_E|SULAWESI': [],
+  'JAVA_W|SULAWESI': [],
+
+  // ── Intra-Indonesia (direct where Java Sea / Makassar Strait is open water)
+  'BORNEO_S|SULAWESI': [],
+  'BORNEO_E|SULAWESI': [],
+  'BORNEO_E|BORNEO_S': [WP.makassar_s],
+  'JAVA_E|JAVA_W':     [],
+
+  // ── Philippines ↔ Java — north via SCS, central/south via Makassar Strait & Sulu Sea
+  'JAVA_E|PH_N':   [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north],
+  'JAVA_W|PH_N':   [WP.java_sea_w, WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north],
+  'JAVA_E|PH_C':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.visayas],
+  'JAVA_W|PH_C':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.visayas],
+  'JAVA_E|PH_S':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
+  'JAVA_W|PH_S':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
+
+  // ── East Borneo ↔ China / Korea — via Borneo's NE tip (don't cut across Kalimantan land)
+  'BORNEO_E|CN_N': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n, WP.bohai_e],
+  'BORNEO_E|CN_E': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs],
+  'BORNEO_E|CN_S': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north],
+  'BORNEO_E|KR':   [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
+
+  // ── East Borneo ↔ Philippines — via Sulu Sea
+  'BORNEO_E|PH_N': [WP.makassar_n, WP.sulu_sea, WP.scs_paracel, WP.scs_north],
+  'BORNEO_E|PH_C': [WP.makassar_n, WP.sulu_sea, WP.visayas],
+  'BORNEO_E|PH_S': [WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
+
+  // ── Sulawesi (Makassar) ↔ Philippines — via Sulu Sea + Makassar Strait
+  // Direction PH_* → SULAWESI: PH port → (approach) → sulu_sea → makassar_n → Makassar.
+  // PH_N uses scs_paracel detour to bypass Palawan / Mindoro.
+  'PH_N|SULAWESI': [WP.scs_north, WP.scs_paracel, WP.sulu_sea, WP.makassar_n],
+  'PH_C|SULAWESI': [WP.visayas, WP.sulu_sea, WP.makassar_n],
+  'PH_S|SULAWESI': [WP.mindanao_s, WP.sulu_sea, WP.makassar_n],
+
+  // ── South Borneo (Banjarmasin) ↔ Philippines — via Makassar Strait + Sulu Sea
+  // (default routing would detour via Karimata / Java Sea / SCS spine — very long).
+  'BORNEO_S|PH_N': [WP.makassar_n, WP.sulu_sea, WP.scs_paracel, WP.scs_north],
+  'BORNEO_S|PH_C': [WP.makassar_n, WP.sulu_sea, WP.visayas],
+  'BORNEO_S|PH_S': [WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
+
+  // ── Intra-Philippines — archipelagic routes, essentially direct between islands.
+  // Default backbone routing detours ~1500nm out to SCS via scs_central; these are all
+  // 200–400nm hops in reality. Use direct great-circle (renders across a few small islands
+  // but distance is accurate to a few %).
+  'PH_C|PH_N': [],
+  'PH_C|PH_S': [],
+  'PH_N|PH_S': [],
+
+  // ── Malacca Strait ↔ Singapore — straight down the Strait via malacca_s.
+  // Default routes via malacca_n (top of Sumatra) for all MALACCA ports, detouring
+  // 600+nm north before coming back. Skip malacca_n; MALACCA ports → malacca_s → sg_strait.
+  'MALACCA|SG': [WP.malacca_s, WP.sg_strait],
+
+  // ── North China ↔ East China coastal — default routes via bi=22 (way south) then north.
+  // Adjacent ports like Lianyungang (CN_E) and Rizhao (CN_N) are 40nm apart but get 1300nm
+  // routing. Direct line along coast is open Yellow Sea water.
+  'CN_E|CN_N': [],
+
+  // ── East China ↔ South China coastal (Wenzhou/Shanghai/Ningbo ↔ Fuzhou/Xiamen/Quanzhou).
+  // Default would detour via taiwan_s + scs_north. Direct line along Taiwan Strait stays
+  // west of Taiwan in open water.
+  'CN_E|CN_S': [],
+
+  // ── North China ↔ South China coastal — same logic as CN_E|CN_S, just further apart.
+  // Direct line runs down the East China Sea and Taiwan Strait, west of Taiwan.
+  'CN_N|CN_S': [],
+
+  // ── South China ↔ Korea (Hong Kong / Shenzhen / Guangzhou → Busan / Incheon / Gwangyang).
+  // Default backbone detoured east of Taiwan via ecs [28,122.5]. Go through Taiwan Strait
+  // instead: taiwan_s keeps us safely offshore of Fujian, taiwan_str puts us mid-Strait
+  // west of Taiwan, then a straight shot NE through open East China Sea to Korea Strait
+  // passing well west of the Ryukyus.
+  'CN_S|KR': [WP.taiwan_s, WP.taiwan_str, WP.korea_str],
+
+  // ── Philippines (North/Manila) ↔ Korea — east-of-Taiwan route via Philippine Sea.
+  // Direct great-circle from Manila to Korea crosses Luzon land. Route exits Manila Bay
+  // (manila_exit avoids Bataan peninsula), goes NW along Luzon's west coast (luzon_w),
+  // through Bashi Channel, east of Taiwan (taiwan_e), then NE through Philippine Sea
+  // to Korea Strait. Stored KR→PH_N so Manila→Busan is the reverse.
+  'KR|PH_N': [WP.korea_str, WP.taiwan_e, WP.luzon_w, WP.manila_exit],
+
+  // ── Malacca Strait ↔ Sarawak — via Singapore + Natuna, skip malacca_n detour.
+  'MALACCA|SARAWAK': [WP.malacca_s, WP.sg_strait, WP.scs_natuna],
+
+  // ── South Borneo ↔ China / Korea — via Karimata + east SCS backbone
+  'BORNEO_S|CN_N': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n, WP.bohai_e],
+  'BORNEO_S|CN_E': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs],
+  'BORNEO_S|CN_S': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north],
+
+  // ── Sarawak (Tanjung Manis / Bintulu / Kuching / Miri) ↔ Java — direct via Karimata
+  // Stored in sortedZ[0] → sortedZ[1] direction (JAVA → SARAWAK here).
+  // Karimata → Surabaya is open Java Sea; Karimata → Jakarta passes very close to Belitung
+  // so we route Jakarta-side via java_sea_w to stay safely west of Belitung Island.
+  'JAVA_E|SARAWAK': [WP.karimata],
+  'JAVA_W|SARAWAK': [WP.java_sea_w, WP.karimata],
+
+  // ── Sarawak ↔ East Borneo — via Borneo's NE tip (don't cut across land)
+  // Most Sarawak ports (Miri, Bintulu, Tanjung Manis) sit NE of Kuching so going via
+  // borneo_ne keeps the route natural along NW Borneo coast. scs_natuna was adding a
+  // 600nm west-then-east loop. Kuching (far SW Sarawak) will slightly underestimate but
+  // most east-Borneo ↔ Sarawak traffic goes to the eastern Sarawak ports.
+  'BORNEO_E|SARAWAK': [WP.makassar_n, WP.borneo_ne],
+
+  // ── Sarawak ↔ South Borneo — direct via Karimata
+  'BORNEO_S|SARAWAK': [WP.karimata],
+
+  // ── Sarawak ↔ Sulawesi — via Borneo NE + Makassar Strait
+  'SARAWAK|SULAWESI': [WP.scs_natuna, WP.borneo_ne, WP.makassar_n, WP.makassar_s],
+
+  // ── Sarawak ↔ Philippines (central/south via Sulu Sea; north via SCS)
+  'PH_C|SARAWAK':  [WP.visayas, WP.sulu_sea, WP.borneo_ne],
+  'PH_S|SARAWAK':  [WP.mindanao_s, WP.sulu_sea, WP.borneo_ne],
+  'PH_N|SARAWAK':  [WP.scs_north, WP.scs_paracel, WP.scs_natuna],
+
+  // ── Sabah (Kota Kinabalu / Sandakan / Tawau / Labuan) custom routing
+  // Default backbone would force SCS south detour; these keep routes natural.
+  'JAVA_E|SABAH':  [WP.java_sea_e, WP.makassar_s, WP.makassar_n, WP.borneo_ne],
+  'JAVA_W|SABAH':  [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.borneo_ne],
+  'BORNEO_E|SABAH':[WP.makassar_n, WP.borneo_ne],
+  'BORNEO_S|SABAH':[WP.makassar_s, WP.makassar_n, WP.borneo_ne],  // around Pulau Laut + Makassar Strait
+  'SABAH|SULAWESI':[WP.borneo_ne, WP.makassar_n, WP.makassar_s],
+  'PH_C|SABAH':    [WP.visayas, WP.sulu_sea],
+  'PH_S|SABAH':    [WP.mindanao_s, WP.sulu_sea],
+  'PH_N|SABAH':    [WP.scs_north, WP.scs_paracel, WP.borneo_ne],
+  'CN_N|SABAH':    [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
+  'CN_E|SABAH':    [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
+  'CN_S|SABAH':    [WP.scs_north, WP.scs_paracel, WP.borneo_ne],
+  'KR|SABAH':      [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
+  'SABAH|SG':      [WP.borneo_ne, WP.scs_natuna, WP.sg_strait],
+  'GOT|SABAH':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],
+  'MALACCA|SABAH': [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],
+  'SABAH|SARAWAK': [WP.borneo_ne],  // NW Borneo coast; scs_natuna added a 600nm loop
+  'SABAH|VN_S':    [WP.borneo_ne, WP.scs_natuna, WP.vn_s_off],
+  'SABAH|VN_C':    [WP.borneo_ne, WP.scs_paracel, WP.vn_c_off],
+  'SABAH|VN_N':    [WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.vn_n_off],
+
+  // ── Taiwan ↔ mainland China — direct across open Taiwan Strait / East China Sea.
+  // Backbone would loop via taiwan_s waypoints; direct line clears all land.
+  'CN_S|TAIWAN':  [],   // HK/Xiamen/Fuzhou across Taiwan Strait — all open water
+  'CN_E|TAIWAN':  [],   // Shanghai/Ningbo/Wenzhou via ECS into strait — all open water
+  'CN_N|TAIWAN':  [],   // Qingdao/Tianjin via Yellow Sea + ECS + Taiwan Strait — open water
+
+  // ── Taiwan ↔ Korea — via East China Sea (skip the Yellow Sea north detour)
+  'KR|TAIWAN':    [WP.korea_str, WP.ecs],
+
+  // ── Taiwan ↔ Philippines (North/Manila) — direct via Luzon Strait (Bashi Channel).
+  // Direct great-circle stays offshore; Luzon Strait is open water between Taiwan and Luzon.
+  'PH_N|TAIWAN':  [],
+
+  // ── MAL_E (Kuantan / Kemaman) — east coast Peninsular Malaysia on the South China Sea.
+  // Anchored at scs_south (bi=16). Default backbone routing handles CN_*/KR fine
+  // (Kuantan → scs_south → SCS spine → northern destination). These customs cover
+  // pairs where the default would detour via Singapore Strait or up the Gulf of Thailand.
+  'MAL_E|SG':       [],                                              // direct: open SCS along east coast
+  'MALACCA|MAL_E':  [WP.malacca_s, WP.sg_strait],                    // via Singapore Strait
+  'GOT|MAL_E':      [WP.got_north, WP.got_mid, WP.got_entrance],     // exit gulf, then south to Kuantan
+  'MAL_E|SARAWAK':  [WP.scs_natuna],                                 // across SCS to Natuna
+  'MAL_E|SABAH':    [WP.scs_natuna, WP.borneo_ne],
+  'BORNEO_S|MAL_E': [WP.karimata],                                   // direct via Karimata
+  'BORNEO_E|MAL_E': [WP.makassar_s, WP.karimata],                    // round Pulau Laut, then Java Sea + Karimata
+  'JAVA_W|MAL_E':   [WP.java_sea_w, WP.karimata],                    // safely west of Belitung, then up
+  'JAVA_E|MAL_E':   [WP.karimata],                                   // direct across Java Sea to Karimata
+  'MAL_E|SULAWESI': [WP.karimata, WP.makassar_s],                    // via Karimata + Makassar Strait south
+  'MAL_E|VN_S':     [WP.vn_s_off],                                   // direct across SCS to HCM offshore
+  'MAL_E|VN_C':     [WP.scs_central, WP.vn_c_off],
+  'MAL_E|VN_N':     [WP.scs_central, WP.scs_paracel, WP.vn_n_off],
+  'MAL_E|PH_N':     [WP.scs_central, WP.scs_paracel, WP.scs_north], // along SCS spine to Luzon
+  'MAL_E|PH_C':     [WP.scs_central, WP.visayas],
+  'MAL_E|PH_S':     [WP.scs_central, WP.sulu_sea, WP.mindanao_s],
 };
 
 function haversineNm(p1, p2) {
@@ -1733,7 +1933,7 @@ function routeDistanceNm(route) {
 }
 
 // ─── ALTERNATIVE ROUTES (Panama / Cape) ───────────────────────────────────────
-const ASIA_ZONES = ['CN_N','CN_E','CN_S','KR','VN_N','VN_C','VN_S','SG','GOT','MALACCA','SARAWAK','PH_N','PH_C','PH_S','JAVA_W','JAVA_E','BORNEO_S','BORNEO_E','SULAWESI'];
+const ASIA_ZONES = ['CN_N','CN_E','CN_S','KR','TAIWAN','VN_N','VN_C','VN_S','SG','GOT','MAL_E','MALACCA','SARAWAK','PH_N','PH_C','PH_S','JAVA_W','JAVA_E','BORNEO_S','BORNEO_E','SULAWESI'];
 const AMERICAS_ATL_ZONES = ['US_EAST','US_GULF','BRAZIL'];
 const AMERICAS_PAC_ZONES = ['MX_PAC_NW','MX_GULF_CAL'];
 const EUROPE_ZONES = ['NW_EU','MED'];
@@ -1751,11 +1951,13 @@ const asianToPacificGateway = {
   CN_E:    [WP.ecs, WP.pac_japan_e],
   CN_S:    [WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   KR:      [WP.korea_str, WP.pac_japan_e],
+  TAIWAN:  [WP.taiwan_e, WP.pac_japan_e],
   VN_N:    [WP.vn_n_off, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   VN_C:    [WP.vn_c_off, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   VN_S:    [WP.vn_s_off, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   SG:      [WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   GOT:     [WP.got_north, WP.got_mid, WP.got_entrance, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
+  MAL_E:   [WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   MALACCA: [WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   SARAWAK: [WP.scs_natuna, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
   PH_N:    [WP.scs_north, WP.taiwan_s, WP.pac_japan_e],
@@ -1835,11 +2037,13 @@ function buildCapeRoute(portA, portB) {
     CN_E: [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
     CN_S: [WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
     KR:   [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    TAIWAN: [WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
     VN_N: [WP.vn_n_off, WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
     VN_C: [WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
     VN_S: [WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
     SG:   [WP.sg_strait, WP.malacca_s, WP.malacca_n],
     GOT:  [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+    MAL_E:[WP.sg_strait, WP.malacca_s, WP.malacca_n],
     MALACCA: [WP.malacca_s, WP.malacca_n],
     SARAWAK: [WP.scs_natuna, WP.sg_strait, WP.malacca_s, WP.malacca_n],
     PH_N: [WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
@@ -1949,8 +2153,8 @@ function updateRouteInfoHint(portA, portB, via) {
 function calculateFreight() {
   const commodity = document.getElementById('commodity').value;
   const quantity  = parseFloat(document.getElementById('quantity').value);
-  const loadPort  = document.getElementById('loadPort').value;
-  const dischPort = document.getElementById('dischargePort').value;
+  const loadPort  = readPort('loadPort');
+  const dischPort = readPort('dischargePort');
   const loadRate  = parseFloat(document.getElementById('loadRate').value);
   const dischRate = parseFloat(document.getElementById('dischRate').value);
   const basis     = document.getElementById('freightBasis').value;
@@ -2051,8 +2255,8 @@ function calculateFreight() {
 
   const hireCost = hireRate * totalDays;
 
-  // Port costs — simplified: USD 1 × DWT per port × 2 ports
-  const portCostPerPort = dwt * 1;
+  // Port costs — simplified: USD 1.25 × DWT per port × 2 ports
+  const portCostPerPort = dwt * 1.25;
   const portCosts = portCostPerPort * 2;
 
   // Shore crane (gearless only) — included only if booked to owner's account
@@ -2111,7 +2315,7 @@ function calculateFreight() {
     ${portVlsfo > 0 ? `<div class="breakdown-row"><span class="b-label">Port VLSFO 380cst (working) @ $${vlsfoPrice}/MT &mdash; ${portVlsfo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portVlsfoMt.toFixed(1)} MT / $${portVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b> (${totalVlsfoMt.toFixed(1)} MT VLSFO + ${totalMgoMt.toFixed(1)} MT MGO)</span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire equiv. ($${hireRate.toLocaleString()}/day \u00D7 ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
-    <div class="breakdown-row"><span class="b-label">Port costs ($1 \u00D7 ${dwt.toLocaleString()} DWT \u00D7 2 ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Port costs ($1.25 \u00D7 ${dwt.toLocaleString()} DWT \u00D7 2 ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${(vesselType === 'gearless' || vesselType === 'either') ? `<div class="breakdown-row"><span class="b-label">Shore crane \u2014 ${craneAccount === 'owner' ? 'Owner\u2019s account' : 'Charterer\u2019s account'}</span><span class="b-val">${includeCrane ? '$'+gearlessSurcharge.toLocaleString('en',{maximumFractionDigits:0}) : 'Excluded (chrtrs acct)'}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label">Port time: ${loadDays.toFixed(1)} d load + ${dischDays.toFixed(1)} d disch</span><span class="b-val">${portDays.toFixed(1)} days at berth</span></div>
     <div class="breakdown-row"><span class="b-label">Basis adjustment (${basis.toUpperCase()})</span><span class="b-val">${((basisFactor-1)*100).toFixed(0)}%</span></div>
@@ -2194,8 +2398,8 @@ function splitAntimeridian(pts) {
 }
 
 function updateMapRoute() {
-  const lp  = document.getElementById('loadPort').value;
-  const dp  = document.getElementById('dischargePort').value;
+  const lp  = readPort('loadPort');
+  const dp  = readPort('dischargePort');
   const spd = parseFloat(document.getElementById('mapSpeed').value) || 11.5;
 
   document.getElementById('vesselSpeed').value = spd;
@@ -2276,9 +2480,159 @@ function syncSpeed(el) {
   document.getElementById('vesselSpeed').value = el.value;
 }
 
+// ── Port autocomplete ──────────────────────────────────────────────────────
+(function() {
+  // Build a flat list [{key, label, country}] for fast searching.
+  // Country hints derived from portZone for context.
+  const zoneCountry = {
+    CN_N:'China', CN_E:'China', CN_S:'China',
+    KR:'South Korea', TAIWAN:'Taiwan', JP_PAC_N:'Japan', JP_PAC_S:'Japan', JP_WEST:'Japan',
+    VN_N:'Vietnam', VN_C:'Vietnam', VN_S:'Vietnam',
+    SG:'Singapore', MAL_E:'Malaysia', MALACCA:'Malaysia',
+    SABAH:'Malaysia', SARAWAK:'Malaysia',
+    GOT:'Thailand', MYA:'Myanmar', BGD:'Bangladesh', LKA:'Sri Lanka',
+    IND_W:'India', IND_E:'India',
+    PKN:'Pakistan', PKS:'Pakistan',
+    JAVA_W:'Indonesia', JAVA_E:'Indonesia', BORNEO_S:'Indonesia',
+    BORNEO_E:'Indonesia', SULAWESI:'Indonesia', MOLUCCAS:'Indonesia',
+    PAPUA:'Indonesia',
+    PH_N:'Philippines', PH_C:'Philippines', PH_S:'Philippines',
+    GULF_N:'Gulf', GULF_S:'Gulf',
+    RED_S:'Red Sea', E_AFR:'East Africa', W_AFR:'West Africa', S_AFR:'South Africa',
+    MED:'Mediterranean', NW_EU:'N.W. Europe',
+    US_EAST:'USA East', US_GULF:'USA Gulf', US_WEST:'USA West',
+    MX_PAC_NW:'Mexico', MX_GULF_CAL:'Mexico',
+    SA_E:'S. America', SA_W:'S. America',
+  };
+
+  const portList = Object.keys(portNames).map(key => ({
+    key,
+    label: portNames[key],
+    country: zoneCountry[portZone[key]] || ''
+  }));
+
+  // Highlight matching portion of text
+  function highlight(text, query) {
+    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx < 0) return text;
+    return text.slice(0, idx)
+      + '<em>' + text.slice(idx, idx + query.length) + '</em>'
+      + text.slice(idx + query.length);
+  }
+
+  // Score a port against the query (higher = better match)
+  function score(port, q) {
+    const lq = q.toLowerCase();
+    const lk = port.key.replace(/_/g, ' ').toLowerCase();
+    const ll = port.label.toLowerCase();
+    const normQ = q.toLowerCase().replace(/[\s_-]/g, '');
+    const normK = port.key.replace(/_/g, '').toLowerCase();
+    const normL = port.label.toLowerCase().replace(/[\s_-]/g, '');
+    if (ll === lq || lk === lq) return 100;
+    if (ll.startsWith(lq) || lk.startsWith(lq)) return 90;
+    if (normL.startsWith(normQ) || normK.startsWith(normQ)) return 80;
+    if (ll.includes(lq) || lk.includes(lq)) return 60;
+    if (normL.includes(normQ) || normK.includes(normQ)) return 40;
+    return 0;
+  }
+
+  function getSuggestions(query) {
+    if (!query || query.trim().length < 2) return [];
+    const q = query.trim();
+    return portList
+      .map(p => ({ ...p, sc: score(p, q) }))
+      .filter(p => p.sc > 0)
+      .sort((a, b) => b.sc - a.sc || a.label.localeCompare(b.label))
+      .slice(0, 8);
+  }
+
+  let activeIdx = -1;
+
+  function setupAutocomplete(inputId) {
+    const inp = document.getElementById(inputId);
+    const box = document.getElementById(inputId + '-sugg');
+    if (!inp || !box) return;
+
+    function hide() { box.style.display = 'none'; activeIdx = -1; }
+
+    function pick(portLabel, portKey) {
+      inp.value = portLabel;
+      inp.dataset.resolvedKey = portKey;
+      hide();
+      inp.dispatchEvent(new Event('change'));
+    }
+
+    function render(query) {
+      const results = getSuggestions(query);
+      if (!results.length) { hide(); return; }
+      box.innerHTML = results.map((p, i) =>
+        `<div class="ps-item" data-key="${p.key}" data-label="${p.label}" data-i="${i}">
+           <span class="ps-name">${highlight(p.label, query.trim())}</span>
+           <span class="ps-country">${p.country}</span>
+         </div>`
+      ).join('');
+      box.style.display = 'block';
+      activeIdx = -1;
+    }
+
+    inp.addEventListener('input', () => render(inp.value));
+    inp.addEventListener('focus', () => { if (inp.value.trim().length >= 2) render(inp.value); });
+
+    inp.addEventListener('keydown', e => {
+      const items = box.querySelectorAll('.ps-item');
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+        if (items[activeIdx]) items[activeIdx].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+        if (items[activeIdx]) items[activeIdx].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (activeIdx >= 0 && items[activeIdx]) {
+          e.preventDefault();
+          const el = items[activeIdx];
+          pick(el.dataset.label, el.dataset.key);
+        } else if (e.key === 'Enter') {
+          hide();
+        }
+      } else if (e.key === 'Escape') {
+        hide();
+      }
+    });
+
+    box.addEventListener('mousedown', e => {
+      const item = e.target.closest('.ps-item');
+      if (item) { e.preventDefault(); pick(item.dataset.label, item.dataset.key); }
+    });
+
+    // Hide when clicking outside
+    document.addEventListener('mousedown', e => {
+      if (!inp.contains(e.target) && !box.contains(e.target)) hide();
+    });
+  }
+
+  setupAutocomplete('loadPort');
+  setupAutocomplete('dischargePort');
+})();
+
 // Live update map when ports change
 document.getElementById('loadPort').addEventListener('change', updateMapRoute);
 document.getElementById('dischargePort').addEventListener('change', updateMapRoute);
+document.getElementById('loadPort').addEventListener('input', updateMapRoute);
+document.getElementById('dischargePort').addEventListener('input', updateMapRoute);
+
+// Enter key in a port field blurs it so the 'change' event fires immediately.
+['loadPort','dischargePort'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); el.blur(); updateMapRoute(); }
+  });
+});
+
 </script>
 
 </body>
