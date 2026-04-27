@@ -2381,17 +2381,21 @@ function buildSmoothRoute(waypoints) {
   return allPts;
 }
 
-// Split polyline at antimeridian
-function splitAntimeridian(pts) {
-  const segments = [[]];
-  for (let i=0; i<pts.length; i++) {
-    segments[segments.length-1].push(pts[i]);
-    if (i<pts.length-1) {
-      const dLon = pts[i+1][1] - pts[i][1];
-      if (Math.abs(dLon) > 180) segments.push([]);
-    }
+// Unwrap polyline longitudes so the path is continuous across the antimeridian.
+// Each point's longitude is adjusted to be within ±180° of the previous one,
+// allowing Leaflet to draw the full great-circle arc as a single unbroken line
+// (Leaflet supports longitudes outside [−180, 180] on tiled world-wrap maps).
+function unwrapLongitudes(pts) {
+  if (!pts.length) return pts;
+  const out = [[pts[0][0], pts[0][1]]];
+  for (let i = 1; i < pts.length; i++) {
+    let lon = pts[i][1];
+    const prev = out[i - 1][1];
+    while (lon - prev >  180) lon -= 360;
+    while (lon - prev < -180) lon += 360;
+    out.push([pts[i][0], lon]);
   }
-  return segments.filter(s=>s.length>1);
+  return out;
 }
 
 function updateMapRoute() {
@@ -2422,15 +2426,15 @@ function updateMapRoute() {
   // Get sea route waypoints and build smooth polyline
   const waypoints = getSeaRouteVia(lp, dp, routeVia);
   const smoothPts = buildSmoothRoute(waypoints);
-  const segments = splitAntimeridian(smoothPts);
+  // Unwrap longitudes so trans-Pacific/antimeridian routes draw as one continuous line
+  const unwrapped = unwrapLongitudes(smoothPts);
 
-  const routeLines = segments.map(seg =>
-    L.polyline(seg, { color:'#ff5500', weight:3, opacity:.95, dashArray:'10,6' })
-      .addTo(leafletMap)
-  );
+  const routeLine = L.polyline(unwrapped, { color:'#ff5500', weight:3, opacity:.95, dashArray:'10,6' })
+    .addTo(leafletMap);
+  const routeLines = [routeLine];
 
-  // Midpoint marker
-  const midPt = smoothPts[Math.floor(smoothPts.length/2)];
+  // Midpoint marker (use unwrapped coords so it lands on the visible line)
+  const midPt = unwrapped[Math.floor(unwrapped.length/2)];
   const midIcon = L.divIcon({ className:'', html:'<div style="width:12px;height:12px;background:#fff;border-radius:50%;border:3px solid #ff5500;box-shadow:0 0 10px rgba(255,85,0,.7)"></div>', iconSize:[12,12], iconAnchor:[6,6] });
   const midMarker = L.marker(midPt, { icon:midIcon }).addTo(leafletMap);
 
@@ -2461,8 +2465,8 @@ function updateMapRoute() {
     bgMarkersLayer.push(cm);
   });
 
-  // Fit map to route
-  const allLatLngs = smoothPts.map(p => L.latLng(p[0], p[1]));
+  // Fit map to route — use unwrapped coords so trans-Pacific routes centre correctly
+  const allLatLngs = unwrapped.map(p => L.latLng(p[0], p[1]));
   const bounds = L.latLngBounds(allLatLngs);
   leafletMap.fitBounds(bounds, { padding:[50,50] });
 
