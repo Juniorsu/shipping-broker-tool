@@ -1184,6 +1184,15 @@ const portCoords = {
   ulsan:         [35.50,  129.37],
   pohang:        [36.03,  129.38],
   gwangyang:     [34.90,  127.72],
+  // Japan
+  yokohama:      [35.45,  139.65],
+  nagoya:        [35.05,  136.86],
+  osaka:         [34.68,  135.20],
+  kobe:          [34.69,  135.18],
+  hiroshima:     [34.40,  132.47],
+  hakata:        [33.59,  130.40],
+  kitakyushu:    [33.87,  130.87],
+  chiba:         [35.59,  140.07],
   // Philippines (expanded)
   subic:         [14.82,  120.27],
   limay:         [14.57,  120.60],
@@ -1240,6 +1249,9 @@ const portNames = {
   fuzhou:'Fuzhou', quanzhou:'Quanzhou', beihai:'Beihai',
   // Korea (expanded)
   incheon:'Incheon', ulsan:'Ulsan', pohang:'Pohang', gwangyang:'Gwangyang',
+  // Japan
+  yokohama:'Yokohama', nagoya:'Nagoya', osaka:'Osaka', kobe:'Kobe',
+  hiroshima:'Hiroshima', hakata:'Hakata / Fukuoka', kitakyushu:'Kitakyushu', chiba:'Chiba',
   // Philippines (expanded)
   subic:'Subic Bay', limay:'Limay / Bataan', zamboanga:'Zamboanga', sual:'Sual',
   // China (Qinzhou) + Taiwan
@@ -1389,6 +1401,7 @@ const WP = {
   yellow_n:    [36.50, 122.50],
   bohai_e:     [38.80, 121.50],
   korea_str:   [34.50, 129.00],
+  japan_s:     [31.50, 130.50], // south approach to Japan — S of Kyushu, open East China Sea
   got_entrance:[6.00, 102.50],
   got_mid:     [8.50, 101.50],
   got_north:   [12.50, 100.50],
@@ -1487,6 +1500,8 @@ const portZone = {
   salalah:'ADEN',
   // Korea
   busan:'KR', incheon:'KR', ulsan:'KR', pohang:'KR', gwangyang:'KR',
+  yokohama:'JAPAN', nagoya:'JAPAN', osaka:'JAPAN', kobe:'JAPAN',
+  hiroshima:'JAPAN', hakata:'JAPAN', kitakyushu:'JAPAN', chiba:'JAPAN',
   // Africa
   mombasa:'EAFRICA', dar_es_salaam:'EAFRICA',
   lagos:'WAFRICA', durban:'SAFRICA',
@@ -1564,6 +1579,7 @@ const zoneConfig = {
   CN_E:       { bi: 22, branch: [] },
   CN_N:       { bi: 26, branch: [] },
   KR:         { bi: 24, branch: [WP.korea_str] },
+  JAPAN:      { bi: 22, branch: [WP.japan_s] },  // ecs[28,122.5] → japan_s[31.5,130.5] → port
   // Taiwan ports anchor at taiwan_str (bi=21) — mid-Taiwan Strait, centre of gravity for all five ports.
   TAIWAN:     { bi: 21, branch: [] },
   EAFRICA:    { bi: 8,  branch: [] },
@@ -1795,6 +1811,18 @@ const customRoutes = {
   // west of Taiwan, then a straight shot NE through open East China Sea to Korea Strait
   // passing well west of the Ryukyus.
   'CN_S|KR': [WP.taiwan_s, WP.taiwan_str, WP.korea_str],
+
+  // ── Japan ↔ Korea — direct via Korea Strait (backbone would detour west through ecs/yellow_s).
+  'JAPAN|KR': [WP.korea_str],
+
+  // ── Japan ↔ CN_N — via Korea Strait → Yellow Sea (avoids backbone west-then-north ecs detour).
+  'CN_N|JAPAN': [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.korea_str],
+
+  // ── Japan ↔ CN_E — direct across ECS (both bi=22; skips redundant japan_s↔ecs hops).
+  'CN_E|JAPAN': [],
+
+  // ── Japan ↔ CN_S — via Taiwan Strait (mirrors the KR↔CN_S route, just continues to japan_s).
+  'CN_S|JAPAN': [WP.taiwan_s, WP.taiwan_str, WP.ecs, WP.japan_s],
 
   // ── Philippines (North/Manila) ↔ Korea — east-of-Taiwan route via Philippine Sea.
   // Direct great-circle from Manila to Korea crosses Luzon land. Route exits Manila Bay
