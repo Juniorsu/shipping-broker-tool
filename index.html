@@ -1059,6 +1059,20 @@ const portCoords = {
   mundra:        [22.84,   69.70],
   kandla:        [23.03,   70.21],
   nhava_sheva:   [18.95,   72.95],
+  // India west coast (INDIA_W zone)
+  pipavav:       [20.91,   71.52],
+  hazira:        [21.09,   72.64],
+  okha:          [22.47,   69.07],
+  mormugao:      [15.41,   73.80],
+  mangalore:     [12.87,   74.84],
+  cochin:        [ 9.96,   76.27],
+  // India east coast (INDIA_E zone)
+  tuticorin:     [ 8.78,   78.17],
+  chennai:       [13.09,   80.29],
+  vizag:         [17.69,   83.23],
+  kakinada:      [16.95,   82.22],
+  paradip:       [20.32,   86.61],
+  haldia:        [21.97,   88.07],
   colombo:       [6.93,    79.85],
   chittagong:    [22.33,   91.83],
   shanghai:      [31.23,  121.47],
@@ -1188,6 +1202,10 @@ const portNames = {
   bangkok:'Bangkok', ho_chi_minh:'Ho Chi Minh City', cailan:'Cai Lan',
   jakarta:'Jakarta', surabaya:'Surabaya', manila:'Manila',
   mundra:'Mundra', kandla:'Kandla', nhava_sheva:'Nhava Sheva',
+  pipavav:'Pipavav', hazira:'Hazira', okha:'Okha',
+  mormugao:'Mormugao (Goa)', mangalore:'New Mangalore', cochin:'Cochin / Kochi',
+  tuticorin:'Tuticorin', chennai:'Chennai', vizag:'Visakhapatnam',
+  kakinada:'Kakinada', paradip:'Paradip', haldia:'Haldia',
   colombo:'Colombo', chittagong:'Chittagong',
   shanghai:'Shanghai', qingdao:'Qingdao', guangzhou:'Guangzhou', busan:'Busan',
   dubai:'Dubai / Jebel Ali', dammam:'Dammam', sohar:'Sohar', salalah:'Salalah',
@@ -1458,6 +1476,10 @@ const portZone = {
   balikpapan:'BORNEO_E', samarinda:'BORNEO_E', bontang:'BORNEO_E',
   // South Asia
   mundra:'INDIA_W', kandla:'INDIA_W', nhava_sheva:'INDIA_W',
+  pipavav:'INDIA_W', hazira:'INDIA_W', okha:'INDIA_W',
+  mormugao:'INDIA_W', mangalore:'INDIA_W', cochin:'INDIA_W',
+  tuticorin:'INDIA_E', chennai:'INDIA_E', vizag:'INDIA_E',
+  kakinada:'INDIA_E', paradip:'INDIA_E', haldia:'INDIA_E',
   colombo:'SRI_LANKA',
   chittagong:'BANGLADESH',
   // Middle East
@@ -1516,6 +1538,7 @@ const zoneConfig = {
   ADEN:       { bi: 8,  branch: [] },
   PG:         { bi: 10, branch: [WP.arabian_n, WP.hormuz] },
   INDIA_W:    { bi: 11, branch: [WP.indian_w] },
+  INDIA_E:    { bi: 11, branch: [] },   // east coast: goes south around Sri Lanka's tip
   SRI_LANKA:  { bi: 11, branch: [] },
   BANGLADESH: { bi: 12, branch: [WP.bengal_ne] },
   MALACCA:    { bi: 13, branch: [] },
@@ -1613,6 +1636,12 @@ const customRoutes = {
   'CN_S|MAL_E':    [WP.scs_central],                                                    // HK → scs_central → Kuantan
   'CN_S|SG':       [WP.scs_central, WP.scs_south, WP.sg_strait],
   'CN_S|MALACCA':  [WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+  // ── South China ↔ South Asia — backbone bi=20 (taiwan_s[22,118.5]) is east of Guangzhou/Fangcheng,
+  // causing a ~600nm eastward spike before turning back west.  Route south through SCS→Malacca instead.
+  'CN_S|SRI_LANKA': [WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
+  'CN_S|INDIA_E':   [WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
+  'CN_S|INDIA_W':   [WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e, WP.sri_lanka_s, WP.indian_w],
+  'BANGLADESH|CN_S':[WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel],
   'CN_S|SARAWAK':  [WP.scs_natuna],                                                     // HK → scs_natuna → Tanjung Manis
 
   // ── South China ↔ Philippines — via Bashi Channel / Luzon Strait area
