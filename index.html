@@ -376,36 +376,60 @@
       <form id="quoteForm" onsubmit="return false;">
         <div class="form-group">
           <label>Commodity</label>
-          <select id="commodity">
-            <option value="">&mdash; Select commodity &mdash;</option>
-            <optgroup label="Agricultural">
-              <option value="grain">Grain (Wheat / Corn / Barley)</option>
-              <option value="rice">Rice (Bagged)</option>
-              <option value="sugar">Sugar (Bagged / Bulk)</option>
-              <option value="fertilizer">Fertilizer (Bagged / Bulk)</option>
-              <option value="soybeans">Soybeans</option>
-            </optgroup>
-            <optgroup label="Minerals / Metals">
-              <option value="steel">Steel Products (Coils/Plates/Pipes)</option>
-              <option value="iron_ore">Iron Ore</option>
-              <option value="clinker">Clinker</option>
-              <option value="cement">Cement (Bagged / Bulk)</option>
-              <option value="scrap">Steel Scrap</option>
-              <option value="salt">Salt</option>
-              <option value="copper_conc">Copper Concentrate</option>
-            </optgroup>
-            <optgroup label="Project / Breakbulk">
-              <option value="machinery">Machinery / Equipment</option>
-              <option value="timber">Timber / Logs</option>
-              <option value="pipes">Pipes / Steel Structures</option>
-              <option value="vehicles">Vehicles / Heavy Lift</option>
-            </optgroup>
-            <optgroup label="Other">
-              <option value="coal">Coal</option>
-              <option value="gypsum">Gypsum</option>
-              <option value="pet_coke">Pet Coke</option>
-            </optgroup>
-          </select>
+          <input type="text" id="commodity" list="commodityList" placeholder="Type or pick (e.g. corn, urea, bauxite, plywood)" autocomplete="off" spellcheck="false">
+          <datalist id="commodityList">
+            <!-- Agricultural / grains -->
+            <option value="grain">Wheat / Corn / Barley / Sorghum</option>
+            <option value="corn">Corn (US/Brazil/Argentina)</option>
+            <option value="wheat">Wheat</option>
+            <option value="barley">Barley</option>
+            <option value="rice">Rice (bagged)</option>
+            <option value="soybeans">Soybeans</option>
+            <option value="soybean_meal">Soybean Meal</option>
+            <option value="sugar">Sugar (raw / bagged)</option>
+            <option value="sorghum">Sorghum / Milo</option>
+            <option value="fertilizer">Fertilizer (NPK / DAP)</option>
+            <option value="urea">Urea</option>
+            <option value="dap">DAP / MAP</option>
+            <option value="potash">Potash / MOP</option>
+            <option value="ammonium_sulphate">Ammonium Sulphate</option>
+            <!-- Minerals / metals -->
+            <option value="iron_ore">Iron Ore (fines / lump / pellets)</option>
+            <option value="bauxite">Bauxite</option>
+            <option value="alumina">Alumina</option>
+            <option value="manganese">Manganese Ore</option>
+            <option value="nickel_ore">Nickel Ore</option>
+            <option value="copper_conc">Copper Concentrate</option>
+            <option value="zinc_conc">Zinc / Lead Concentrate</option>
+            <option value="iron_conc">Iron Concentrate</option>
+            <option value="chrome">Chrome Ore</option>
+            <option value="ilmenite">Ilmenite</option>
+            <option value="salt">Salt (bulk)</option>
+            <option value="cement">Cement (bagged / bulk)</option>
+            <option value="clinker">Clinker</option>
+            <option value="gypsum">Gypsum</option>
+            <option value="limestone">Limestone</option>
+            <!-- Energy -->
+            <option value="coal">Coal (steam / coking)</option>
+            <option value="pet_coke">Pet Coke</option>
+            <option value="anthracite">Anthracite</option>
+            <!-- Steel / breakbulk -->
+            <option value="steel">Steel Products (coils / plates / sheets)</option>
+            <option value="rebar">Rebar / Wire Rod</option>
+            <option value="hbi">HBI / DRI</option>
+            <option value="scrap">Steel Scrap</option>
+            <option value="pipes">Pipes / Tubes / Structures</option>
+            <option value="machinery">Machinery / Equipment</option>
+            <option value="vehicles">Vehicles / Heavy Lift</option>
+            <option value="project">Project Cargo</option>
+            <!-- Forestry -->
+            <option value="timber">Timber / Logs</option>
+            <option value="lumber">Lumber / Sawn Wood</option>
+            <option value="plywood">Plywood</option>
+            <option value="woodpulp">Woodpulp</option>
+            <option value="woodchips">Woodchips</option>
+          </datalist>
+          <div class="form-hint">Type any cargo name. Recognized cargoes apply specific stevedoring/handling factors; unknown defaults to general drybulk.</div>
         </div>
 
         <div class="form-row">
@@ -2398,13 +2422,16 @@ function calculateFreight() {
   if (errors.length) { alert('Please fill in: ' + errors.join(', ')); return; }
   if (loadPort === dischPort) { alert('Loading and discharging ports cannot be the same.'); return; }
 
-  // Auto vessel size — pick smallest vessel where DWT × 93% ≥ cargo quantity.
-  // 93% load factor leaves headroom for bunkers, freshwater, spares, constants.
-  // (Older logic jumped 15K→20K for 14,500 MT cargo — wasted ~5K DWT on freight rate.)
+  // Auto vessel size — pick smallest "round" vessel that fits the cargo.
+  // Uses LF=1.00 (cargo can equal vessel DWT in real broker quotes — common
+  // when vessel is light on bunkers/spares). Matches industry quoting practice
+  // of picking round nominal sizes (15K / 30K / 50K / etc) rather than tight fits.
   if (dwt === 'auto') {
-    const SIZES = [3500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 25000, 30000, 35000, 45000, 50000, 60000, 75000];
-    const minDwt = quantity / 0.93;
-    dwt = SIZES.find(s => s >= minDwt) || SIZES[SIZES.length - 1];
+    // Curated auto-pick list — skips 17.5K and 45K from auto-pick (still in dropdown
+    // for manual override). These two sizes conflict with broker quoting practice:
+    // 14-15K MT cargo → 15K vessel (not 17.5K), 45-50K MT cargo → 50K vessel (not 45K).
+    const SIZES = [3500, 5000, 7500, 10000, 12500, 15000, 20000, 25000, 30000, 35000, 50000, 60000, 75000, 82000];
+    dwt = SIZES.find(s => s >= quantity) || SIZES[SIZES.length - 1];
   } else { dwt = parseFloat(dwt); }
 
   const routeVia = document.getElementById('routeVia').value || 'auto';
@@ -2512,9 +2539,39 @@ function calculateFreight() {
   if (actualVia === 'suez')   { canalToll = dwt * 0.70; canalLabel = 'Suez Canal toll'; }
   if (actualVia === 'panama') { canalToll = dwt * 2.50; canalLabel = 'Panama Canal toll'; }
 
-  // Port costs — simplified: USD 1.25 × DWT per port × 2 ports
-  const portCostPerPort = dwt * 1.25;
-  const portCosts = portCostPerPort * 2;
+  // ───── Port costs — per-zone $/DWT multipliers ─────
+  // Old: flat $1.25/DWT for every port (badly under/over-counts depending on region).
+  // New: zone-based rates reflecting real DA differences (NW Europe 2× SE Asia, etc).
+  // Rates are $/DWT for ONE port call (loading or discharging).
+  const PORT_RATE = {
+    // Premium NW (high agency + pilotage + dues + dock fees)
+    NW_EU: 1.85, MED: 1.55, US_GULF: 1.70, US_EAST: 1.80,
+    // Mid-tier
+    JAPAN: 1.30, KR: 1.25, TAIWAN: 1.25,
+    SAFRICA: 1.45, WAFRICA: 1.55, EAFRICA: 1.40,
+    BRAZIL: 1.50, MX_PAC_NW: 1.45, MX_GULF_CAL: 1.40,
+    ADEN: 1.30, PG: 1.20,
+    // China mainstream
+    CN_N: 1.20, CN_E: 1.20, CN_S: 1.15,
+    // South Asia
+    INDIA_W: 1.05, INDIA_E: 1.05, BANGLADESH: 1.00, SRI_LANKA: 1.00,
+    // SE Asia
+    SG: 1.10, MALACCA: 1.00, GOT: 0.95, MAL_E: 0.95,
+    // Vietnam
+    VN_N: 1.00, VN_C: 0.95, VN_S: 1.00,
+    // Philippines
+    PH_N: 1.00, PH_C: 0.95, PH_S: 0.95,
+    // Indonesia
+    JAVA_W: 0.95, JAVA_E: 0.95, SULAWESI: 0.90,
+    BORNEO_S: 0.90, BORNEO_E: 0.90, SARAWAK: 0.90, SABAH: 0.90,
+  };
+  const portRateFor = (portKey) => {
+    const z = portZone[portKey];
+    return PORT_RATE[z] || 1.10;  // default for unknown zone
+  };
+  const loadPortRate  = portRateFor(loadPort);
+  const dischPortRate = portRateFor(dischPort);
+  const portCosts = dwt * (loadPortRate + dischPortRate);
 
   // Shore crane (gearless only) — included only if booked to owner's account
   const craneAccountEl = document.querySelector('input[name="craneAccount"]:checked');
@@ -2522,20 +2579,49 @@ function calculateFreight() {
   const includeCrane = (vesselType === 'gearless' || vesselType === 'either') && craneAccount === 'owner';
   const gearlessSurcharge = includeCrane ? 800 * portDays : 0;
 
-  // Basis adjustment
-  let basisFactor = 1.0;
-  if (basis === 'gross')  basisFactor = 1.20;
-  if (basis === 'fio')    basisFactor = 1.00;
-  if (basis === 'fios')   basisFactor = 0.98;
-  if (basis === 'filo')   basisFactor = 1.08;
+  // ───── Stevedoring cost — extracted from old basis × commodity multipliers ─────
+  // Previously basis (FIO/FILO/Gross) and commodity (steel/vehicles/etc.) multiplied
+  // the WHOLE voyage cost — wrongly inflating bunker/hire as if cargo type changes burn.
+  // Now stevedoring is its own line, scaled by:
+  //   1) Commodity-specific $/MT base rate (drybulk cheap, breakbulk/project expensive)
+  //   2) Basis encoding owner's share (FIO=0, FILO=disch only, Gross=both)
+  const commodityKey = (commodity || '').toLowerCase().trim();
+  const STEV_RATE_PER_MT = {
+    // Drybulk minerals/energy — cheap mechanical loading (grabs/conveyors)
+    iron_ore: 3, coal: 3, bauxite: 3, alumina: 4, manganese: 4, nickel_ore: 4,
+    chrome: 4, ilmenite: 4, gypsum: 3, pet_coke: 3, anthracite: 3,
+    salt: 3, limestone: 3, copper_conc: 5, zinc_conc: 5, iron_conc: 5,
+    // Cement / clinker
+    cement: 5, clinker: 4,
+    // Agricultural — pneumatic / belt
+    grain: 4, corn: 4, wheat: 4, barley: 4, sorghum: 4, soybeans: 4, soybean_meal: 4,
+    rice: 6, sugar: 5, fertilizer: 4, urea: 4, dap: 4, potash: 4, ammonium_sulphate: 4,
+    // Steel & breakbulk — gear-intensive
+    scrap: 6, steel: 12, rebar: 11, hbi: 6, pipes: 14, machinery: 18, vehicles: 22,
+    project: 20,
+    // Forestry
+    timber: 8, lumber: 9, plywood: 10, woodpulp: 7, woodchips: 5,
+  };
+  const stevRate = STEV_RATE_PER_MT[commodityKey] || 5;  // default ~drybulk handling
 
-  // Commodity factor
-  const commFactors = { steel:1.12, machinery:1.25, pipes:1.15, vehicles:1.30, timber:1.10, copper_conc:1.08, grain:1.0, rice:1.05, sugar:1.02, fertilizer:1.0, soybeans:1.0, iron_ore:0.95, clinker:1.0, cement:1.02, scrap:1.0, salt:0.95, coal:0.95, gypsum:0.95, pet_coke:0.95 };
-  const commFactor = commFactors[commodity] || 1.0;
+  // Basis encodes owner's share of stevedoring:
+  //   Gross  → owner pays both load AND discharge stevedoring (full)
+  //   FIO    → charterer pays both (none on owner)
+  //   FILO   → free in / liner out → owner pays discharge only (50%)
+  //   FIOS   → charterer pays both + stevedoring/lashing → small saving for owner
+  const ownerStevShare = { gross: 1.0, fio: 0.0, filo: 0.5, fios: -0.02 }[basis] ?? 0;
+  const stevCost = stevRate * quantity * ownerStevShare;
+  const stevLabel = `Stevedoring (${basis.toUpperCase()}, ${commodityKey || 'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% owner share)`;
 
+  // Margin / commission (~10%)
   const marginFactor = 1.10;
 
-  const totalCost   = (bunkerCost + hireCost + portCosts + canalToll + gearlessSurcharge) * basisFactor * commFactor * marginFactor;
+  // Backward-compat display variables
+  const basisFactor = 1.0;  // legacy display only — actual effect now in stevCost
+  const commFactor = 1.0;   // legacy display only — actual effect now in stevCost
+
+  const voyageBaseCost = bunkerCost + hireCost + portCosts + canalToll + gearlessSurcharge + stevCost;
+  const totalCost      = voyageBaseCost * marginFactor;
   const freightRate = totalCost / quantity;
   const freightLow  = (freightRate * 0.90).toFixed(1);  // symmetric \u00b110% range (was -12%/+15%)
   const freightHigh = (freightRate * 1.10).toFixed(1);
@@ -2561,12 +2647,11 @@ function calculateFreight() {
     ${portVlsfo > 0 ? `<div class="breakdown-row"><span class="b-label">Port VLSFO 380cst (working) @ $${vlsfoPrice}/MT &mdash; ${portVlsfo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portVlsfoMt.toFixed(1)} MT / $${portVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b> (${totalVlsfoMt.toFixed(1)} MT VLSFO + ${totalMgoMt.toFixed(1)} MT MGO)</span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire equiv. ($${hireRate.toLocaleString()}/day \u00D7 ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
-    <div class="breakdown-row"><span class="b-label">Port costs ($1.25 \u00D7 ${dwt.toLocaleString()} DWT \u00D7 2 ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Port costs (load $${loadPortRate.toFixed(2)} + disch $${dischPortRate.toFixed(2)} \u00D7 ${dwt.toLocaleString()} DWT)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${canalToll > 0 ? `<div class="breakdown-row"><span class="b-label">${canalLabel} (laden one-way, ${actualVia==='suez'?'$0.70':'$2.50'}/DWT)</span><span class="b-val">$${canalToll.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     ${(vesselType === 'gearless' || vesselType === 'either') ? `<div class="breakdown-row"><span class="b-label">Shore crane \u2014 ${craneAccount === 'owner' ? 'Owner\u2019s account' : 'Charterer\u2019s account'}</span><span class="b-val">${includeCrane ? '$'+gearlessSurcharge.toLocaleString('en',{maximumFractionDigits:0}) : 'Excluded (chrtrs acct)'}</span></div>` : ''}
+    ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">${stevLabel}</span><span class="b-val">${stevCost >= 0 ? '$' : '-$'}${Math.abs(stevCost).toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : `<div class="breakdown-row"><span class="b-label">Stevedoring (${basis.toUpperCase()} \u2014 charterer's account)</span><span class="b-val">$0 (excluded)</span></div>`}
     <div class="breakdown-row"><span class="b-label">Port time: ${loadDays.toFixed(1)} d load + ${dischDays.toFixed(1)} d disch</span><span class="b-val">${portDays.toFixed(1)} days at berth</span></div>
-    <div class="breakdown-row"><span class="b-label">Basis adjustment (${basis.toUpperCase()})</span><span class="b-val">${((basisFactor-1)*100).toFixed(0)}%</span></div>
-    <div class="breakdown-row"><span class="b-label">Commodity premium factor</span><span class="b-val">${((commFactor-1)*100).toFixed(0)}%</span></div>
     <div class="breakdown-row"><span class="b-label">Margin + commission (incl.)</span><span class="b-val">~10%</span></div>
     <div class="breakdown-row total"><span class="b-label">TOTAL VOYAGE COST</span><span class="b-val">$${totalCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row total"><span class="b-label">FREIGHT RATE (\u00F7 ${quantity.toLocaleString()} MT)</span><span class="b-val">$${freightRate.toFixed(2)}/MT</span></div>
