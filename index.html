@@ -572,13 +572,13 @@
         <div class="form-row">
           <div class="form-group">
             <label>Route Via</label>
-            <select id="routeVia" onchange="updateMapRoute(); updateCanalToggles(); if(document.getElementById('results').classList.contains('show')) calculateFreight();">
-              <option value="auto">Auto &mdash; shortest (Suez vs Panama)</option>
-              <option value="suez">Suez Canal (via Indian Ocean &amp; Med)</option>
-              <option value="panama">Panama Canal (trans-Pacific)</option>
-              <option value="cape">Cape of Good Hope (via S.Africa)</option>
+            <select id="routeVia" onchange="updateMapRoute(); if(document.getElementById('results').classList.contains('show')) calculateFreight();">
+              <option value="auto">Auto (Shortest) &mdash; no canal toll</option>
+              <option value="suez">Suez Canal &mdash; +$0.70/DWT toll</option>
+              <option value="panama">Panama Canal &mdash; +$2.50/DWT toll</option>
+              <option value="cape">Cape of Good Hope &mdash; no canal toll</option>
             </select>
-            <div class="form-hint">Override for trans-oceanic voyages &mdash; auto picks shorter</div>
+            <div class="form-hint">Choose the actual route &mdash; Suez/Panama auto-charge canal toll.</div>
           </div>
           <div class="form-group">
             <label>&nbsp;</label>
@@ -588,19 +588,6 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-top:-2px">
-          <label>Canal Toll <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">&mdash; auto-detected, uncheck if charterer pays</span></label>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;font-size:.78rem;white-space:nowrap">
-              <input type="checkbox" id="suezToll">
-              <span>Suez ($0.70/DWT)</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;font-size:.78rem;white-space:nowrap">
-              <input type="checkbox" id="panamaToll">
-              <span>Panama ($2.50/DWT)</span>
-            </label>
-          </div>
-        </div>
 
         <div class="form-row">
           <div class="form-group">
@@ -778,11 +765,11 @@
           <div class="form-row">
             <div class="form-group">
               <label>Route Via</label>
-              <select id="tceRouteVia" onchange="updateCanalToggles('tce')">
-                <option value="auto">Auto (shortest)</option>
-                <option value="suez">Suez</option>
-                <option value="panama">Panama</option>
-                <option value="cape">Cape</option>
+              <select id="tceRouteVia">
+                <option value="auto">Auto (Shortest) &mdash; no toll</option>
+                <option value="suez">Suez &mdash; +$0.70/DWT toll</option>
+                <option value="panama">Panama &mdash; +$2.50/DWT toll</option>
+                <option value="cape">Cape &mdash; no toll</option>
               </select>
             </div>
             <div class="form-group">
@@ -791,20 +778,6 @@
                 <option value="geared" selected>Geared</option>
                 <option value="gearless">Gearless</option>
               </select>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-top:-2px">
-            <label>Canal Toll <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">&mdash; auto-detected, uncheck if charterer pays</span></label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;font-size:.78rem;white-space:nowrap">
-                <input type="checkbox" id="tceSuezToll">
-                <span>Suez ($0.70/DWT)</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;font-size:.78rem;white-space:nowrap">
-                <input type="checkbox" id="tcePanamaToll">
-                <span>Panama ($2.50/DWT)</span>
-              </label>
             </div>
           </div>
 
@@ -2765,17 +2738,14 @@ function calculateFreight() {
   }
   const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Suez';
 
-  // Canal tolls — controlled by user checkboxes (auto-detected from waypoints,
-  // user can override if charterer pays). Charged laden one-way only.
-  // Suez:   ~$0.70/DWT for laden bulker (SCNT-based, 2024-25 tariff w/ rebates)
-  // Panama: ~$2.50/DWT for Panamax-lock transit (PCT-based, higher than Suez)
-  const useSuez   = document.getElementById('suezToll').checked;
-  const usePanama = document.getElementById('panamaToll').checked;
+  // Canal tolls — driven directly by Route Via selection. Charged laden one-way.
+  //   'suez'   → $0.70/DWT (SCNT-based, 2024-25 tariff with rebates)
+  //   'panama' → $2.50/DWT (PCT-based, Panamax-lock transit)
+  //   'auto' / 'cape' → no toll (auto = baseline indicative only)
   let canalToll = 0;
   const canalLines = [];
-  if (useSuez)   { const t = dwt * 0.70; canalToll += t; canalLines.push({label:'Suez Canal toll ($0.70/DWT)',   amt:t}); }
-  if (usePanama) { const t = dwt * 2.50; canalToll += t; canalLines.push({label:'Panama Canal toll ($2.50/DWT)', amt:t}); }
-  // Legacy display vars (used elsewhere in the function)
+  if (routeVia === 'suez')   { canalToll = dwt * 0.70; canalLines.push({label:'Suez Canal toll ($0.70/DWT)',   amt:canalToll}); }
+  if (routeVia === 'panama') { canalToll = dwt * 2.50; canalLines.push({label:'Panama Canal toll ($2.50/DWT)', amt:canalToll}); }
   const canalLabel = canalLines.map(c => c.label).join(' + ');
 
   // ───── Port costs — per-zone $/DWT multipliers ─────
@@ -2909,49 +2879,6 @@ function calculateFreight() {
   updateMapRoute();
 }
 
-// ─── CANAL TRANSIT DETECTION ─────────────────────────────────────────────────
-// Coordinate-based — independent of route name labels (which were unreliable
-// when getSeaRoute returned a backbone route called 'suez' that didn't actually
-// transit the Suez Canal). Checks if any waypoint passes within ~50nm of canal.
-function routeTransitsSuez(route) {
-  if (!route || route.length < 2) return false;
-  // Suez Canal corridor: lat 29.5–31.5, lon ~32–33
-  return route.some(([lat, lon]) =>
-    lat > 29.5 && lat < 31.5 && lon > 32 && lon < 33.2
-  );
-}
-function routeTransitsPanama(route) {
-  if (!route || route.length < 2) return false;
-  // Panama Canal corridor: lat 8–10, lon ~-80 to -79
-  return route.some(([lat, lon]) =>
-    lat > 8 && lat < 10 && lon > -80.5 && lon < -79
-  );
-}
-
-// Auto-update canal toll checkboxes based on actually-detected canal transit
-function updateCanalToggles(which) {
-  const isTce = which === 'tce';
-  const lp = readPort(isTce ? 'tceLoadPort' : 'loadPort');
-  const dp = readPort(isTce ? 'tceDischargePort' : 'dischargePort');
-  const suezBox   = document.getElementById(isTce ? 'tceSuezToll'   : 'suezToll');
-  const panamaBox = document.getElementById(isTce ? 'tcePanamaToll' : 'panamaToll');
-  if (!suezBox || !panamaBox) return;
-  if (!lp || !dp || lp === dp) {
-    suezBox.checked = false;
-    panamaBox.checked = false;
-    return;
-  }
-  const via = document.getElementById(isTce ? 'tceRouteVia' : 'routeVia').value || 'auto';
-  try {
-    const route = getSeaRouteVia(lp, dp, via);
-    suezBox.checked   = routeTransitsSuez(route);
-    panamaBox.checked = routeTransitsPanama(route);
-  } catch (e) {
-    suezBox.checked = false;
-    panamaBox.checked = false;
-  }
-}
-
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
 function switchTab(tabId) {
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -3033,13 +2960,11 @@ function calculateTCE() {
   }
   const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Direct';
 
-  // Canal tolls — from explicit checkboxes (auto-set from route waypoints)
-  const useSuezTce   = document.getElementById('tceSuezToll').checked;
-  const usePanamaTce = document.getElementById('tcePanamaToll').checked;
+  // Canal tolls — driven by Route Via selection (no toll for Auto/Cape)
   let canalToll = 0;
   const tceCanalLines = [];
-  if (useSuezTce)   { const t = dwt * 0.70; canalToll += t; tceCanalLines.push({label:'Suez Canal toll',   amt:t}); }
-  if (usePanamaTce) { const t = dwt * 2.50; canalToll += t; tceCanalLines.push({label:'Panama Canal toll', amt:t}); }
+  if (routeVia === 'suez')   { canalToll = dwt * 0.70; tceCanalLines.push({label:'Suez Canal toll',   amt:canalToll}); }
+  if (routeVia === 'panama') { canalToll = dwt * 2.50; tceCanalLines.push({label:'Panama Canal toll', amt:canalToll}); }
 
   // Per-zone port costs
   const PORT_RATE = {
@@ -3512,18 +3437,11 @@ function syncSpeed(el) {
   setupAutocomplete('tceDischargePort');
 })();
 
-// Live update map + canal toggles when ports change
-function syncFreightUI() { updateMapRoute(); updateCanalToggles(); }
-document.getElementById('loadPort').addEventListener('change', syncFreightUI);
-document.getElementById('dischargePort').addEventListener('change', syncFreightUI);
-document.getElementById('loadPort').addEventListener('input', syncFreightUI);
-document.getElementById('dischargePort').addEventListener('input', syncFreightUI);
-
-// TCE-tab port inputs auto-update its own canal toggles
-document.getElementById('tceLoadPort').addEventListener('change',  () => updateCanalToggles('tce'));
-document.getElementById('tceDischargePort').addEventListener('change', () => updateCanalToggles('tce'));
-document.getElementById('tceLoadPort').addEventListener('input',  () => updateCanalToggles('tce'));
-document.getElementById('tceDischargePort').addEventListener('input', () => updateCanalToggles('tce'));
+// Live update map when freight-tab ports change
+document.getElementById('loadPort').addEventListener('change', updateMapRoute);
+document.getElementById('dischargePort').addEventListener('change', updateMapRoute);
+document.getElementById('loadPort').addEventListener('input', updateMapRoute);
+document.getElementById('dischargePort').addEventListener('input', updateMapRoute);
 
 // Enter key in a port field blurs it so the 'change' event fires immediately.
 ['loadPort','dischargePort','tceLoadPort','tceDischargePort'].forEach(id => {
@@ -3533,8 +3451,7 @@ document.getElementById('tceDischargePort').addEventListener('input', () => upda
     if (e.key === 'Enter') {
       e.preventDefault();
       el.blur();
-      if (id.startsWith('tce')) updateCanalToggles('tce');
-      else syncFreightUI();
+      if (!id.startsWith('tce')) updateMapRoute();
     }
   });
 });
