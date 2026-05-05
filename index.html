@@ -2778,7 +2778,10 @@ function calculateFreight() {
     PH_N: 1.00, PH_C: 0.95, PH_S: 0.95,
     // Indonesia
     JAVA_W: 0.95, JAVA_E: 0.95, SULAWESI: 0.90,
-    BORNEO_S: 0.90, BORNEO_E: 0.90, SARAWAK: 0.90, SABAH: 0.90,
+    BORNEO_S: 0.90, BORNEO_E: 0.90,
+    // East Malaysia (Sabah/Sarawak) — Bintulu, Tanjung Manis, KK etc.
+    // Bumped 0.90 → 1.25 (palm oil / LNG / methanol hubs with higher DA than typical regional outports)
+    SARAWAK: 1.25, SABAH: 1.25,
   };
   const portRateFor = (portKey) => {
     const z = portZone[portKey];
@@ -2988,7 +2991,8 @@ function calculateTCE() {
     VN_N:1.00, VN_C:0.95, VN_S:1.00,
     PH_N:1.00, PH_C:0.95, PH_S:0.95,
     JAVA_W:0.95, JAVA_E:0.95, SULAWESI:0.90,
-    BORNEO_S:0.90, BORNEO_E:0.90, SARAWAK:0.90, SABAH:0.90,
+    BORNEO_S:0.90, BORNEO_E:0.90,
+    SARAWAK:1.25, SABAH:1.25,  // bumped — palm oil/LNG hubs (Bintulu, Tanjung Manis, KK)
   };
   const lr = PORT_RATE[portZone[loadPort]]  || 1.10;
   const dr = PORT_RATE[portZone[dischPort]] || 1.10;
