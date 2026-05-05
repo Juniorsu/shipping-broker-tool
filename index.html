@@ -592,12 +592,12 @@
         <div class="form-row">
           <div class="form-group">
             <label>VLSFO Price (USD/MT) &mdash; sea</label>
-            <input type="number" id="vlsfoPrice" value="498" min="200" max="1500" step="1">
+            <input type="number" id="vlsfoPrice" value="510" min="200" max="1500" step="1">
             <div class="form-hint">Main engine fuel.</div>
           </div>
           <div class="form-group">
             <label>MGO Price (USD/MT) &mdash; aux / port</label>
-            <input type="number" id="mgoPrice" value="685" min="300" max="2000" step="1">
+            <input type="number" id="mgoPrice" value="720" min="300" max="2000" step="1">
             <div class="form-hint">Auxiliary engines (sea + port).</div>
           </div>
         </div>
@@ -665,8 +665,9 @@
         </button>
 
         <p class="disclaimer">
-          Indicative basis only. Market rates may vary &plusmn;20&ndash;35% depending on vessel availability,
-          bunker prices, port conditions, and negotiation. Always validate against current market fixtures.
+          Indicative basis only &mdash; built on cost-plus model: voyage costs &times; 10% (5% commission + 5% margin).
+          Tool shows &plusmn;10% market band; real spot fixtures can swing wider on tonnage tightness, bunker spikes,
+          or laycan pressure. Always validate against current market fixtures before quoting.
         </p>
       </div>
 
@@ -818,8 +819,9 @@
           </button>
 
           <p class="disclaimer">
-            TCE represents net daily earnings to vessel after voyage costs (bunker, port, canal, stevedoring on owner's account).
-            Compare against current market hire to assess if the offered rate is acceptable.
+            TCE = net daily earnings after voyage costs (bunker + port + canal + stevedoring + shore crane on owner's account).
+            Commission assumed at 5% (3.75% address + 1.25% broker). Crane account is read from Freight tab's setting.
+            Compare TCE against current market hire to assess if the offered rate is acceptable.
           </p>
         </div>
       </div><!-- /tab-tce -->
@@ -2639,6 +2641,11 @@ function calculateFreight() {
     // 14-15K MT cargo → 15K vessel (not 17.5K), 45-50K MT cargo → 50K vessel (not 45K).
     const SIZES = [3500, 5000, 7500, 10000, 12500, 15000, 20000, 25000, 30000, 35000, 50000, 60000, 75000, 82000];
     dwt = SIZES.find(s => s >= quantity) || SIZES[SIZES.length - 1];
+    // Warn if cargo exceeds largest available auto-pick size (capesize / VLOC territory)
+    if (quantity > SIZES[SIZES.length - 1]) {
+      const proceed = confirm(`Cargo of ${quantity.toLocaleString()} MT exceeds the largest auto-pick vessel (${dwt.toLocaleString()} DWT). The freight calc will assume vessel CAN load this — but in reality you'd need a Capesize/VLOC. Continue with ${dwt.toLocaleString()} DWT estimate?`);
+      if (!proceed) return;
+    }
   } else { dwt = parseFloat(dwt); }
 
   const routeVia = document.getElementById('routeVia').value || 'auto';
@@ -2682,8 +2689,8 @@ function calculateFreight() {
   seaMgo    = +(seaMgo    * spdFactor).toFixed(2);
   // Port consumption is independent of speed — vessel is at berth, only aux/cargo gear running.
 
-  const vlsfoPrice = parseFloat(document.getElementById('vlsfoPrice').value) || 498;
-  const mgoPrice   = parseFloat(document.getElementById('mgoPrice').value)   || 685;
+  const vlsfoPrice = parseFloat(document.getElementById('vlsfoPrice').value) || 510;
+  const mgoPrice   = parseFloat(document.getElementById('mgoPrice').value)   || 720;
 
   const seaVlsfoMt   = seaDays  * seaVlsfo;
   const seaMgoMt     = seaDays  * seaMgo;
@@ -2727,16 +2734,15 @@ function calculateFreight() {
 
   const hireCost = hireRate * totalDays;
 
-  // Resolve actual via FIRST (canal tolls depend on it)
-  let actualVia = routeVia;
-  if (routeVia === 'auto') {
-    const opts = getRouteOptions(loadPort, dischPort);
-    if (opts.length) {
-      opts.sort((a,b)=>a.nm-b.nm);
-      actualVia = opts[0].via;
-    }
-  }
-  const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Suez';
+  // Display label — driven directly by user's Route Via choice.
+  // (Old code resolved 'auto' to a specific canal name, which wrongly showed
+  // "Suez (auto)" for Asia voyages that don't actually transit Suez.)
+  const viaLabel = {
+    auto:   'Auto (Shortest)',
+    suez:   'Suez Canal',
+    panama: 'Panama Canal',
+    cape:   'Cape of Good Hope',
+  }[routeVia] || 'Direct';
 
   // Canal tolls — driven directly by Route Via selection. Charged laden one-way.
   //   'suez'   → $0.70/DWT (SCNT-based, 2024-25 tariff with rebates)
@@ -2746,7 +2752,6 @@ function calculateFreight() {
   const canalLines = [];
   if (routeVia === 'suez')   { canalToll = dwt * 0.70; canalLines.push({label:'Suez Canal toll ($0.70/DWT)',   amt:canalToll}); }
   if (routeVia === 'panama') { canalToll = dwt * 2.50; canalLines.push({label:'Panama Canal toll ($2.50/DWT)', amt:canalToll}); }
-  const canalLabel = canalLines.map(c => c.label).join(' + ');
 
   // ───── Port costs — per-zone $/DWT multipliers ─────
   // Old: flat $1.25/DWT for every port (badly under/over-counts depending on region).
@@ -2821,12 +2826,8 @@ function calculateFreight() {
   const stevCost = stevRate * quantity * ownerStevShare;
   const stevLabel = `Stevedoring (${basis.toUpperCase()}, ${commodityKey || 'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% owner share)`;
 
-  // Margin / commission (~10%)
+  // Margin / commission — split: ~5% address+broker commission + ~5% owner profit margin
   const marginFactor = 1.10;
-
-  // Backward-compat display variables
-  const basisFactor = 1.0;  // legacy display only — actual effect now in stevCost
-  const commFactor = 1.0;   // legacy display only — actual effect now in stevCost
 
   const voyageBaseCost = bunkerCost + hireCost + portCosts + canalToll + gearlessSurcharge + stevCost;
   const totalCost      = voyageBaseCost * marginFactor;
@@ -2860,7 +2861,7 @@ function calculateFreight() {
     ${(vesselType === 'gearless' || vesselType === 'either') ? `<div class="breakdown-row"><span class="b-label">Shore crane \u2014 ${craneAccount === 'owner' ? 'Owner\u2019s account' : 'Charterer\u2019s account'}</span><span class="b-val">${includeCrane ? '$'+gearlessSurcharge.toLocaleString('en',{maximumFractionDigits:0}) : 'Excluded (chrtrs acct)'}</span></div>` : ''}
     ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">${stevLabel}</span><span class="b-val">${stevCost >= 0 ? '$' : '-$'}${Math.abs(stevCost).toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : `<div class="breakdown-row"><span class="b-label">Stevedoring (${basis.toUpperCase()} \u2014 charterer's account)</span><span class="b-val">$0 (excluded)</span></div>`}
     <div class="breakdown-row"><span class="b-label">Port time: ${loadDays.toFixed(1)} d load + ${dischDays.toFixed(1)} d disch</span><span class="b-val">${portDays.toFixed(1)} days at berth</span></div>
-    <div class="breakdown-row"><span class="b-label">Margin + commission (incl.)</span><span class="b-val">~10%</span></div>
+    <div class="breakdown-row"><span class="b-label">Margin + commission (5% addr/broker + 5% profit)</span><span class="b-val">+10%</span></div>
     <div class="breakdown-row total"><span class="b-label">TOTAL VOYAGE COST</span><span class="b-val">$${totalCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row total"><span class="b-label">FREIGHT RATE (\u00F7 ${quantity.toLocaleString()} MT)</span><span class="b-val">$${freightRate.toFixed(2)}/MT</span></div>
   `;
@@ -2952,19 +2953,26 @@ function calculateTCE() {
   const portVlsfoMt= portDays * portVlsfo;
   const bunkerCost = seaVlsfoMt*vlsfoPrice + seaMgoMt*mgoPrice + portMgoMt*mgoPrice + portVlsfoMt*vlsfoPrice;
 
-  // Resolve via for canal toll
-  let actualVia = routeVia;
-  if (routeVia === 'auto') {
-    const opts = getRouteOptions(loadPort, dischPort);
-    if (opts.length) { opts.sort((a,b)=>a.nm-b.nm); actualVia = opts[0].via; }
-  }
-  const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Direct';
+  // Display label — driven directly by user's Route Via choice
+  const viaLabel = {
+    auto:   'Auto (Shortest)',
+    suez:   'Suez Canal',
+    panama: 'Panama Canal',
+    cape:   'Cape of Good Hope',
+  }[routeVia] || 'Direct';
 
   // Canal tolls — driven by Route Via selection (no toll for Auto/Cape)
   let canalToll = 0;
   const tceCanalLines = [];
   if (routeVia === 'suez')   { canalToll = dwt * 0.70; tceCanalLines.push({label:'Suez Canal toll',   amt:canalToll}); }
   if (routeVia === 'panama') { canalToll = dwt * 2.50; tceCanalLines.push({label:'Panama Canal toll', amt:canalToll}); }
+
+  // Shore crane charge (gearless + owner's account) — pulled from freight tab radio buttons
+  // (TCE doesn't have its own crane radio; assumes brokerstool's freight-tab setting applies)
+  const craneAccountEl = document.querySelector('input[name="craneAccount"]:checked');
+  const craneAccount   = craneAccountEl ? craneAccountEl.value : 'charterer';
+  const portDaysForCrane = quantity / loadRate + quantity / dischRate;
+  const craneCost = (vesselType === 'gearless' && craneAccount === 'owner') ? 800 * portDaysForCrane : 0;
 
   // Per-zone port costs
   const PORT_RATE = {
@@ -3006,8 +3014,8 @@ function calculateTCE() {
   // Owner pays: bunker, port, canal, stevedoring (on owner's share)
   // What's left = net to vessel; ÷ totalDays = TCE per day
   const grossRevenue   = freightOffered * quantity;
-  const totalVoyageOpex = bunkerCost + portCosts + canalToll + stevCost;
-  // We assume broker commission ~5% (3.75% address + 1.25% broker) — owner nets after that
+  const totalVoyageOpex = bunkerCost + portCosts + canalToll + stevCost + craneCost;
+  // Owner pays broker commission ~5% (3.75% address + 1.25% broker) on gross revenue
   const commissionRate = 0.05;
   const netRevenue = grossRevenue * (1 - commissionRate);
   const netToVessel = netRevenue - totalVoyageOpex;
@@ -3059,6 +3067,7 @@ function calculateTCE() {
     <div class="breakdown-row"><span class="b-label">Less: port costs ($${lr.toFixed(2)}+$${dr.toFixed(2)} × ${dwt.toLocaleString()} DWT)</span><span class="b-val" style="color:var(--red)">−$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${tceCanalLines.map(c => `<div class="breakdown-row"><span class="b-label">Less: ${c.label}</span><span class="b-val" style="color:var(--red)">−$${c.amt.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`).join('')}
     ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">Less: stevedoring (${basis.toUpperCase()}, ${commodityKey||'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% owner share)</span><span class="b-val" style="color:var(--red)">−$${stevCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
+    ${craneCost > 0 ? `<div class="breakdown-row"><span class="b-label">Less: shore crane (gearless, owner's a/c — $800/day × ${portDaysForCrane.toFixed(1)} d at berth)</span><span class="b-val" style="color:var(--red)">−$${craneCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     <div class="breakdown-row total"><span class="b-label">NET TO VESSEL</span><span class="b-val">$${netToVessel.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row total"><span class="b-label">TCE / DAY (÷ ${totalDays.toFixed(1)} days)</span><span class="b-val" style="color:var(--accent2)">$${Math.round(tceDay).toLocaleString()}</span></div>
   `;
@@ -3071,7 +3080,8 @@ function calculateTCE() {
     loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
     quantity, commodity: commodityKey || 'general', basis, totalDays,
     seaDays, portDays, freightOffered, tceDay, marketHire,
-    bunkerCost, portCosts, canalToll, stevCost, grossRevenue, netRevenue, netToVessel,
+    bunkerCost, portCosts, canalToll, stevCost, craneCost,
+    grossRevenue, netRevenue, netToVessel,
   };
 }
 
@@ -3097,7 +3107,8 @@ function copyQuote(which) {
    Bunker:          −$${Math.round(q.bunkerCost).toLocaleString()}
    Port costs:      −$${Math.round(q.portCosts).toLocaleString()}${q.canalToll>0?`
    Canal toll:      −$${Math.round(q.canalToll).toLocaleString()}`:''}${q.stevCost!==0?`
-   Stevedoring:     −$${Math.round(q.stevCost).toLocaleString()}`:''}
+   Stevedoring:     −$${Math.round(q.stevCost).toLocaleString()}`:''}${q.craneCost>0?`
+   Shore crane:     −$${Math.round(q.craneCost).toLocaleString()}`:''}
    ─────────────────
    Net to vessel:    $${Math.round(q.netToVessel).toLocaleString()}
 
