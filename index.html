@@ -2420,19 +2420,34 @@ function calculateFreight() {
   const portDays  = loadDays + dischDays;
   const totalDays = seaDays + portDays + 1.5;
 
-  // Bunker consumption — realistic VLSFO (main) + MGO (aux) at sea, MGO-only in port
-  // portVlsfo > 0 only for larger vessels that run VLSFO boilers/gensets in port
+  // Bunker consumption — calibrated against owner's vessel database (n=126 vessels with disclosed speed/cons)
+  // Values are MEDIAN at 11.5 kts baseline. Speed scaling applied below (cons ≈ baseline × (speed/11.5)^2).
+  // Small vessels (<25K DWT): port runs MGO-only. Larger vessels (≥25K): port runs IFO + small MGO.
+  // Database source: 1船東資料 VSL'S PARTICULAR (cleaned v5).xlsx — extracted via regex parser.
   let seaVlsfo, seaMgo, portMgo, portVlsfo = 0;
-  if      (dwt <= 5500)  { seaVlsfo = 7.0;  seaMgo = 0.5; portMgo = 1.0; }  // 4-5K
-  else if (dwt <= 7800)  { seaVlsfo = 8.0;  seaMgo = 0.7; portMgo = 1.2; }  // 6-7K
-  else if (dwt <= 9500)  { seaVlsfo = 10.0; seaMgo = 1.0; portMgo = 1.5; }  // 8-9K
-  else if (dwt <= 13000) { seaVlsfo = 12.0; seaMgo = 1.3; portMgo = 1.8; }  // 10-13K
-  else if (dwt <= 15500) { seaVlsfo = 14.0; seaMgo = 1.0; portMgo = 2.0; }  // 13-15K
-  else if (dwt <= 17500) { seaVlsfo = 17.0; seaMgo = 0.1; portMgo = 2.2; }  // 16-17K
-  else if (dwt <= 19500) { seaVlsfo = 18.0; seaMgo = 0.1; portMgo = 2.5; }  // 18-19K
-  else if (dwt <= 25500) { seaVlsfo = 15.0; seaMgo = 1.5; portMgo = 2.8; }  // 20-25K
-  else if (dwt <= 30000) { seaVlsfo = 20.0; seaMgo = 0.2; portMgo = 3.2; }  // 26-30K
-  else                   { seaVlsfo = 22.5; seaMgo = 0.5; portMgo = 0.1; portVlsfo = 5.0; }  // 45-50K (working: 5.0 VLSFO 380cst + 0.1 MGO)
+  if      (dwt <= 5500)  { seaVlsfo = 7.0;  seaMgo = 0.5; portMgo = 1.5; }  // 1-5K   (DB n=1, svc 11kt:7.7)
+  else if (dwt <= 7800)  { seaVlsfo = 7.5;  seaMgo = 0.6; portMgo = 1.7; }  // 6-7K   (DB n=1, svc 10kt:7.0)
+  else if (dwt <= 9500)  { seaVlsfo = 9.5;  seaMgo = 0.8; portMgo = 1.8; }  // 8-9K   (interpolated, no DB)
+  else if (dwt <= 13000) { seaVlsfo = 11.0; seaMgo = 1.0; portMgo = 1.5; }  // 10-13K (DB n=12, svc 12.5kt:12.5)
+  else if (dwt <= 15500) { seaVlsfo = 12.5; seaMgo = 0.5; portMgo = 2.0; }  // 13-15K (DB n=3,  svc 13kt:14.5)
+  else if (dwt <= 17500) { seaVlsfo = 13.5; seaMgo = 0.3; portMgo = 2.2; }  // 16-17K (interpolated)
+  else if (dwt <= 19500) { seaVlsfo = 14.5; seaMgo = 0.2; portMgo = 2.5; }  // 18-19K (DB n=3,  svc 12kt:16.0)
+  else if (dwt <= 25500) { seaVlsfo = 17.5; seaMgo = 0.2; portMgo = 0;   portVlsfo = 4.5; }  // 20-25K (DB n=3,  svc 14kt:26 / eco 12.5kt:17.5) — was 16.5 BUG
+  else if (dwt <= 30000) { seaVlsfo = 18.0; seaMgo = 0.2; portMgo = 0;   portVlsfo = 5.0; }  // 26-30K (DB n=10, svc 13.5kt:21.3 / eco 12.2kt:17.2)
+  else if (dwt <= 40000) { seaVlsfo = 20.0; seaMgo = 0.2; portMgo = 0;   portVlsfo = 4.9; }  // 30-40K handymax (DB n=28, svc 14kt:23.8 / eco 12kt:19.0)
+  else if (dwt <= 55000) { seaVlsfo = 23.0; seaMgo = 0.3; portMgo = 0;   portVlsfo = 4.5; }  // 40-55K supramax/UMX (DB n=25, svc 14kt:28 / eco 12kt:23.8)
+  else if (dwt <= 70000) { seaVlsfo = 24.0; seaMgo = 0.2; portMgo = 0;   portVlsfo = 5.1; }  // 55-70K kamsarmax (DB n=36, svc 14kt:28.5 / eco 12kt:26)
+  else                   { seaVlsfo = 25.0; seaMgo = 0.3; portMgo = 0;   portVlsfo = 5.0; }  // 70K+ panamax (DB n=3,  svc 13.5kt:31 / eco 11.6kt:26.5)
+
+  // Speed scaling — calibrated from database: cons ratio ≈ (speed/baseline)^1.5
+  // (Observed exponent varies 0.6–2.0 across DWT brackets; k=1.5 is best fit for handysize→panamax.
+  //  Theoretical cube-law overshoots because real ships operate within a narrow design band.)
+  // Baseline = 11.5 kts (tool default; close to eco speed for most bulkers).
+  const SPD_BASELINE = 11.5;
+  const spdFactor = Math.pow(speed / SPD_BASELINE, 1.5);
+  seaVlsfo  = +(seaVlsfo  * spdFactor).toFixed(2);
+  seaMgo    = +(seaMgo    * spdFactor).toFixed(2);
+  // Port consumption is independent of speed — vessel is at berth, only aux/cargo gear running.
 
   const vlsfoPrice = parseFloat(document.getElementById('vlsfoPrice').value) || 498;
   const mgoPrice   = parseFloat(document.getElementById('mgoPrice').value)   || 685;
