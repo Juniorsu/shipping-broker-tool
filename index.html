@@ -2711,22 +2711,23 @@ function calculateFreight() {
   const totalMgoMt     = seaMgoMt + portMgoMt;
   const totalVlsfoMt   = seaVlsfoMt + portVlsfoMt;
 
-  // Vessel hire
+  // Vessel hire (TCE-equivalent owner's earnings target — bumped 1.05x over baseline
+  // per user calibration to reflect firmer 2025 dry bulk market)
   let hireRateGeared;
-  if      (dwt <= 3800)  hireRateGeared = 2750;
-  else if (dwt <= 5500)  hireRateGeared = 3000;
-  else if (dwt <= 7800)  hireRateGeared = 3500;
-  else if (dwt <= 9500)  hireRateGeared = 4250;
-  else if (dwt <= 13000) hireRateGeared = 5200;     // merged 12.8K and 13K (was useless 200-DWT step)
-  else if (dwt <= 15500) hireRateGeared = 6250;
-  else if (dwt <= 17500) hireRateGeared = 7500;
-  else if (dwt <= 19500) hireRateGeared = 8750;
-  else if (dwt <= 25500) hireRateGeared = 10250;
-  else if (dwt <= 30000) hireRateGeared = 12000;    // handysize
-  else if (dwt <= 40000) hireRateGeared = 13500;    // NEW handymax
-  else if (dwt <= 55000) hireRateGeared = 15000;    // NEW supramax
-  else if (dwt <= 70000) hireRateGeared = 16500;    // NEW ultramax
-  else                   hireRateGeared = 18000;    // NEW panamax/kamsarmax
+  if      (dwt <= 3800)  hireRateGeared = 2888;     // 2,750 x 1.05
+  else if (dwt <= 5500)  hireRateGeared = 3150;     // 3,000 x 1.05
+  else if (dwt <= 7800)  hireRateGeared = 3675;     // 3,500 x 1.05
+  else if (dwt <= 9500)  hireRateGeared = 4463;     // 4,250 x 1.05
+  else if (dwt <= 13000) hireRateGeared = 5460;     // 5,200 x 1.05
+  else if (dwt <= 15500) hireRateGeared = 6563;     // 6,250 x 1.05
+  else if (dwt <= 17500) hireRateGeared = 7875;     // 7,500 x 1.05
+  else if (dwt <= 19500) hireRateGeared = 9188;     // 8,750 x 1.05
+  else if (dwt <= 25500) hireRateGeared = 10763;    // 10,250 x 1.05
+  else if (dwt <= 30000) hireRateGeared = 12600;    // 12,000 x 1.05  handysize
+  else if (dwt <= 40000) hireRateGeared = 14175;    // 13,500 x 1.05  handymax
+  else if (dwt <= 55000) hireRateGeared = 15750;    // 15,000 x 1.05  supramax
+  else if (dwt <= 70000) hireRateGeared = 17325;    // 16,500 x 1.05  ultramax
+  else                   hireRateGeared = 18900;    // 18,000 x 1.05  panamax/kamsarmax
 
   const hireRate = vesselType === 'gearless'
     ? Math.round(hireRateGeared * 0.88)
@@ -3021,22 +3022,22 @@ function calculateTCE() {
   const netToVessel = netRevenue - totalVoyageOpex;
   const tceDay = netToVessel / totalDays;
 
-  // Market hire rate for comparison
+  // Market hire rate for comparison (kept in sync with calculateFreight's hireRateGeared)
   let marketHireGeared;
-  if      (dwt <= 3800)  marketHireGeared = 2750;
-  else if (dwt <= 5500)  marketHireGeared = 3000;
-  else if (dwt <= 7800)  marketHireGeared = 3500;
-  else if (dwt <= 9500)  marketHireGeared = 4250;
-  else if (dwt <= 13000) marketHireGeared = 5200;
-  else if (dwt <= 15500) marketHireGeared = 6250;
-  else if (dwt <= 17500) marketHireGeared = 7500;
-  else if (dwt <= 19500) marketHireGeared = 8750;
-  else if (dwt <= 25500) marketHireGeared = 10250;
-  else if (dwt <= 30000) marketHireGeared = 12000;
-  else if (dwt <= 40000) marketHireGeared = 13500;
-  else if (dwt <= 55000) marketHireGeared = 15000;
-  else if (dwt <= 70000) marketHireGeared = 16500;
-  else                   marketHireGeared = 18000;
+  if      (dwt <= 3800)  marketHireGeared = 2888;
+  else if (dwt <= 5500)  marketHireGeared = 3150;
+  else if (dwt <= 7800)  marketHireGeared = 3675;
+  else if (dwt <= 9500)  marketHireGeared = 4463;
+  else if (dwt <= 13000) marketHireGeared = 5460;
+  else if (dwt <= 15500) marketHireGeared = 6563;
+  else if (dwt <= 17500) marketHireGeared = 7875;
+  else if (dwt <= 19500) marketHireGeared = 9188;
+  else if (dwt <= 25500) marketHireGeared = 10763;
+  else if (dwt <= 30000) marketHireGeared = 12600;
+  else if (dwt <= 40000) marketHireGeared = 14175;
+  else if (dwt <= 55000) marketHireGeared = 15750;
+  else if (dwt <= 70000) marketHireGeared = 17325;
+  else                   marketHireGeared = 18900;
   const marketHire = vesselType === 'gearless' ? Math.round(marketHireGeared * 0.88) : marketHireGeared;
 
   // Display
