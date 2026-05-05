@@ -514,7 +514,7 @@
             <label>Freight Basis</label>
             <select id="freightBasis">
               <option value="fio">FIO (Free In/Out)</option>
-              <option value="fios">FIOS (Free In/Out &amp; Stowed)</option>
+              <option value="fiost">FIOST (Free In/Out, Stowed &amp; Trimmed)</option>
               <option value="gross">Gross Terms (Owner ops)</option>
               <option value="filo">FILO (Free In, Liner Out)</option>
             </select>
@@ -2606,10 +2606,10 @@ function calculateFreight() {
 
   // Basis encodes owner's share of stevedoring:
   //   Gross  → owner pays both load AND discharge stevedoring (full)
-  //   FIO    → charterer pays both (none on owner)
+  //   FIO    → charterer pays load + discharge (none on owner)
+  //   FIOST  → charterer pays load + discharge + stowage + trimming (none on owner)
   //   FILO   → free in / liner out → owner pays discharge only (50%)
-  //   FIOS   → charterer pays both + stevedoring/lashing → small saving for owner
-  const ownerStevShare = { gross: 1.0, fio: 0.0, filo: 0.5, fios: -0.02 }[basis] ?? 0;
+  const ownerStevShare = { gross: 1.0, fio: 0.0, fiost: 0.0, filo: 0.5 }[basis] ?? 0;
   const stevCost = stevRate * quantity * ownerStevShare;
   const stevLabel = `Stevedoring (${basis.toUpperCase()}, ${commodityKey || 'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% owner share)`;
 
