@@ -192,6 +192,47 @@
   }
   .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(184,98,10,.35); }
 
+  /* TABS */
+  .tabs {
+    display: flex; border-bottom: 1px solid var(--border); background: var(--navy2);
+  }
+  .tab-btn {
+    flex: 1; padding: 11px 14px; background: transparent; border: none; cursor: pointer;
+    font-size: .78rem; font-weight: 700; color: var(--muted); letter-spacing: .4px;
+    text-transform: uppercase; transition: all .15s; border-bottom: 3px solid transparent;
+  }
+  .tab-btn:hover { color: var(--accent2); background: rgba(184,98,10,.06); }
+  .tab-btn.active {
+    color: var(--accent2); background: var(--card); border-bottom-color: var(--accent);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* COPY QUOTE BUTTON */
+  .copy-btn {
+    width: 100%; padding: 10px; margin-top: 12px;
+    background: var(--card); border: 1px solid var(--accent); border-radius: 8px;
+    color: var(--accent2); font-size: .82rem; font-weight: 600; cursor: pointer;
+    transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .copy-btn:hover { background: var(--accent); color: #fff; }
+  .copy-btn.copied { background: var(--green); border-color: var(--green); color: #fff; }
+
+  /* TCE OUTPUT */
+  .tce-display {
+    text-align: center; padding: 20px 0;
+  }
+  .tce-label { font-size: .72rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+  .tce-value { font-size: 2.4rem; font-weight: 700; color: var(--accent2); margin: 6px 0 2px; line-height: 1; }
+  .tce-unit { font-size: .8rem; color: var(--muted); }
+  .tce-vs-market {
+    margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+    font-size: .82rem; font-weight: 600; display: inline-block;
+  }
+  .tce-vs-market.above { background: rgba(26,122,72,.12); color: var(--green); border: 1px solid rgba(26,122,72,.3); }
+  .tce-vs-market.below { background: rgba(192,57,43,.12); color: var(--red); border: 1px solid rgba(192,57,43,.3); }
+  .tce-vs-market.par { background: var(--navy2); color: var(--text); border: 1px solid var(--border); }
+
   /* RESULTS */
   .results { display: none; padding: 0 20px 20px; }
   .results.show { display: block; }
@@ -372,6 +413,14 @@
         <h2>&#129518; Freight Quotation Calculator</h2>
         <p>Indicative freight basis &mdash; tramp / spot market</p>
       </div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-freight" onclick="switchTab('tab-freight')">&#9875; Freight Calc</button>
+        <button class="tab-btn"        data-tab="tab-tce"     onclick="switchTab('tab-tce')">&#128200; TCE Reverse</button>
+      </div>
+
+      <div id="tab-freight" class="tab-content active">
 
       <form id="quoteForm" onsubmit="return false;">
         <div class="form-group">
@@ -610,11 +659,169 @@
 
         <div class="breakdown" id="breakdown"></div>
 
+        <button class="copy-btn" id="copyFreightBtn" onclick="copyQuote('freight')">
+          &#128203; Copy Quote to Clipboard
+        </button>
+
         <p class="disclaimer">
           Indicative basis only. Market rates may vary &plusmn;20&ndash;35% depending on vessel availability,
           bunker prices, port conditions, and negotiation. Always validate against current market fixtures.
         </p>
       </div>
+
+      </div><!-- /tab-freight -->
+
+      <!-- ========== TCE REVERSE TAB ========== -->
+      <div id="tab-tce" class="tab-content">
+        <form id="tceForm" onsubmit="return false;">
+          <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
+            &#128161; <b>How it works:</b> Enter the freight rate the charterer is offering and the voyage details. Tool back-calculates your time-charter equivalent (TCE) per day &mdash; what the owner actually earns after voyage costs.
+          </div>
+
+          <div class="form-group">
+            <label>Freight Rate Offered (USD / MT) <b style="color:var(--accent2)">*</b></label>
+            <input type="number" id="tceFreightRate" placeholder="e.g. 45.5" min="1" step="0.5">
+            <div class="form-hint">The $/MT being offered by the charterer.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Commodity</label>
+            <input type="text" id="tceCommodity" list="commodityList" placeholder="e.g. corn, urea, steel" autocomplete="off" spellcheck="false">
+            <div class="form-hint">Affects stevedoring cost (which reduces TCE on Liner / FILO basis).</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Quantity (MT)</label>
+              <input type="number" id="tceQuantity" placeholder="e.g. 28000" min="500">
+            </div>
+            <div class="form-group">
+              <label>Vessel Size (DWT)</label>
+              <select id="tceVesselSize">
+                <option value="3500">~3,500 DWT</option>
+                <option value="5000">~5,000 DWT</option>
+                <option value="7500">~7,500 DWT</option>
+                <option value="10000">~10,000 DWT</option>
+                <option value="12500">~12,500 DWT</option>
+                <option value="15000">~15,000 DWT</option>
+                <option value="17500">~17,500 DWT</option>
+                <option value="20000">~20,000 DWT</option>
+                <option value="25000">~25,000 DWT</option>
+                <option value="30000" selected>~30,000 DWT (handysize)</option>
+                <option value="35000">~35,000 DWT (handymax)</option>
+                <option value="45000">~45,000 DWT (handymax)</option>
+                <option value="50000">~50,000 DWT (supramax)</option>
+                <option value="60000">~60,000 DWT (ultramax)</option>
+                <option value="75000">~75,000 DWT (panamax)</option>
+                <option value="82000">~82,000 DWT (kamsarmax)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Loading Port</label>
+              <div class="port-wrap">
+                <input type="text" id="tceLoadPort" placeholder="e.g. Singapore" autocomplete="off" spellcheck="false">
+                <div class="port-suggestions" id="tceLoadPort-sugg" style="display:none"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Discharging Port</label>
+              <div class="port-wrap">
+                <input type="text" id="tceDischargePort" placeholder="e.g. Tianjin" autocomplete="off" spellcheck="false">
+                <div class="port-suggestions" id="tceDischargePort-sugg" style="display:none"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Loading Rate (MT/day)</label>
+              <input type="number" id="tceLoadRate" placeholder="e.g. 3000" value="3000" min="100">
+            </div>
+            <div class="form-group">
+              <label>Discharging Rate (MT/day)</label>
+              <input type="number" id="tceDischRate" placeholder="e.g. 2500" value="2500" min="100">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Speed (kts)</label>
+              <input type="number" id="tceSpeed" value="11.5" min="6" max="16" step="0.5">
+            </div>
+            <div class="form-group">
+              <label>Freight Basis</label>
+              <select id="tceBasis">
+                <option value="fiost" selected>FIOST</option>
+                <option value="filo">FILO</option>
+                <option value="liner">Full Liner Terms</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Route Via</label>
+              <select id="tceRouteVia">
+                <option value="auto">Auto (shortest)</option>
+                <option value="suez">Suez</option>
+                <option value="panama">Panama</option>
+                <option value="cape">Cape</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Vessel Type</label>
+              <select id="tceVesselType">
+                <option value="geared" selected>Geared</option>
+                <option value="gearless">Gearless</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>VLSFO Price ($/MT)</label>
+              <input type="number" id="tceVlsfoPrice" placeholder="auto" min="200" max="1500" step="1">
+              <div class="form-hint">Leave blank to use Freight tab value.</div>
+            </div>
+            <div class="form-group">
+              <label>MGO Price ($/MT)</label>
+              <input type="number" id="tceMgoPrice" placeholder="auto" min="300" max="2000" step="1">
+            </div>
+          </div>
+
+          <button class="calc-btn" onclick="calculateTCE()">
+            &#128200; Calculate Owner's TCE
+          </button>
+        </form>
+
+        <!-- TCE RESULTS -->
+        <div class="results" id="tceResults">
+          <hr class="result-divider">
+
+          <div class="tce-display">
+            <div class="tce-label">Owner's Time-Charter Equivalent</div>
+            <div class="tce-value" id="tceValue">&mdash;</div>
+            <div class="tce-unit">USD / day</div>
+            <div id="tceVsMarket"></div>
+          </div>
+
+          <div class="voyage-tags" id="tceVoyageTags"></div>
+
+          <div class="breakdown" id="tceBreakdown"></div>
+
+          <button class="copy-btn" id="copyTceBtn" onclick="copyQuote('tce')">
+            &#128203; Copy TCE Summary to Clipboard
+          </button>
+
+          <p class="disclaimer">
+            TCE represents net daily earnings to vessel after voyage costs (bunker, port, canal, stevedoring on owner's account).
+            Compare against current market hire to assess if the offered rate is acceptable.
+          </p>
+        </div>
+      </div><!-- /tab-tce -->
 
     </div>
   </div>
@@ -2658,7 +2865,269 @@ function calculateFreight() {
   document.getElementById('results').classList.add('show');
   document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
+  // Stash data for the Copy Quote button
+  window._lastFreightQuote = {
+    loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
+    quantity, commodity: commodityKey || 'general', basis, totalDays,
+    seaDays, portDays, freightRate, freightLow, freightHigh,
+    bunkerCost, hireCost, hireRate, portCosts, canalToll, stevCost, totalCost,
+  };
+
   updateMapRoute();
+}
+
+// ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabId);
+  });
+  document.querySelectorAll('.tab-content').forEach(div => {
+    div.classList.toggle('active', div.id === tabId);
+  });
+}
+
+// ─── TCE REVERSE CALCULATOR ──────────────────────────────────────────────────
+// Given a freight rate offered by charterer, back-calculate the owner's
+// time-charter equivalent (TCE) per day after voyage costs.
+function calculateTCE() {
+  const freightOffered = parseFloat(document.getElementById('tceFreightRate').value);
+  const commodity      = document.getElementById('tceCommodity').value;
+  const quantity       = parseFloat(document.getElementById('tceQuantity').value);
+  const loadPort       = readPort('tceLoadPort');
+  const dischPort      = readPort('tceDischargePort');
+  const loadRate       = parseFloat(document.getElementById('tceLoadRate').value);
+  const dischRate      = parseFloat(document.getElementById('tceDischRate').value);
+  const speed          = parseFloat(document.getElementById('tceSpeed').value) || 11.5;
+  const basis          = document.getElementById('tceBasis').value;
+  const routeVia       = document.getElementById('tceRouteVia').value || 'auto';
+  const vesselType     = document.getElementById('tceVesselType').value;
+  let dwt              = parseFloat(document.getElementById('tceVesselSize').value);
+
+  // Fallback bunker prices: use TCE-tab override, else freight tab values, else defaults
+  const tceVlsfo = parseFloat(document.getElementById('tceVlsfoPrice').value);
+  const tceMgo   = parseFloat(document.getElementById('tceMgoPrice').value);
+  const vlsfoPrice = !isNaN(tceVlsfo) ? tceVlsfo : (parseFloat(document.getElementById('vlsfoPrice').value) || 510);
+  const mgoPrice   = !isNaN(tceMgo)   ? tceMgo   : (parseFloat(document.getElementById('mgoPrice').value)   || 720);
+
+  // Validation
+  const errors = [];
+  if (!freightOffered || freightOffered < 1) errors.push('Freight Rate Offered');
+  if (!quantity || quantity < 100)           errors.push('Quantity (min 100 MT)');
+  if (!loadPort)                              errors.push('Loading Port');
+  if (!dischPort)                             errors.push('Discharging Port');
+  if (!loadRate || loadRate < 50)             errors.push('Loading Rate');
+  if (!dischRate || dischRate < 50)           errors.push('Discharging Rate');
+  if (errors.length) { alert('Please fill in: ' + errors.join(', ')); return; }
+  if (loadPort === dischPort) { alert('Loading and discharging ports cannot be the same.'); return; }
+
+  // Compute voyage costs (same logic as freight calc, EXCLUDING hire — TCE backs out the hire-equivalent)
+  const distance = getDistance(loadPort, dischPort, routeVia);
+  const seaDays  = distance / (speed * 24);
+  const portDays = quantity / loadRate + quantity / dischRate;
+  const totalDays = seaDays + portDays + 1.5;
+
+  // Bunker (same table as calculateFreight)
+  let seaIfo, seaMgo, portMgo, portVlsfo = 0;
+  if      (dwt <= 5500)  { seaIfo = 7.0;  seaMgo = 0.5; portMgo = 1.5; }
+  else if (dwt <= 7800)  { seaIfo = 7.5;  seaMgo = 0.6; portMgo = 1.7; }
+  else if (dwt <= 9500)  { seaIfo = 9.5;  seaMgo = 0.8; portMgo = 1.8; }
+  else if (dwt <= 13000) { seaIfo = 11.0; seaMgo = 1.0; portMgo = 1.5; }
+  else if (dwt <= 15500) { seaIfo = 12.5; seaMgo = 0.5; portMgo = 2.0; }
+  else if (dwt <= 17500) { seaIfo = 13.5; seaMgo = 0.3; portMgo = 2.2; }
+  else if (dwt <= 19500) { seaIfo = 14.5; seaMgo = 0.2; portMgo = 2.5; }
+  else if (dwt <= 25500) { seaIfo = 17.5; seaMgo = 0.2; portMgo = 0; portVlsfo = 4.5; }
+  else if (dwt <= 30000) { seaIfo = 18.0; seaMgo = 0.2; portMgo = 0; portVlsfo = 5.0; }
+  else if (dwt <= 40000) { seaIfo = 20.0; seaMgo = 0.2; portMgo = 0; portVlsfo = 4.9; }
+  else if (dwt <= 55000) { seaIfo = 23.0; seaMgo = 0.3; portMgo = 0; portVlsfo = 4.5; }
+  else if (dwt <= 70000) { seaIfo = 24.0; seaMgo = 0.2; portMgo = 0; portVlsfo = 5.1; }
+  else                   { seaIfo = 25.0; seaMgo = 0.3; portMgo = 0; portVlsfo = 5.0; }
+  const sf = Math.pow(speed / 11.5, 1.5);
+  seaIfo *= sf; seaMgo *= sf;
+  const seaVlsfoMt = seaDays * seaIfo;
+  const seaMgoMt   = seaDays * seaMgo;
+  const portMgoMt  = portDays * portMgo;
+  const portVlsfoMt= portDays * portVlsfo;
+  const bunkerCost = seaVlsfoMt*vlsfoPrice + seaMgoMt*mgoPrice + portMgoMt*mgoPrice + portVlsfoMt*vlsfoPrice;
+
+  // Resolve via for canal toll
+  let actualVia = routeVia;
+  if (routeVia === 'auto') {
+    const opts = getRouteOptions(loadPort, dischPort);
+    if (opts.length) { opts.sort((a,b)=>a.nm-b.nm); actualVia = opts[0].via; }
+  }
+  const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Suez';
+  let canalToll = 0;
+  if (actualVia === 'suez')   canalToll = dwt * 0.70;
+  if (actualVia === 'panama') canalToll = dwt * 2.50;
+
+  // Per-zone port costs
+  const PORT_RATE = {
+    NW_EU:1.85, MED:1.55, US_GULF:1.70, US_EAST:1.80,
+    JAPAN:1.30, KR:1.25, TAIWAN:1.25,
+    SAFRICA:1.45, WAFRICA:1.55, EAFRICA:1.40,
+    BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40,
+    ADEN:1.30, PG:1.20,
+    CN_N:1.20, CN_E:1.20, CN_S:1.15,
+    INDIA_W:1.05, INDIA_E:1.05, BANGLADESH:1.00, SRI_LANKA:1.00,
+    SG:1.10, MALACCA:1.00, GOT:0.95, MAL_E:0.95,
+    VN_N:1.00, VN_C:0.95, VN_S:1.00,
+    PH_N:1.00, PH_C:0.95, PH_S:0.95,
+    JAVA_W:0.95, JAVA_E:0.95, SULAWESI:0.90,
+    BORNEO_S:0.90, BORNEO_E:0.90, SARAWAK:0.90, SABAH:0.90,
+  };
+  const lr = PORT_RATE[portZone[loadPort]]  || 1.10;
+  const dr = PORT_RATE[portZone[dischPort]] || 1.10;
+  const portCosts = dwt * (lr + dr);
+
+  // Stevedoring
+  const commodityKey = (commodity || '').toLowerCase().trim();
+  const STEV_RATE_PER_MT = {
+    iron_ore:3, coal:3, bauxite:3, alumina:4, manganese:4, nickel_ore:4,
+    chrome:4, ilmenite:4, gypsum:3, pet_coke:3, anthracite:3,
+    salt:3, limestone:3, copper_conc:5, zinc_conc:5, iron_conc:5,
+    cement:5, clinker:4,
+    grain:4, corn:4, wheat:4, barley:4, sorghum:4, soybeans:4, soybean_meal:4,
+    rice:6, sugar:5, fertilizer:4, urea:4, dap:4, potash:4, ammonium_sulphate:4,
+    scrap:6, steel:12, rebar:11, hbi:6, pipes:14, machinery:18, vehicles:22, project:20,
+    timber:8, lumber:9, plywood:10, woodpulp:7, woodchips:5,
+  };
+  const stevRate = STEV_RATE_PER_MT[commodityKey] || 5;
+  const ownerStevShare = { liner: 1.0, fiost: 0.0, filo: 0.5 }[basis] ?? 0;
+  const stevCost = stevRate * quantity * ownerStevShare;
+
+  // ── TCE calculation ──
+  // Owner receives: freight × quantity (gross revenue)
+  // Owner pays: bunker, port, canal, stevedoring (on owner's share)
+  // What's left = net to vessel; ÷ totalDays = TCE per day
+  const grossRevenue   = freightOffered * quantity;
+  const totalVoyageOpex = bunkerCost + portCosts + canalToll + stevCost;
+  // We assume broker commission ~5% (3.75% address + 1.25% broker) — owner nets after that
+  const commissionRate = 0.05;
+  const netRevenue = grossRevenue * (1 - commissionRate);
+  const netToVessel = netRevenue - totalVoyageOpex;
+  const tceDay = netToVessel / totalDays;
+
+  // Market hire rate for comparison
+  let marketHireGeared;
+  if      (dwt <= 3800)  marketHireGeared = 2750;
+  else if (dwt <= 5500)  marketHireGeared = 3000;
+  else if (dwt <= 7800)  marketHireGeared = 3500;
+  else if (dwt <= 9500)  marketHireGeared = 4250;
+  else if (dwt <= 13000) marketHireGeared = 5200;
+  else if (dwt <= 15500) marketHireGeared = 6250;
+  else if (dwt <= 17500) marketHireGeared = 7500;
+  else if (dwt <= 19500) marketHireGeared = 8750;
+  else if (dwt <= 25500) marketHireGeared = 10250;
+  else if (dwt <= 30000) marketHireGeared = 12000;
+  else if (dwt <= 40000) marketHireGeared = 13500;
+  else if (dwt <= 55000) marketHireGeared = 15000;
+  else if (dwt <= 70000) marketHireGeared = 16500;
+  else                   marketHireGeared = 18000;
+  const marketHire = vesselType === 'gearless' ? Math.round(marketHireGeared * 0.88) : marketHireGeared;
+
+  // Display
+  document.getElementById('tceValue').textContent = '$' + Math.round(tceDay).toLocaleString();
+
+  const diff = tceDay - marketHire;
+  const diffPct = (diff / marketHire) * 100;
+  let vsClass, vsText;
+  if (Math.abs(diffPct) < 5)        { vsClass='par';   vsText=`At market (~$${marketHire.toLocaleString()}/d)`; }
+  else if (diff > 0)                { vsClass='above'; vsText=`▲ $${Math.round(diff).toLocaleString()}/d above market ($${marketHire.toLocaleString()}/d) — owner-friendly`; }
+  else                              { vsClass='below'; vsText=`▼ $${Math.abs(Math.round(diff)).toLocaleString()}/d below market ($${marketHire.toLocaleString()}/d) — charterer-friendly`; }
+  document.getElementById('tceVsMarket').innerHTML = `<div class="tce-vs-market ${vsClass}">${vsText}</div>`;
+
+  document.getElementById('tceVoyageTags').innerHTML = `
+    <div class="vtag">⚓ ${portNames[loadPort]||loadPort} → ${portNames[dischPort]||dischPort}</div>
+    <div class="vtag">📏 ${distance.toLocaleString()} nm via ${viaLabel}</div>
+    <div class="vtag">🚀 ${speed} kts</div>
+    <div class="vtag">⏱ ${totalDays.toFixed(1)} days total</div>
+    <div class="vtag">🚢 ${dwt.toLocaleString()} DWT ${vesselType==='geared'?'⚙️':'🏗️'}</div>
+    <div class="vtag">💰 $${freightOffered.toFixed(2)}/MT × ${quantity.toLocaleString()} MT</div>
+  `;
+
+  document.getElementById('tceBreakdown').innerHTML = `
+    <div class="breakdown-row"><span class="b-label">Gross revenue ($${freightOffered.toFixed(2)}/MT × ${quantity.toLocaleString()} MT)</span><span class="b-val" style="color:var(--green)">+$${grossRevenue.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Less: address + broker commission (${(commissionRate*100).toFixed(1)}%)</span><span class="b-val" style="color:var(--red)">−$${(grossRevenue*commissionRate).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label"><b>Net revenue</b></span><span class="b-val"><b>$${netRevenue.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
+    <div class="breakdown-row"><span class="b-label">Less: bunker cost (${totalDays.toFixed(1)}d voyage)</span><span class="b-val" style="color:var(--red)">−$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Less: port costs ($${lr.toFixed(2)}+$${dr.toFixed(2)} × ${dwt.toLocaleString()} DWT)</span><span class="b-val" style="color:var(--red)">−$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    ${canalToll > 0 ? `<div class="breakdown-row"><span class="b-label">Less: ${actualVia==='suez'?'Suez':'Panama'} Canal toll</span><span class="b-val" style="color:var(--red)">−$${canalToll.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
+    ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">Less: stevedoring (${basis.toUpperCase()}, ${commodityKey||'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% owner share)</span><span class="b-val" style="color:var(--red)">−$${stevCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
+    <div class="breakdown-row total"><span class="b-label">NET TO VESSEL</span><span class="b-val">$${netToVessel.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row total"><span class="b-label">TCE / DAY (÷ ${totalDays.toFixed(1)} days)</span><span class="b-val" style="color:var(--accent2)">$${Math.round(tceDay).toLocaleString()}</span></div>
+  `;
+
+  document.getElementById('tceResults').classList.add('show');
+  document.getElementById('tceResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Stash for copy
+  window._lastTceQuote = {
+    loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
+    quantity, commodity: commodityKey || 'general', basis, totalDays,
+    seaDays, portDays, freightOffered, tceDay, marketHire,
+    bunkerCost, portCosts, canalToll, stevCost, grossRevenue, netRevenue, netToVessel,
+  };
+}
+
+// ─── COPY QUOTE TO CLIPBOARD ──────────────────────────────────────────────────
+function copyQuote(which) {
+  const q = which === 'tce' ? window._lastTceQuote : window._lastFreightQuote;
+  if (!q) { alert('Calculate first, then copy.'); return; }
+
+  let text;
+  if (which === 'tce') {
+    const dir = q.tceDay >= q.marketHire ? '▲ above' : '▼ below';
+    const diff = Math.abs(Math.round(q.tceDay - q.marketHire));
+    text =
+`📊 TCE BACK-CALC — ${(portNames[q.loadPort]||q.loadPort)} → ${(portNames[q.dischPort]||q.dischPort)}
+─────────────────────────────────────
+🚢 ${q.dwt.toLocaleString()} DWT | ${q.vesselType} | ${q.speed} kts
+📦 ${q.quantity.toLocaleString()} MT ${q.commodity} | ${q.basis.toUpperCase()}
+📏 ${q.distance.toLocaleString()} nm via ${q.viaLabel} | ${q.totalDays.toFixed(1)} days
+
+💰 Freight offered: $${q.freightOffered.toFixed(2)}/MT
+   Gross revenue:    $${Math.round(q.grossRevenue).toLocaleString()}
+   Net revenue:      $${Math.round(q.netRevenue).toLocaleString()} (after 5% comm)
+   Bunker:          −$${Math.round(q.bunkerCost).toLocaleString()}
+   Port costs:      −$${Math.round(q.portCosts).toLocaleString()}${q.canalToll>0?`
+   Canal toll:      −$${Math.round(q.canalToll).toLocaleString()}`:''}${q.stevCost!==0?`
+   Stevedoring:     −$${Math.round(q.stevCost).toLocaleString()}`:''}
+   ─────────────────
+   Net to vessel:    $${Math.round(q.netToVessel).toLocaleString()}
+
+⚓ TCE = $${Math.round(q.tceDay).toLocaleString()} / day  (${dir} market by $${diff.toLocaleString()})
+   Current market hire: $${q.marketHire.toLocaleString()} / day`;
+  } else {
+    text =
+`🔎 INDICATIVE FREIGHT — ${(portNames[q.loadPort]||q.loadPort)} → ${(portNames[q.dischPort]||q.dischPort)}
+─────────────────────────────────────
+📦 ${q.quantity.toLocaleString()} MT ${q.commodity} | ${q.basis.toUpperCase()}
+🚢 ${q.dwt.toLocaleString()} DWT | ${q.vesselType} | ${q.speed} kts
+📏 ${q.distance.toLocaleString()} nm via ${q.viaLabel} | ${q.totalDays.toFixed(1)} days
+   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + 1.5 d margin)
+
+💵 Bunker:    $${Math.round(q.bunkerCost).toLocaleString()}
+   Hire eq:   $${Math.round(q.hireCost).toLocaleString()} ($${q.hireRate.toLocaleString()}/d)
+   Port cost: $${Math.round(q.portCosts).toLocaleString()}${q.canalToll>0?`
+   Canal:     $${Math.round(q.canalToll).toLocaleString()}`:''}${q.stevCost!==0?`
+   Steve:     $${Math.round(q.stevCost).toLocaleString()}`:''}
+   ─────────────────
+   Total:     $${Math.round(q.totalCost).toLocaleString()}
+
+💰 INDICATIVE FREIGHT: $${q.freightRate.toFixed(2)} / MT
+   Market range: $${q.freightLow} – $${q.freightHigh} / MT`;
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(which === 'tce' ? 'copyTceBtn' : 'copyFreightBtn');
+    if (!btn) return;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '✓ Copied to clipboard!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = originalHTML; btn.classList.remove('copied'); }, 1800);
+  }).catch(err => {
+    alert('Copy failed. Please copy manually:\n\n' + text);
+  });
 }
 
 // ─── MAP ──────────────────────────────────────────────────────────────────────
@@ -2958,6 +3427,8 @@ function syncSpeed(el) {
 
   setupAutocomplete('loadPort');
   setupAutocomplete('dischargePort');
+  setupAutocomplete('tceLoadPort');
+  setupAutocomplete('tceDischargePort');
 })();
 
 // Live update map when ports change
