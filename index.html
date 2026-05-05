@@ -423,11 +423,16 @@
               <option value="10000">~10,000 DWT</option>
               <option value="12500">~12,500 DWT</option>
               <option value="15000">~15,000 DWT</option>
+              <option value="17500">~17,500 DWT</option>
               <option value="20000">~20,000 DWT</option>
               <option value="25000">~25,000 DWT</option>
-              <option value="30000">~30,000 DWT</option>
-              <option value="45000">~45,000 DWT</option>
-              <option value="50000">~50,000 DWT</option>
+              <option value="30000">~30,000 DWT (handysize)</option>
+              <option value="35000">~35,000 DWT (handymax)</option>
+              <option value="45000">~45,000 DWT (handymax)</option>
+              <option value="50000">~50,000 DWT (supramax)</option>
+              <option value="60000">~60,000 DWT (ultramax)</option>
+              <option value="75000">~75,000 DWT (panamax)</option>
+              <option value="82000">~82,000 DWT (kamsarmax)</option>
             </select>
           </div>
         </div>
@@ -2393,19 +2398,13 @@ function calculateFreight() {
   if (errors.length) { alert('Please fill in: ' + errors.join(', ')); return; }
   if (loadPort === dischPort) { alert('Loading and discharging ports cannot be the same.'); return; }
 
-  // Auto vessel size
+  // Auto vessel size — pick smallest vessel where DWT × 93% ≥ cargo quantity.
+  // 93% load factor leaves headroom for bunkers, freshwater, spares, constants.
+  // (Older logic jumped 15K→20K for 14,500 MT cargo — wasted ~5K DWT on freight rate.)
   if (dwt === 'auto') {
-    if      (quantity <= 3000)  dwt = 3500;
-    else if (quantity <= 5000)  dwt = 5000;
-    else if (quantity <= 7000)  dwt = 7500;
-    else if (quantity <= 10000) dwt = 10000;
-    else if (quantity <= 12000) dwt = 12500;
-    else if (quantity <= 14000) dwt = 15000;
-    else if (quantity <= 19000) dwt = 20000;
-    else if (quantity <= 24000) dwt = 25000;
-    else if (quantity <= 30000) dwt = 30000;
-    else if (quantity <= 45000) dwt = 45000;
-    else                        dwt = 50000;
+    const SIZES = [3500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 25000, 30000, 35000, 45000, 50000, 60000, 75000];
+    const minDwt = quantity / 0.93;
+    dwt = SIZES.find(s => s >= minDwt) || SIZES[SIZES.length - 1];
   } else { dwt = parseFloat(dwt); }
 
   const routeVia = document.getElementById('routeVia').value || 'auto';
@@ -2477,20 +2476,41 @@ function calculateFreight() {
   else if (dwt <= 5500)  hireRateGeared = 3000;
   else if (dwt <= 7800)  hireRateGeared = 3500;
   else if (dwt <= 9500)  hireRateGeared = 4250;
-  else if (dwt <= 12800) hireRateGeared = 5200;
-  else if (dwt <= 13000) hireRateGeared = 5500;
+  else if (dwt <= 13000) hireRateGeared = 5200;     // merged 12.8K and 13K (was useless 200-DWT step)
   else if (dwt <= 15500) hireRateGeared = 6250;
   else if (dwt <= 17500) hireRateGeared = 7500;
   else if (dwt <= 19500) hireRateGeared = 8750;
   else if (dwt <= 25500) hireRateGeared = 10250;
-  else if (dwt <= 30000) hireRateGeared = 13000;
-  else                   hireRateGeared = 16000;
+  else if (dwt <= 30000) hireRateGeared = 12000;    // handysize
+  else if (dwt <= 40000) hireRateGeared = 13500;    // NEW handymax
+  else if (dwt <= 55000) hireRateGeared = 15000;    // NEW supramax
+  else if (dwt <= 70000) hireRateGeared = 16500;    // NEW ultramax
+  else                   hireRateGeared = 18000;    // NEW panamax/kamsarmax
 
   const hireRate = vesselType === 'gearless'
     ? Math.round(hireRateGeared * 0.88)
     : hireRateGeared;
 
   const hireCost = hireRate * totalDays;
+
+  // Resolve actual via FIRST (canal tolls depend on it)
+  let actualVia = routeVia;
+  if (routeVia === 'auto') {
+    const opts = getRouteOptions(loadPort, dischPort);
+    if (opts.length) {
+      opts.sort((a,b)=>a.nm-b.nm);
+      actualVia = opts[0].via;
+    }
+  }
+  const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Suez';
+
+  // Canal tolls — laden one-way (ballast leg not billed to this voyage)
+  // Suez:  ~$0.70/DWT for laden bulker (SCNT-based, 2024-25 tariff with rebates)
+  // Panama: ~$2.50/DWT for Panamax-lock transit (PCT-based, much higher than Suez)
+  let canalToll = 0;
+  let canalLabel = '';
+  if (actualVia === 'suez')   { canalToll = dwt * 0.70; canalLabel = 'Suez Canal toll'; }
+  if (actualVia === 'panama') { canalToll = dwt * 2.50; canalLabel = 'Panama Canal toll'; }
 
   // Port costs — simplified: USD 1.25 × DWT per port × 2 ports
   const portCostPerPort = dwt * 1.25;
@@ -2515,25 +2535,14 @@ function calculateFreight() {
 
   const marginFactor = 1.10;
 
-  const totalCost   = (bunkerCost + hireCost + portCosts + gearlessSurcharge) * basisFactor * commFactor * marginFactor;
+  const totalCost   = (bunkerCost + hireCost + portCosts + canalToll + gearlessSurcharge) * basisFactor * commFactor * marginFactor;
   const freightRate = totalCost / quantity;
-  const freightLow  = (freightRate * 0.88).toFixed(1);
-  const freightHigh = (freightRate * 1.15).toFixed(1);
+  const freightLow  = (freightRate * 0.90).toFixed(1);  // symmetric \u00b110% range (was -12%/+15%)
+  const freightHigh = (freightRate * 1.10).toFixed(1);
 
   // Display
   document.getElementById('freightRate').textContent = '$' + freightRate.toFixed(1);
   document.getElementById('freightRange').textContent = `Market range: $${freightLow} \u2013 $${freightHigh} / MT`;
-
-  // Resolve actual via used (when routeVia = auto, show which one was picked)
-  let actualVia = routeVia;
-  if (routeVia === 'auto') {
-    const opts = getRouteOptions(loadPort, dischPort);
-    if (opts.length) {
-      opts.sort((a,b)=>a.nm-b.nm);
-      actualVia = opts[0].via;
-    }
-  }
-  const viaLabel = { suez:'Suez', panama:'Panama', cape:'Cape', auto:'Auto' }[actualVia] || 'Suez';
 
   document.getElementById('voyageTags').innerHTML = `
     <div class="vtag">\u2693 ${portNames[loadPort]||loadPort} \u2192 ${portNames[dischPort]||dischPort}</div>
@@ -2553,6 +2562,7 @@ function calculateFreight() {
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b> (${totalVlsfoMt.toFixed(1)} MT VLSFO + ${totalMgoMt.toFixed(1)} MT MGO)</span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire equiv. ($${hireRate.toLocaleString()}/day \u00D7 ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label">Port costs ($1.25 \u00D7 ${dwt.toLocaleString()} DWT \u00D7 2 ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    ${canalToll > 0 ? `<div class="breakdown-row"><span class="b-label">${canalLabel} (laden one-way, ${actualVia==='suez'?'$0.70':'$2.50'}/DWT)</span><span class="b-val">$${canalToll.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     ${(vesselType === 'gearless' || vesselType === 'either') ? `<div class="breakdown-row"><span class="b-label">Shore crane \u2014 ${craneAccount === 'owner' ? 'Owner\u2019s account' : 'Charterer\u2019s account'}</span><span class="b-val">${includeCrane ? '$'+gearlessSurcharge.toLocaleString('en',{maximumFractionDigits:0}) : 'Excluded (chrtrs acct)'}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label">Port time: ${loadDays.toFixed(1)} d load + ${dischDays.toFixed(1)} d disch</span><span class="b-val">${portDays.toFixed(1)} days at berth</span></div>
     <div class="breakdown-row"><span class="b-label">Basis adjustment (${basis.toUpperCase()})</span><span class="b-val">${((basisFactor-1)*100).toFixed(0)}%</span></div>
