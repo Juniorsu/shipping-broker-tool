@@ -676,6 +676,19 @@
         </div>
 
         <div class="form-group">
+          <label>Voyage Buffer (extra days)</label>
+          <select id="bufferDays">
+            <option value="0">0 days &mdash; tight (no allowance)</option>
+            <option value="1" selected>1 day &mdash; minimal pilotage buffer</option>
+            <option value="2">2 days &mdash; typical (waiting + pilotage)</option>
+            <option value="3">3 days &mdash; conservative (anchorage / weather)</option>
+            <option value="4">4 days &mdash; congested ports / monsoon season</option>
+            <option value="5">5 days &mdash; heavy weather routing / lay-over risk</option>
+          </select>
+          <div class="form-hint">Extra days added to total voyage time for waiting at anchor, weather, pilotage. Applies to all tabs.</div>
+        </div>
+
+        <div class="form-group">
           <label>
             Address + Broker Commission
             <span id="commissionPctLabel" style="font-weight:700;color:var(--accent2);float:right;letter-spacing:0;text-transform:none">2.50%</span>
@@ -3028,7 +3041,10 @@ function calculateFreight() {
   const loadDays  = quantity / loadRate;
   const dischDays = quantity / dischRate;
   const portDays  = loadDays + dischDays;
-  const totalDays = seaDays + portDays + 1.5;
+  // Voyage buffer — user-selectable (0-5 days) for waiting/anchorage/weather/pilotage
+  const bufferDays = parseFloat(document.getElementById('bufferDays').value);
+  const bufferDaysSafe = isNaN(bufferDays) ? 1 : bufferDays;
+  const totalDays = seaDays + portDays + bufferDaysSafe;
 
   // Bunker consumption — calibrated against owner's vessel database (n=126 vessels with disclosed speed/cons)
   // Values are MEDIAN at 11.5 kts baseline. Speed scaling applied below (cons ≈ baseline × (speed/11.5)^2).
@@ -3258,7 +3274,8 @@ function calculateFreight() {
   window._lastFreightQuote = {
     loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
     quantity, commodity: commodityKey || 'general', basis, totalDays,
-    seaDays, portDays, freightRate, freightLow, freightHigh,
+    seaDays, portDays, bufferDays: bufferDaysSafe,
+    freightRate, freightLow, freightHigh,
     bunkerCost, hireCost, hireRate, portCosts, canalToll, stevCost, totalCost,
   };
 
@@ -3375,7 +3392,10 @@ function calculateTCE() {
   const distance = getDistance(loadPort, dischPort, routeVia);
   const seaDays  = distance / (speed * 24);
   const portDays = quantity / loadRate + quantity / dischRate;
-  const totalDays = seaDays + portDays + 1.5;
+  // Voyage buffer (shared from Freight tab)
+  const bufferDaysRaw = parseFloat(document.getElementById('bufferDays').value);
+  const bufferDays = isNaN(bufferDaysRaw) ? 1 : bufferDaysRaw;
+  const totalDays = seaDays + portDays + bufferDays;
 
   // Bunker (same table as calculateFreight)
   let seaIfo, seaMgo, portMgo, portVlsfo = 0;
@@ -3529,7 +3549,8 @@ function calculateTCE() {
   window._lastTceQuote = {
     loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
     quantity, commodity: commodityKey || 'general', basis, totalDays,
-    seaDays, portDays, freightOffered, tceDay, marketHire,
+    seaDays, portDays, bufferDays,
+    freightOffered, tceDay, marketHire,
     bunkerCost, portCosts, canalToll, stevCost, craneCost,
     grossRevenue, netRevenue, netToVessel, commissionPct,
   };
@@ -3682,7 +3703,10 @@ function calculateMulti() {
   const seaDays = totalDistance / (speed * 24);
   // Port days = sum of (qty / rate) for each stop
   const portDays = stops.reduce((acc, s) => acc + s.qty / (s.type === 'load' ? loadRate : dischRate), 0);
-  const totalDays = seaDays + portDays + 1.5;
+  // Voyage buffer (shared from Freight tab)
+  const bufferDaysRaw = parseFloat(document.getElementById('bufferDays').value);
+  const bufferDays = isNaN(bufferDaysRaw) ? 1 : bufferDaysRaw;
+  const totalDays = seaDays + portDays + bufferDays;
 
   const bunkerCost = (seaIfo*seaDays + portIfo*portDays)*vlsfoPrice + (seaMgo*seaDays + portMgo*portDays)*mgoPrice;
 
@@ -3819,7 +3843,8 @@ function calculateMulti() {
   window._lastMultiQuote = {
     stops, legs, totalDistance, viaLabel, dwt, speed, vesselType,
     totalLoad, commodity: commodityKey || 'general', basis, totalDays,
-    seaDays, portDays, freightRate, freightLow, freightHigh,
+    seaDays, portDays, bufferDays,
+    freightRate, freightLow, freightHigh,
     bunkerCost, hireCost, hireRate, portCosts, canalToll, stevCost, totalCost,
   };
 }
@@ -3904,7 +3929,7 @@ ${stopsList}
 📦 Total cargo: ${q.totalLoad.toLocaleString()} MT ${q.commodity} | ${q.basis.toUpperCase()}
 🚢 ${q.dwt.toLocaleString()} DWT | ${q.vesselType} | ${q.speed} kts
 🛳 via ${q.viaLabel} | ${q.totalDistance.toLocaleString()} nm | ${q.totalDays.toFixed(1)} days
-   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + 1.5 d margin)
+   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + ${(q.bufferDays ?? 1).toFixed(1)} d buffer)
 
 📏 Voyage legs:
 ${legsList}
@@ -3926,7 +3951,7 @@ ${legsList}
 📦 ${q.quantity.toLocaleString()} MT ${q.commodity} | ${q.basis.toUpperCase()}
 🚢 ${q.dwt.toLocaleString()} DWT | ${q.vesselType} | ${q.speed} kts
 📏 ${q.distance.toLocaleString()} nm via ${q.viaLabel} | ${q.totalDays.toFixed(1)} days
-   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + 1.5 d margin)
+   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + ${(q.bufferDays ?? 1).toFixed(1)} d buffer)
 
 💵 Bunker:    $${Math.round(q.bunkerCost).toLocaleString()}
    Hire eq:   $${Math.round(q.hireCost).toLocaleString()} ($${q.hireRate.toLocaleString()}/d)
