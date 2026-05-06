@@ -1957,6 +1957,7 @@ const WP = {
   bengal_e:    [8.00, 90.00],
   bengal_ne:   [18.00, 88.00],
   malacca_n:   [5.80, 97.50],
+  malacca_mid: [3.80, 100.30],   // mid-Malacca shipping lane offshore (Port Klang region)
   malacca_s:   [2.40, 101.50],
   sg_strait:   [1.20, 103.85],
   scs_south:   [3.50, 107.00],
@@ -2241,10 +2242,13 @@ const customRoutes = {
   'GOT|VN_N':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
   'GOT|VN_S':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off],
 
-  // Vietnam ↔ Malacca Strait (Penang, Belawan)
-  'MALACCA|VN_C':  [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
-  'MALACCA|VN_N':  [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'MALACCA|VN_S':  [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off],
+  // Vietnam ↔ Malacca Strait (Penang, Belawan, Lhokseumawe)
+  // Use malacca_mid (Port Klang region) → malacca_s to track the actual shipping
+  // lane that hugs the Malaysian coast. Avoids the old malacca_n westward detour
+  // while keeping distance close to realistic ~1200nm Penang→HCM.
+  'MALACCA|VN_C':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
+  'MALACCA|VN_N':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'MALACCA|VN_S':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off],
 
   // Vietnam ↔ South Borneo (Banjarmasin)
   'BORNEO_S|VN_C': [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
@@ -2541,7 +2545,7 @@ const customRoutes = {
   'KR|SABAH':      [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
   'SABAH|SG':      [WP.borneo_ne, WP.scs_natuna, WP.sg_strait],
   'GOT|SABAH':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],
-  'MALACCA|SABAH': [WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],
+  'MALACCA|SABAH': [WP.malacca_s, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],   // dropped malacca_n (Penang/Belawan already east of it)
   'SABAH|SARAWAK': [WP.borneo_ne],  // NW Borneo coast; scs_natuna added a 600nm loop
   'SABAH|VN_S':    [WP.borneo_ne, WP.scs_natuna, WP.vn_s_off],
   'SABAH|VN_C':    [WP.borneo_ne, WP.scs_paracel, WP.vn_c_off],
