@@ -146,8 +146,9 @@
 
   form { padding: 18px 20px; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .form-group { margin-bottom: 12px; }
-  label { display: block; font-size: .7rem; color: var(--accent2); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 5px; }
+  .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+  /* Labels: min-height keeps inputs aligned across a row even when one label wraps */
+  label { display: block; font-size: .7rem; color: var(--accent2); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 5px; min-height: 1.2em; }
   input, select, textarea {
     width: 100%; background: #fff; border: 1px solid var(--border); border-radius: 6px;
     padding: 9px 12px; color: var(--text); font-size: .83rem; outline: none;
@@ -721,14 +722,14 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>VLSFO Price (USD/MT) &mdash; sea</label>
+            <label>VLSFO Price (USD/MT)</label>
             <input type="number" id="vlsfoPrice" value="510" min="200" max="1500" step="1">
-            <div class="form-hint">Main engine fuel.</div>
+            <div class="form-hint">Main engine &mdash; sea</div>
           </div>
           <div class="form-group">
-            <label>MGO Price (USD/MT) &mdash; aux / port</label>
+            <label>MGO Price (USD/MT)</label>
             <input type="number" id="mgoPrice" value="720" min="300" max="2000" step="1">
-            <div class="form-hint">Auxiliary engines (sea + port).</div>
+            <div class="form-hint">Auxiliary engines &mdash; sea + port</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:-4px;margin-bottom:10px;flex-wrap:wrap">
