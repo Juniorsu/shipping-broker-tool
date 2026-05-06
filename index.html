@@ -572,12 +572,12 @@
         <div class="form-group">
           <label>
             Address + Broker Commission
-            <span id="commissionPctLabel" style="font-weight:700;color:var(--accent2);float:right;letter-spacing:0;text-transform:none">5.00%</span>
+            <span id="commissionPctLabel" style="font-weight:700;color:var(--accent2);float:right;letter-spacing:0;text-transform:none">2.50%</span>
           </label>
-          <input type="range" id="commissionPct" value="5" min="0" max="5" step="0.25"
+          <input type="range" id="commissionPct" value="2.5" min="0" max="5" step="0.25"
                  oninput="document.getElementById('commissionPctLabel').textContent=parseFloat(this.value).toFixed(2)+'%'"
                  style="width:100%;accent-color:var(--accent);margin-top:6px">
-          <div class="form-hint">Default 5% = 3.75% address + 1.25% broker. Slide to 0% for direct deals. <i>Owner profit margin stays fixed at 5%.</i></div>
+          <div class="form-hint">Default 2.5% (1.25% address + 1.25% broker). Slide to 0% for direct deals or 5% for full address+broker. <i>Owner profit margin stays fixed at 5%.</i></div>
         </div>
 
         <div class="form-row">
@@ -2841,8 +2841,10 @@ function calculateFreight() {
   const stevCost = stevRate * quantity * ownerStevShare;
   const stevLabel = `Stevedoring (${basis.toUpperCase()}, ${commodityKey || 'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% owner share)`;
 
-  // Mark-up = commission (user-controlled slider, default 5%) + owner profit margin (fixed 5%)
-  const commissionPct = parseFloat(document.getElementById('commissionPct').value) || 5;
+  // Mark-up = commission (user-controlled slider, default 2.5%) + owner profit margin (fixed 5%)
+  // NaN-safe: only fall back when slider is missing — preserves user-set 0% (direct deal)
+  const commissionPctRaw = parseFloat(document.getElementById('commissionPct').value);
+  const commissionPct = isNaN(commissionPctRaw) ? 2.5 : commissionPctRaw;
   const ownerMarginPct = 5;
   const totalMarkupPct = commissionPct + ownerMarginPct;
   const marginFactor = 1 + totalMarkupPct / 100;
@@ -3034,8 +3036,9 @@ function calculateTCE() {
   // What's left = net to vessel; ÷ totalDays = TCE per day
   const grossRevenue   = freightOffered * quantity;
   const totalVoyageOpex = bunkerCost + portCosts + canalToll + stevCost + craneCost;
-  // Owner pays broker commission — uses slider from Freight tab (default 5% = 3.75% addr + 1.25% broker)
-  const commissionPct = parseFloat(document.getElementById('commissionPct').value) || 5;
+  // Owner pays broker commission — uses slider from Freight tab (default 2.5%, NaN-safe)
+  const commissionPctRaw = parseFloat(document.getElementById('commissionPct').value);
+  const commissionPct = isNaN(commissionPctRaw) ? 2.5 : commissionPctRaw;
   const commissionRate = commissionPct / 100;
   const netRevenue = grossRevenue * (1 - commissionRate);
   const netToVessel = netRevenue - totalVoyageOpex;
