@@ -1453,6 +1453,60 @@ const portCoords = {
   keelung:       [25.13,  121.74],
   taipei:        [25.15,  121.37],
   suao:          [24.60,  121.87],
+  // ─── NEW PORTS (added via punch list) ───
+  // Indonesia (additional)
+  tanjung_priok: [-6.10,  106.88],   // Jakarta's main port (in JAVA_W zone, distinct from Jakarta center)
+  // Pakistan & Iran
+  karachi:       [24.85,   66.97],
+  port_qasim:    [24.78,   67.34],
+  bandar_abbas:  [27.13,   56.21],   // Iran main Persian Gulf port
+  // Saudi Arabia / Red Sea
+  jeddah:        [21.49,   39.18],
+  yanbu:         [24.09,   38.05],
+  jubail:        [27.00,   49.66],   // Saudi Persian Gulf side
+  // Egypt / Jordan / Israel — Red Sea
+  sokhna:        [29.36,   32.61],   // Egyptian Red Sea, near Suez south entrance
+  aqaba:         [29.52,   35.00],   // Jordan Red Sea
+  haifa:         [32.83,   35.00],   // Israel Med
+  // Africa expansion
+  djibouti:      [11.59,   43.15],
+  maputo:        [-25.97,  32.59],   // Mozambique
+  beira:         [-19.83,  34.84],   // Mozambique
+  nacala:        [-14.55,  40.66],   // Mozambique
+  walvis_bay:    [-22.96,  14.51],   // Namibia
+  cape_town:     [-33.92,  18.42],
+  tema:          [ 5.66,    0.02],   // Ghana
+  abidjan:       [ 5.30,   -4.00],   // Ivory Coast
+  dakar:         [14.69,  -17.43],   // Senegal
+  // Mediterranean expansion
+  piraeus:       [37.94,   23.65],   // Greece
+  valencia:      [39.45,   -0.32],
+  marseille:     [43.30,    5.37],
+  algeciras:     [36.13,   -5.45],
+  alexandria:    [31.20,   29.92],   // Egypt Med
+  // North America West (new region)
+  vancouver:     [49.29,  -123.12],
+  seattle:       [47.61,  -122.34],
+  long_beach:    [33.77,  -118.20],
+  oakland:       [37.80,  -122.30],
+  // South America Pacific (new region)
+  callao:        [-12.05,  -77.15],   // Peru — Lima
+  iquique:       [-20.21,  -70.15],   // Chile north
+  san_antonio:   [-33.59,  -71.62],   // Chile central
+  // Australia
+  newcastle_au:  [-32.92,  151.78],   // major coal export
+  port_hedland:  [-20.31,  118.58],   // major iron ore export
+  dampier:       [-20.66,  116.71],   // iron ore
+  gladstone:     [-23.83,  151.26],   // coal
+  brisbane:      [-27.43,  153.18],
+  fremantle:     [-32.05,  115.74],   // Perth
+  // Vietnam additional
+  sihanoukville: [10.62,  103.51],   // Cambodia (closest match to GOT)
+  yangon:        [16.78,   96.16],   // Myanmar
+  // Black Sea
+  constanta:     [44.18,   28.66],   // Romania
+  novorossiysk:  [44.72,   37.78],   // Russia
+  istanbul_marm: [40.97,   28.83],   // Marmara — used as Black Sea gateway
 };
 
 const portNames = {
@@ -1506,6 +1560,21 @@ const portNames = {
   // China (Qinzhou) + Taiwan
   qinzhou:'Qinzhou',
   kaohsiung:'Kaohsiung', taichung:'Taichung', keelung:'Keelung', taipei:'Taipei', suao:'Suao',
+  // ─── NEW PORTS ───
+  tanjung_priok:'Tanjung Priok (Jakarta)',
+  karachi:'Karachi', port_qasim:'Port Qasim (Karachi)', bandar_abbas:'Bandar Abbas',
+  jeddah:'Jeddah', yanbu:'Yanbu', jubail:'Jubail',
+  sokhna:'Sokhna (Egypt)', aqaba:'Aqaba', haifa:'Haifa',
+  djibouti:'Djibouti',
+  maputo:'Maputo', beira:'Beira', nacala:'Nacala', walvis_bay:'Walvis Bay', cape_town:'Cape Town',
+  tema:'Tema', abidjan:'Abidjan', dakar:'Dakar',
+  piraeus:'Piraeus', valencia:'Valencia', marseille:'Marseille', algeciras:'Algeciras', alexandria:'Alexandria',
+  vancouver:'Vancouver', seattle:'Seattle', long_beach:'Long Beach', oakland:'Oakland',
+  callao:'Callao (Lima)', iquique:'Iquique', san_antonio:'San Antonio',
+  newcastle_au:'Newcastle (AU)', port_hedland:'Port Hedland', dampier:'Dampier',
+  gladstone:'Gladstone', brisbane:'Brisbane', fremantle:'Fremantle (Perth)',
+  sihanoukville:'Sihanoukville', yangon:'Yangon (Rangoon)',
+  constanta:'Constanta', novorossiysk:'Novorossiysk', istanbul_marm:'Istanbul (Marmara)',
 };
 
 // ─── PORT AUTOCOMPLETE (datalist + resolver) ────────────────────────────────
@@ -1763,6 +1832,41 @@ const portZone = {
   santos:'BRAZIL',
   ensenada:'MX_PAC_NW',
   guaymas:'MX_GULF_CAL', la_paz:'MX_GULF_CAL',
+  // ─── NEW PORT-ZONE MAPPINGS ───
+  // Indonesia additional
+  tanjung_priok:'JAVA_W',
+  // Pakistan + Iran (treated as INDIA_W / PG for routing — both Arabian Sea / Gulf reach)
+  karachi:'PAKISTAN', port_qasim:'PAKISTAN',
+  bandar_abbas:'PG',
+  // Saudi Persian Gulf
+  jubail:'PG',
+  // Red Sea — new zone
+  jeddah:'RED_SEA', yanbu:'RED_SEA',
+  sokhna:'RED_SEA', aqaba:'RED_SEA',
+  // Mediterranean East / Levant
+  haifa:'MED', alexandria:'MED',
+  // East Africa expansion
+  djibouti:'ADEN',  // geographically Red Sea but routes mostly via Aden gulf — group with ADEN
+  maputo:'EAFRICA', beira:'EAFRICA', nacala:'EAFRICA',
+  // South Africa expansion
+  cape_town:'SAFRICA',
+  walvis_bay:'SAFRICA',  // Namibia — SE Africa cluster
+  // West Africa expansion
+  tema:'WAFRICA', abidjan:'WAFRICA', dakar:'WAFRICA',
+  // Mediterranean expansion
+  piraeus:'MED', valencia:'MED', marseille:'MED', algeciras:'MED',
+  // North America West Coast — new zone
+  vancouver:'NORTH_AM_W', seattle:'NORTH_AM_W',
+  long_beach:'NORTH_AM_W', oakland:'NORTH_AM_W',
+  // South America Pacific — new zone
+  callao:'S_AM_W', iquique:'S_AM_W', san_antonio:'S_AM_W',
+  // Australia — new zone
+  newcastle_au:'AUSTRALIA', port_hedland:'AUSTRALIA', dampier:'AUSTRALIA',
+  gladstone:'AUSTRALIA', brisbane:'AUSTRALIA', fremantle:'AUSTRALIA',
+  // SE Asia additional
+  sihanoukville:'GOT', yangon:'INDIA_E',  // Yangon routes Bay of Bengal — closer to INDIA_E
+  // Black Sea — new zone (still uses MED routing via Bosphorus)
+  constanta:'BLACK_SEA', novorossiysk:'BLACK_SEA', istanbul_marm:'BLACK_SEA',
 };
 
 // Backbone waypoints ordered west-to-east (NW Europe to North China)
@@ -1840,6 +1944,19 @@ const zoneConfig = {
   // Mexican Pacific coast — via Panama Canal from the Atlantic backbone
   MX_PAC_NW:     { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw] },
   MX_GULF_CAL:   { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.gulf_cal] },
+  // ─── NEW ZONES (added with port batch) ───
+  // Pakistan — Karachi area, north Arabian Sea
+  PAKISTAN:      { bi: 10, branch: [WP.arabian_n] },
+  // Red Sea ports — Jeddah, Yanbu, Sokhna, Aqaba (between bab_mandeb and Suez)
+  RED_SEA:       { bi: 7,  branch: [WP.red_sea_n] },
+  // Black Sea — accessed via Med + Bosphorus (no dedicated WP, treated as MED extension)
+  BLACK_SEA:     { bi: 4,  branch: [WP.med_e] },
+  // North America West Coast — Panama Canal route from Atlantic backbone
+  NORTH_AM_W:    { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw] },
+  // South America Pacific — Panama route too (Callao, San Antonio etc.)
+  S_AM_W:        { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s] },
+  // Australia — anchor at SG strait, route south through Lombok Strait
+  AUSTRALIA:     { bi: 15, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok] },
 };
 
 // ─── CUSTOM ROUTE OVERRIDES ──────────────────────────────────────────────────
@@ -2772,11 +2889,17 @@ function calculateFreight() {
   const PORT_RATE = {
     // Premium NW (high agency + pilotage + dues + dock fees)
     NW_EU: 1.85, MED: 1.55, US_GULF: 1.70, US_EAST: 1.80,
+    NORTH_AM_W: 1.80,                    // NEW — US/Canada West Coast (Vancouver, LA, Seattle)
+    AUSTRALIA: 1.65,                     // NEW — Newcastle, Port Hedland, Gladstone, Fremantle
     // Mid-tier
     JAPAN: 1.30, KR: 1.25, TAIWAN: 1.25,
     SAFRICA: 1.45, WAFRICA: 1.55, EAFRICA: 1.40,
     BRAZIL: 1.50, MX_PAC_NW: 1.45, MX_GULF_CAL: 1.40,
+    S_AM_W: 1.45,                        // NEW — Chile/Peru Pacific (Callao, San Antonio)
     ADEN: 1.30, PG: 1.20,
+    RED_SEA: 1.35,                       // NEW — Jeddah, Yanbu, Sokhna, Aqaba
+    BLACK_SEA: 1.40,                     // NEW — Constanta, Novorossiysk
+    PAKISTAN: 1.10,                      // NEW — Karachi, Port Qasim
     // China mainstream
     CN_N: 1.20, CN_E: 1.20, CN_S: 1.15,
     // South Asia
@@ -2996,11 +3119,11 @@ function calculateTCE() {
 
   // Per-zone port costs
   const PORT_RATE = {
-    NW_EU:1.85, MED:1.55, US_GULF:1.70, US_EAST:1.80,
+    NW_EU:1.85, MED:1.55, US_GULF:1.70, US_EAST:1.80, NORTH_AM_W:1.80, AUSTRALIA:1.65,
     JAPAN:1.30, KR:1.25, TAIWAN:1.25,
     SAFRICA:1.45, WAFRICA:1.55, EAFRICA:1.40,
-    BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40,
-    ADEN:1.30, PG:1.20,
+    BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40, S_AM_W:1.45,
+    ADEN:1.30, PG:1.20, RED_SEA:1.35, BLACK_SEA:1.40, PAKISTAN:1.10,
     CN_N:1.20, CN_E:1.20, CN_S:1.15,
     INDIA_W:1.05, INDIA_E:1.05, BANGLADESH:1.00, SRI_LANKA:1.00,
     SG:1.10, MALACCA:1.00, GOT:0.95, MAL_E:0.95,
@@ -3008,7 +3131,7 @@ function calculateTCE() {
     PH_N:1.00, PH_C:0.95, PH_S:0.95,
     JAVA_W:0.95, JAVA_E:0.95, SULAWESI:0.90,
     BORNEO_S:0.90, BORNEO_E:0.90,
-    SARAWAK:1.25, SABAH:1.25,  // bumped — palm oil/LNG hubs (Bintulu, Tanjung Manis, KK)
+    SARAWAK:1.25, SABAH:1.25,
   };
   const lr = PORT_RATE[portZone[loadPort]]  || 1.10;
   const dr = PORT_RATE[portZone[dischPort]] || 1.10;
