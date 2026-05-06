@@ -244,6 +244,27 @@
     #tceResults::before { content: 'Broker Intelligence Suite — TCE Reverse Calculation'; }
   }
 
+  /* MULTI-PORT STOP ROW */
+  .multi-stop-row {
+    display: grid; grid-template-columns: auto 1fr 90px 30px; gap: 6px;
+    align-items: center; padding: 6px 8px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    position: relative;
+  }
+  .multi-stop-row .stop-badge {
+    width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 700; color: #fff;
+  }
+  .multi-stop-row .stop-badge.load { background: var(--green); }
+  .multi-stop-row .stop-badge.disch { background: var(--red); }
+  .multi-stop-row input[type="text"] { padding: 6px 8px; font-size: .82rem; }
+  .multi-stop-row input[type="number"] { padding: 6px 8px; font-size: .82rem; text-align: right; }
+  .multi-stop-row .stop-remove {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: .9rem;
+  }
+  .multi-stop-row .stop-remove:hover { color: var(--red); border-color: var(--red); }
+
   /* TCE OUTPUT */
   .tce-display {
     text-align: center; padding: 20px 0;
@@ -500,8 +521,9 @@
 
       <!-- TABS -->
       <div class="tabs">
-        <button class="tab-btn active" data-tab="tab-freight" onclick="switchTab('tab-freight')">&#9875; Freight Calc</button>
-        <button class="tab-btn"        data-tab="tab-tce"     onclick="switchTab('tab-tce')">&#128200; TCE Reverse</button>
+        <button class="tab-btn active" data-tab="tab-freight" onclick="switchTab('tab-freight')">&#9875; Freight</button>
+        <button class="tab-btn"        data-tab="tab-tce"     onclick="switchTab('tab-tce')">&#128200; TCE</button>
+        <button class="tab-btn"        data-tab="tab-multi"   onclick="switchTab('tab-multi')">&#128205; Multi-Port</button>
       </div>
 
       <div id="tab-freight" class="tab-content active">
@@ -930,6 +952,132 @@
           </p>
         </div>
       </div><!-- /tab-tce -->
+
+      <!-- ========== MULTI-PORT VOYAGE TAB ========== -->
+      <div id="tab-multi" class="tab-content">
+        <form id="multiForm" onsubmit="return false;">
+          <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
+            &#128205; <b>Multi-port voyage:</b> 2-load / 1-disch, 1-load / 2-disch, or full 4-stop sequences. Leg distances computed in order. Total loaded MT must equal total discharged MT (cargo balance check).
+          </div>
+
+          <!-- Stops list (dynamic) -->
+          <div class="form-group">
+            <label>Voyage Stops <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">— in order of call</span></label>
+            <div id="multiStopsList" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"></div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button type="button" onclick="addMultiStop('load')" style="flex:1;padding:7px;background:var(--card);border:1px solid var(--green);color:var(--green);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer">+ Add Load Port</button>
+              <button type="button" onclick="addMultiStop('disch')" style="flex:1;padding:7px;background:var(--card);border:1px solid var(--red);color:var(--red);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer">+ Add Discharge Port</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Commodity</label>
+            <input type="text" id="multiCommodity" list="commodityList" placeholder="e.g. corn, urea, steel" autocomplete="off" spellcheck="false">
+            <div class="form-hint">Same commodity assumed across all stops.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Vessel Size (DWT)</label>
+              <select id="multiVesselSize">
+                <option value="3500">~3,500 DWT</option>
+                <option value="5000">~5,000 DWT</option>
+                <option value="7500">~7,500 DWT</option>
+                <option value="10000">~10,000 DWT</option>
+                <option value="12500">~12,500 DWT</option>
+                <option value="15000">~15,000 DWT</option>
+                <option value="17500">~17,500 DWT</option>
+                <option value="20000">~20,000 DWT</option>
+                <option value="25000">~25,000 DWT</option>
+                <option value="30000" selected>~30,000 DWT (handysize)</option>
+                <option value="35000">~35,000 DWT (handymax)</option>
+                <option value="45000">~45,000 DWT (handymax)</option>
+                <option value="50000">~50,000 DWT (supramax)</option>
+                <option value="60000">~60,000 DWT (ultramax)</option>
+                <option value="75000">~75,000 DWT (panamax)</option>
+                <option value="82000">~82,000 DWT (kamsarmax)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Vessel Type</label>
+              <select id="multiVesselType">
+                <option value="geared" selected>Geared</option>
+                <option value="gearless">Gearless</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Speed (kts)</label>
+              <input type="number" id="multiSpeed" value="11.5" min="6" max="16" step="0.5">
+            </div>
+            <div class="form-group">
+              <label>Freight Basis</label>
+              <select id="multiBasis">
+                <option value="fiost" selected>FIOST</option>
+                <option value="filo">FILO</option>
+                <option value="liner">Full Liner Terms</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Route Via</label>
+              <select id="multiRouteVia">
+                <option value="auto">Auto (Shortest) &mdash; no toll</option>
+                <option value="suez">Suez &mdash; +$0.70/DWT toll</option>
+                <option value="panama">Panama &mdash; +$2.50/DWT toll</option>
+                <option value="cape">Cape &mdash; no toll</option>
+              </select>
+              <div class="form-hint">Toll applied once per voyage if selected.</div>
+            </div>
+            <div class="form-group">
+              <label>VLSFO / MGO ($/MT)</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <input type="number" id="multiVlsfo" placeholder="auto" min="200" max="1500" step="1">
+                <input type="number" id="multiMgo" placeholder="auto" min="300" max="2000" step="1">
+              </div>
+              <div class="form-hint">Blank = use Freight tab values.</div>
+            </div>
+          </div>
+
+          <button class="calc-btn" onclick="calculateMulti()">
+            &#128205; Calculate Multi-Port Voyage
+          </button>
+        </form>
+
+        <!-- MULTI-PORT RESULTS -->
+        <div class="results" id="multiResults">
+          <hr class="result-divider">
+
+          <div class="freight-display">
+            <div class="freight-label">Indicative Freight Rate (blended)</div>
+            <div class="freight-value" id="multiFreightRate">&mdash;</div>
+            <div class="freight-unit">USD / MT</div>
+            <div class="freight-range" id="multiFreightRange"></div>
+          </div>
+
+          <div class="voyage-tags" id="multiVoyageTags"></div>
+
+          <div class="breakdown" id="multiBreakdown"></div>
+
+          <div class="action-btn-row">
+            <button class="copy-btn" id="copyMultiBtn" onclick="copyQuote('multi')">
+              &#128203; Copy
+            </button>
+            <button class="print-btn" onclick="printQuote('multi')">
+              &#128424; Print / PDF
+            </button>
+          </div>
+
+          <p class="disclaimer">
+            Multi-port indicative basis. Each leg routed by current "Route Via" selection.
+            Cargo balance enforced: total loaded MT must equal total discharged MT.
+          </p>
+        </div>
+      </div><!-- /tab-multi -->
 
     </div>
   </div>
@@ -3387,27 +3535,333 @@ function calculateTCE() {
   };
 }
 
+// ─── MULTI-PORT VOYAGE CALCULATOR ─────────────────────────────────────────────
+let multiStopCounter = 0;
+
+function addMultiStop(type, prefillPort, prefillQty) {
+  const list = document.getElementById('multiStopsList');
+  const id = ++multiStopCounter;
+  const isLoad = type === 'load';
+  const badge = isLoad ? 'L' : 'D';
+  const cls   = isLoad ? 'load' : 'disch';
+  const placeholder = isLoad ? 'Load port (e.g. Singapore)' : 'Disch port (e.g. Tianjin)';
+  const row = document.createElement('div');
+  row.className = 'multi-stop-row';
+  row.dataset.stopId = id;
+  row.dataset.type = type;
+  row.innerHTML = `
+    <div class="stop-badge ${cls}">${badge}</div>
+    <div class="port-wrap" style="position:relative">
+      <input type="text" placeholder="${placeholder}" value="${prefillPort||''}" autocomplete="off" spellcheck="false">
+      <div class="port-suggestions" style="display:none"></div>
+    </div>
+    <input type="number" placeholder="MT" min="100" step="100" value="${prefillQty||''}" title="Cargo qty (MT)">
+    <button type="button" class="stop-remove" onclick="this.closest('.multi-stop-row').remove()">×</button>
+  `;
+  list.appendChild(row);
+  // Wire autocomplete on the new port input
+  const portInputId = 'multiStop_' + id;
+  const portInput = row.querySelector('input[type="text"]');
+  const portSugg  = row.querySelector('.port-suggestions');
+  portInput.id = portInputId;
+  portSugg.id  = portInputId + '-sugg';
+  setupAutocompleteForElement(portInput, portSugg);
+}
+
+function setupAutocompleteForElement(inp, box) {
+  // Mirror of setupAutocomplete() inside the IIFE — extracted so multi-stop rows can use it
+  function hide() { box.style.display = 'none'; }
+  function pick(label, key) { inp.value = label; inp.dataset.resolvedKey = key; hide(); }
+  function score(p, q) {
+    const lq = q.toLowerCase();
+    const ll = p.label.toLowerCase();
+    const lk = p.key.replace(/_/g,' ').toLowerCase();
+    const norm = s => s.toLowerCase().replace(/[\s_\-]/g,'');
+    if (ll === lq || lk === lq) return 100;
+    if (ll.startsWith(lq) || lk.startsWith(lq)) return 90;
+    if (norm(ll).startsWith(norm(lq))) return 80;
+    if (ll.includes(lq)) return 60;
+    return 0;
+  }
+  const portList = Object.keys(portNames).map(k => ({ key:k, label: portNames[k] }));
+  inp.addEventListener('input', () => {
+    const q = inp.value.trim();
+    if (q.length < 2) { hide(); return; }
+    const results = portList.map(p => ({...p, sc: score(p, q)})).filter(p => p.sc > 0)
+      .sort((a,b) => b.sc - a.sc || a.label.localeCompare(b.label)).slice(0, 6);
+    if (!results.length) { hide(); return; }
+    box.innerHTML = results.map(p => `<div class="ps-item" data-key="${p.key}" data-label="${p.label}"><span class="ps-name">${p.label}</span></div>`).join('');
+    box.style.display = 'block';
+  });
+  box.addEventListener('mousedown', e => {
+    const item = e.target.closest('.ps-item');
+    if (item) { e.preventDefault(); pick(item.dataset.label, item.dataset.key); }
+  });
+  document.addEventListener('mousedown', e => {
+    if (!inp.contains(e.target) && !box.contains(e.target)) hide();
+  });
+}
+
+// Initialize default stops on first tab open
+function initMultiStops() {
+  const list = document.getElementById('multiStopsList');
+  if (list && list.children.length === 0) {
+    addMultiStop('load');   // L1
+    addMultiStop('load');   // L2
+    addMultiStop('disch');  // D1
+  }
+}
+
+function calculateMulti() {
+  initMultiStops();
+  const stops = [];
+  document.querySelectorAll('#multiStopsList .multi-stop-row').forEach(row => {
+    const portInput = row.querySelector('input[type="text"]');
+    const qtyInput  = row.querySelector('input[type="number"]');
+    const portKey = resolvePortKey(portInput.value);
+    const qty = parseFloat(qtyInput.value);
+    stops.push({ type: row.dataset.type, port: portKey, qty: isNaN(qty) ? 0 : qty });
+  });
+
+  // Validation
+  const errors = [];
+  if (stops.length < 2) errors.push('At least 2 stops needed');
+  stops.forEach((s, i) => {
+    if (!s.port) errors.push(`Stop #${i+1}: invalid/empty port`);
+    if (s.qty < 100) errors.push(`Stop #${i+1}: qty (min 100 MT)`);
+  });
+  const totalLoad  = stops.filter(s => s.type === 'load').reduce((a,s) => a + s.qty, 0);
+  const totalDisch = stops.filter(s => s.type === 'disch').reduce((a,s) => a + s.qty, 0);
+  if (Math.abs(totalLoad - totalDisch) > 1) {
+    errors.push(`Cargo imbalance: loaded ${totalLoad.toLocaleString()} MT vs discharged ${totalDisch.toLocaleString()} MT`);
+  }
+  if (errors.length) { alert('Issues:\n• ' + errors.join('\n• ')); return; }
+
+  const commodity = document.getElementById('multiCommodity').value;
+  const dwt   = parseFloat(document.getElementById('multiVesselSize').value);
+  const speed = parseFloat(document.getElementById('multiSpeed').value) || 11.5;
+  const basis = document.getElementById('multiBasis').value;
+  const routeVia = document.getElementById('multiRouteVia').value || 'auto';
+  const vesselType = document.getElementById('multiVesselType').value;
+  const mVlsfoIn = parseFloat(document.getElementById('multiVlsfo').value);
+  const mMgoIn   = parseFloat(document.getElementById('multiMgo').value);
+  const vlsfoPrice = !isNaN(mVlsfoIn) ? mVlsfoIn : (parseFloat(document.getElementById('vlsfoPrice').value) || 510);
+  const mgoPrice   = !isNaN(mMgoIn)   ? mMgoIn   : (parseFloat(document.getElementById('mgoPrice').value)   || 720);
+
+  // Loading/discharging rates — use sensible defaults (no per-stop input here)
+  const loadRate = 3000;   // MT/day average
+  const dischRate = 2500;  // MT/day average
+
+  // Compute leg distances
+  const legs = [];
+  let totalDistance = 0;
+  for (let i = 0; i < stops.length - 1; i++) {
+    const d = getDistance(stops[i].port, stops[i+1].port, routeVia);
+    legs.push({ from: stops[i].port, to: stops[i+1].port, nm: d, fromType: stops[i].type, toType: stops[i+1].type });
+    totalDistance += d;
+  }
+
+  // Bunker (same table)
+  let seaIfo, seaMgo, portMgo = 0, portIfo = 0;
+  if      (dwt <= 5500)  { seaIfo = 7.0;  seaMgo = 0.5; portMgo = 1.5; }
+  else if (dwt <= 7800)  { seaIfo = 7.5;  seaMgo = 0.6; portMgo = 1.7; }
+  else if (dwt <= 9500)  { seaIfo = 9.5;  seaMgo = 0.8; portMgo = 1.8; }
+  else if (dwt <= 13000) { seaIfo = 11.0; seaMgo = 1.0; portMgo = 1.5; }
+  else if (dwt <= 15500) { seaIfo = 12.5; seaMgo = 0.5; portMgo = 2.0; }
+  else if (dwt <= 17500) { seaIfo = 13.5; seaMgo = 0.3; portMgo = 2.2; }
+  else if (dwt <= 19500) { seaIfo = 14.5; seaMgo = 0.2; portMgo = 2.5; }
+  else if (dwt <= 25500) { seaIfo = 17.5; seaMgo = 0.2; portIfo = 4.5; }
+  else if (dwt <= 30000) { seaIfo = 18.0; seaMgo = 0.2; portIfo = 5.0; }
+  else if (dwt <= 40000) { seaIfo = 20.0; seaMgo = 0.2; portIfo = 4.9; }
+  else if (dwt <= 55000) { seaIfo = 23.0; seaMgo = 0.3; portIfo = 4.5; }
+  else if (dwt <= 70000) { seaIfo = 24.0; seaMgo = 0.2; portIfo = 5.1; }
+  else                   { seaIfo = 25.0; seaMgo = 0.3; portIfo = 5.0; }
+  const sf = Math.pow(speed / 11.5, 1.5);
+  seaIfo *= sf; seaMgo *= sf;
+
+  const seaDays = totalDistance / (speed * 24);
+  // Port days = sum of (qty / rate) for each stop
+  const portDays = stops.reduce((acc, s) => acc + s.qty / (s.type === 'load' ? loadRate : dischRate), 0);
+  const totalDays = seaDays + portDays + 1.5;
+
+  const bunkerCost = (seaIfo*seaDays + portIfo*portDays)*vlsfoPrice + (seaMgo*seaDays + portMgo*portDays)*mgoPrice;
+
+  // Hire
+  let h;
+  if      (dwt <= 3800) h = 2888;
+  else if (dwt <= 5500) h = 3150;
+  else if (dwt <= 7800) h = 3675;
+  else if (dwt <= 9500) h = 4463;
+  else if (dwt <= 13000) h = 5460;
+  else if (dwt <= 15500) h = 6563;
+  else if (dwt <= 17500) h = 7875;
+  else if (dwt <= 19500) h = 9188;
+  else if (dwt <= 25500) h = 10763;
+  else if (dwt <= 30000) h = 12600;
+  else if (dwt <= 40000) h = 14175;
+  else if (dwt <= 55000) h = 15750;
+  else if (dwt <= 70000) h = 17325;
+  else                   h = 18900;
+  if (vesselType === 'gearless') h = Math.round(h * 0.88);
+  const hireRate = h;
+  const hireCost = h * totalDays;
+
+  // Canal toll (once per voyage if selected)
+  let canalToll = 0;
+  const canalLines = [];
+  if (routeVia === 'suez')   { canalToll = dwt * 0.70; canalLines.push({label:'Suez Canal toll',   amt:canalToll}); }
+  if (routeVia === 'panama') { canalToll = dwt * 2.50; canalLines.push({label:'Panama Canal toll', amt:canalToll}); }
+
+  // Per-zone port costs — one charge per stop
+  const PORT_RATE = {
+    NW_EU:1.85, MED:1.55, US_GULF:1.70, US_EAST:1.80, NORTH_AM_W:1.80, AUSTRALIA:1.65,
+    JAPAN:1.30, KR:1.25, TAIWAN:1.25,
+    SAFRICA:1.45, WAFRICA:1.55, EAFRICA:1.40,
+    BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40, S_AM_W:1.45,
+    ADEN:1.30, PG:1.20, RED_SEA:1.35, BLACK_SEA:1.40, PAKISTAN:1.10,
+    CN_N:1.20, CN_E:1.20, CN_S:1.15,
+    INDIA_W:1.05, INDIA_E:1.05, BANGLADESH:1.00, SRI_LANKA:1.00,
+    SG:1.10, MALACCA:1.00, GOT:0.95, MAL_E:0.95,
+    VN_N:1.00, VN_C:0.95, VN_S:1.00,
+    PH_N:1.00, PH_C:0.95, PH_S:0.95,
+    JAVA_W:0.95, JAVA_E:0.95, SULAWESI:0.90,
+    BORNEO_S:0.90, BORNEO_E:0.90,
+    SARAWAK:1.25, SABAH:1.25,
+  };
+  let portCosts = 0;
+  const portLines = [];
+  stops.forEach(s => {
+    const rate = PORT_RATE[portZone[s.port]] || 1.10;
+    const cost = dwt * rate;
+    portCosts += cost;
+    portLines.push({ port: s.port, type: s.type, rate, cost });
+  });
+
+  // Stevedoring — applied to total cargo (load side, since loaded = discharged)
+  const commodityKey = (commodity || '').toLowerCase().trim();
+  const STEV_RATE_PER_MT = {
+    iron_ore:3, coal:3, bauxite:3, alumina:4, manganese:4, nickel_ore:4,
+    chrome:4, ilmenite:4, gypsum:3, pet_coke:3, anthracite:3,
+    salt:3, limestone:3, copper_conc:5, zinc_conc:5, iron_conc:5,
+    cement:5, clinker:4,
+    grain:4, corn:4, wheat:4, barley:4, sorghum:4, soybeans:4, soybean_meal:4,
+    rice:6, sugar:5, fertilizer:4, urea:4, dap:4, potash:4, ammonium_sulphate:4,
+    scrap:6, steel:12, rebar:11, hbi:6, pipes:14, machinery:18, vehicles:22, project:20,
+    timber:8, lumber:9, plywood:10, woodpulp:7, woodchips:5,
+  };
+  const stevRate = STEV_RATE_PER_MT[commodityKey] || 5;
+  const ownerStevShare = { liner: 1.0, fiost: 0.0, filo: 0.5 }[basis] ?? 0;
+  const stevCost = stevRate * totalLoad * ownerStevShare;
+
+  // Mark-up (from slider)
+  const commissionPctRaw = parseFloat(document.getElementById('commissionPct').value);
+  const commissionPct = isNaN(commissionPctRaw) ? 2.5 : commissionPctRaw;
+  const ownerMarginPct = 5;
+  const totalMarkupPct = commissionPct + ownerMarginPct;
+  const marginFactor = 1 + totalMarkupPct / 100;
+
+  const voyageBaseCost = bunkerCost + hireCost + portCosts + canalToll + stevCost;
+  const totalCost = voyageBaseCost * marginFactor;
+  const freightRate = totalCost / totalLoad;
+  const freightLow  = (freightRate * 0.90).toFixed(1);
+  const freightHigh = (freightRate * 1.10).toFixed(1);
+
+  // Display
+  document.getElementById('multiFreightRate').textContent = '$' + freightRate.toFixed(1);
+  document.getElementById('multiFreightRange').textContent = `Market range: $${freightLow} – $${freightHigh} / MT`;
+
+  const viaLabel = { auto:'Auto (Shortest)', suez:'Suez Canal', panama:'Panama Canal', cape:'Cape of Good Hope' }[routeVia] || 'Direct';
+
+  document.getElementById('multiVoyageTags').innerHTML = `
+    <div class="vtag">📍 ${stops.length} stops</div>
+    <div class="vtag">📏 ${totalDistance.toLocaleString()} nm total</div>
+    <div class="vtag">🛳 via ${viaLabel}</div>
+    <div class="vtag">🚀 ${speed} kts</div>
+    <div class="vtag">⏱ ${totalDays.toFixed(1)} days total</div>
+    <div class="vtag">🚢 ${dwt.toLocaleString()} DWT ${vesselType==='geared'?'⚙️':'🏗️'}</div>
+    <div class="vtag">📦 ${totalLoad.toLocaleString()} MT ${commodityKey || 'cargo'}</div>
+  `;
+
+  const legsHtml = legs.map((leg, i) => {
+    const fromName = portNames[leg.from] || leg.from;
+    const toName = portNames[leg.to] || leg.to;
+    const fromBadge = leg.fromType === 'load' ? '🟢' : '🔴';
+    const toBadge = leg.toType === 'load' ? '🟢' : '🔴';
+    return `<div class="breakdown-row" style="font-size:.78rem"><span class="b-label">Leg ${i+1}: ${fromBadge} ${fromName} → ${toBadge} ${toName}</span><span class="b-val">${leg.nm.toLocaleString()} nm</span></div>`;
+  }).join('');
+
+  const portCostsHtml = portLines.map(p => {
+    const portName = portNames[p.port] || p.port;
+    const badge = p.type === 'load' ? '🟢 L' : '🔴 D';
+    return `<div class="breakdown-row" style="font-size:.78rem"><span class="b-label">${badge} ${portName} ($${p.rate.toFixed(2)} × ${dwt.toLocaleString()} DWT)</span><span class="b-val">$${p.cost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`;
+  }).join('');
+
+  document.getElementById('multiBreakdown').innerHTML = `
+    <div class="breakdown-row" style="background:rgba(184,98,10,.06);font-weight:700"><span class="b-label">📍 Voyage legs</span><span class="b-val">Total ${totalDistance.toLocaleString()} nm</span></div>
+    ${legsHtml}
+    <div class="breakdown-row"><span class="b-label">Sea bunker (${seaDays.toFixed(1)} sea days @ ${(seaIfo+seaMgo).toFixed(1)} MT/d)</span><span class="b-val">$${(seaIfo*seaDays*vlsfoPrice + seaMgo*seaDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Port bunker (${portDays.toFixed(1)} port days)</span><span class="b-val">$${(portIfo*portDays*vlsfoPrice + portMgo*portDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b></span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
+    <div class="breakdown-row"><span class="b-label">Vessel hire ($${hireRate.toLocaleString()}/d × ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row" style="background:rgba(184,98,10,.06);font-weight:700"><span class="b-label">📍 Port costs (${stops.length} ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    ${portCostsHtml}
+    ${canalLines.map(c => `<div class="breakdown-row"><span class="b-label">${c.label}</span><span class="b-val">$${c.amt.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`).join('')}
+    ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">Stevedoring (${basis.toUpperCase()}, ${commodityKey||'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% × ${totalLoad.toLocaleString()} MT)</span><span class="b-val">$${stevCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
+    <div class="breakdown-row"><span class="b-label">Mark-up (${commissionPct.toFixed(2)}% commission + ${ownerMarginPct}% margin)</span><span class="b-val">+${totalMarkupPct.toFixed(2)}%</span></div>
+    <div class="breakdown-row total"><span class="b-label">TOTAL VOYAGE COST</span><span class="b-val">$${totalCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row total"><span class="b-label">FREIGHT RATE (÷ ${totalLoad.toLocaleString()} MT)</span><span class="b-val">$${freightRate.toFixed(2)}/MT</span></div>
+  `;
+
+  document.getElementById('multiResults').classList.add('show');
+  document.getElementById('multiResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Stash for copy
+  window._lastMultiQuote = {
+    stops, legs, totalDistance, viaLabel, dwt, speed, vesselType,
+    totalLoad, commodity: commodityKey || 'general', basis, totalDays,
+    seaDays, portDays, freightRate, freightLow, freightHigh,
+    bunkerCost, hireCost, hireRate, portCosts, canalToll, stevCost, totalCost,
+  };
+}
+
+// Auto-init multi-port stops when tab is first opened
+const _origSwitchTab = (typeof switchTab === 'function') ? switchTab : null;
+window.addEventListener('DOMContentLoaded', () => { setTimeout(initMultiStops, 100); });
+
 // ─── PRINT / SAVE AS PDF ─────────────────────────────────────────────────────
 // Hides the OTHER tab's results so only the active quote prints. The print
 // stylesheet (in @media print) handles all UI chrome cleanup.
 function printQuote(which) {
-  const stash = which === 'tce' ? window._lastTceQuote : window._lastFreightQuote;
+  const stash = which === 'tce'   ? window._lastTceQuote
+               : which === 'multi' ? window._lastMultiQuote
+               : window._lastFreightQuote;
   if (!stash) { alert('Calculate first, then print.'); return; }
-  // Toggle the OTHER tab off so its (possibly stale) results don't print
-  const otherResults = document.getElementById(which === 'tce' ? 'results' : 'tceResults');
-  const wasShown = otherResults && otherResults.classList.contains('show');
-  if (otherResults) otherResults.classList.remove('show');
-  // Trigger browser print dialog (user picks printer or "Save as PDF")
+  // Toggle other tabs' results off so only the active quote prints
+  const allResultIds = ['results', 'tceResults', 'multiResults'];
+  const activeId = which === 'tce' ? 'tceResults' : which === 'multi' ? 'multiResults' : 'results';
+  const wasShown = {};
+  allResultIds.forEach(id => {
+    if (id === activeId) return;
+    const el = document.getElementById(id);
+    if (el) {
+      wasShown[id] = el.classList.contains('show');
+      el.classList.remove('show');
+    }
+  });
   setTimeout(() => {
     window.print();
-    // Restore the other tab's results visibility after print dialog closes
-    if (wasShown) otherResults.classList.add('show');
+    // Restore visibility after print dialog closes
+    Object.keys(wasShown).forEach(id => {
+      if (wasShown[id]) document.getElementById(id).classList.add('show');
+    });
   }, 50);
 }
 
 // ─── COPY QUOTE TO CLIPBOARD ──────────────────────────────────────────────────
 function copyQuote(which) {
-  const q = which === 'tce' ? window._lastTceQuote : window._lastFreightQuote;
+  const q = which === 'tce'   ? window._lastTceQuote
+           : which === 'multi' ? window._lastMultiQuote
+           : window._lastFreightQuote;
   if (!q) { alert('Calculate first, then copy.'); return; }
 
   let text;
@@ -3434,6 +3888,37 @@ function copyQuote(which) {
 
 ⚓ TCE = $${Math.round(q.tceDay).toLocaleString()} / day  (${dir} market by $${diff.toLocaleString()})
    Current market hire: $${q.marketHire.toLocaleString()} / day`;
+  } else if (which === 'multi') {
+    const stopsList = q.stops.map((s, i) => {
+      const badge = s.type === 'load' ? '🟢 L' : '🔴 D';
+      return `   ${i+1}. ${badge} ${portNames[s.port]||s.port} (${s.qty.toLocaleString()} MT)`;
+    }).join('\n');
+    const legsList = q.legs.map((leg, i) =>
+      `   Leg ${i+1}: ${portNames[leg.from]||leg.from} → ${portNames[leg.to]||leg.to} = ${leg.nm.toLocaleString()} nm`
+    ).join('\n');
+    text =
+`📍 MULTI-PORT VOYAGE — ${q.stops.length} stops
+─────────────────────────────────────
+${stopsList}
+
+📦 Total cargo: ${q.totalLoad.toLocaleString()} MT ${q.commodity} | ${q.basis.toUpperCase()}
+🚢 ${q.dwt.toLocaleString()} DWT | ${q.vesselType} | ${q.speed} kts
+🛳 via ${q.viaLabel} | ${q.totalDistance.toLocaleString()} nm | ${q.totalDays.toFixed(1)} days
+   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + 1.5 d margin)
+
+📏 Voyage legs:
+${legsList}
+
+💵 Bunker:    $${Math.round(q.bunkerCost).toLocaleString()}
+   Hire eq:   $${Math.round(q.hireCost).toLocaleString()} ($${q.hireRate.toLocaleString()}/d)
+   Port cost: $${Math.round(q.portCosts).toLocaleString()} (${q.stops.length} ports)${q.canalToll>0?`
+   Canal:     $${Math.round(q.canalToll).toLocaleString()}`:''}${q.stevCost!==0?`
+   Steve:     $${Math.round(q.stevCost).toLocaleString()}`:''}
+   ─────────────────
+   Total:     $${Math.round(q.totalCost).toLocaleString()}
+
+💰 INDICATIVE FREIGHT: $${q.freightRate.toFixed(2)} / MT (blended)
+   Market range: $${q.freightLow} – $${q.freightHigh} / MT`;
   } else {
     text =
 `🔎 INDICATIVE FREIGHT — ${(portNames[q.loadPort]||q.loadPort)} → ${(portNames[q.dischPort]||q.dischPort)}
@@ -3456,7 +3941,8 @@ function copyQuote(which) {
   }
 
   navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById(which === 'tce' ? 'copyTceBtn' : 'copyFreightBtn');
+    const btnId = which === 'tce' ? 'copyTceBtn' : which === 'multi' ? 'copyMultiBtn' : 'copyFreightBtn';
+    const btn = document.getElementById(btnId);
     if (!btn) return;
     const originalHTML = btn.innerHTML;
     btn.innerHTML = '✓ Copied to clipboard!';
