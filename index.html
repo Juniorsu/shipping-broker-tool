@@ -47,7 +47,7 @@
   .dn { color: var(--red); }
 
   /* LAYOUT */
-  .main { display: grid; grid-template-columns: 1fr 420px; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  .main { display: grid; grid-template-columns: minmax(560px, 1.2fr) 1fr; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
 
   /* SECTIONS */
   .section-title {
@@ -57,7 +57,8 @@
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
   /* NEWS */
-  .news-col { display: flex; flex-direction: column; gap: 16px; }
+  .news-col { display: flex; flex-direction: column; gap: 16px; order: 2; }
+  .quote-col { order: 1; }
 
   .news-sources {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
@@ -132,7 +133,6 @@
   }
 
   /* QUOTE FORM */
-  .quote-col {}
   .quote-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
     position: sticky; top: 80px;
@@ -397,7 +397,7 @@
 <!-- MAIN -->
 <div class="main">
 
-  <!-- LEFT: NEWS -->
+  <!-- NEWS — visual position controlled by CSS grid `order` (right column on desktop) -->
   <div class="news-col">
 
     <div class="section-title">Live Market Intelligence</div>
