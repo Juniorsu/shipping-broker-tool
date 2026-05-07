@@ -2242,13 +2242,47 @@ const customRoutes = {
   'GOT|VN_N':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
   'GOT|VN_S':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off],
 
-  // Vietnam ↔ Malacca Strait (Penang, Belawan, Lhokseumawe)
-  // Use malacca_mid (Port Klang region) → malacca_s to track the actual shipping
-  // lane that hugs the Malaysian coast. Avoids the old malacca_n westward detour
-  // while keeping distance close to realistic ~1200nm Penang→HCM.
+  // ─── MALACCA-zone routes (Penang / Belawan / Lhokseumawe) ───
+  // Strategy:
+  //   Eastbound (sg_strait & beyond): use [malacca_mid, malacca_s, sg_strait, ...]
+  //                                   to track strait shipping lane (avoids
+  //                                   malacca_n westward detour for ports
+  //                                   already inside the strait).
+  //   Westbound (Indian Ocean / Med): exit via malacca_n directly, NO malacca_s
+  //                                   detour — Penang is east of malacca_n but
+  //                                   the natural westbound path goes through it.
+
+  // Vietnam (eastbound, via Singapore Strait then up SCS coast)
   'MALACCA|VN_C':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
   'MALACCA|VN_N':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
   'MALACCA|VN_S':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off],
+
+  // Gulf of Thailand (eastbound to Bangkok / Laem Chabang etc.)
+  'GOT|MALACCA':   [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
+
+  // Indonesia Java (eastbound through Karimata Strait to Java Sea)
+  'JAVA_W|MALACCA': [WP.java_sea_w, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
+  'JAVA_E|MALACCA': [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
+
+  // Indonesia Borneo south (eastbound to Banjarmasin)
+  'BORNEO_S|MALACCA': [WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
+
+  // Sulawesi (eastbound to Makassar via Java Sea + Makassar Strait south)
+  'MALACCA|SULAWESI': [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_c, WP.makassar_s],
+
+  // Westbound Indian Ocean — ports exit via malacca_n directly (bypass bengal_e/bab_mandeb detours)
+  // Uses sri_lanka_s as the trans-Indian-Ocean pivot (5.8N latitude direct route works).
+  'ADEN|MALACCA':       [WP.arabian_s, WP.sri_lanka_s, WP.malacca_n],     // Salalah — dropped gulf_aden (Salalah is ~midway between arabian_s and gulf_aden, going via gulf_aden adds ~700nm zigzag)
+  'EAFRICA|MALACCA':    [WP.sri_lanka_s, WP.malacca_n],                                   // Mombasa / Dar es Salaam (direct cross-IO, no bab_mandeb)
+  'MALACCA|SAFRICA':    [WP.malacca_n, WP.sri_lanka_s, WP.cape_agulhas],                  // Durban (Cape route, no bab_mandeb)
+  'MALACCA|PG':         [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.hormuz], // dropped arabian_n (wrong-direction zigzag — Dubai/Sohar are right inside Hormuz)
+  'MALACCA|SRI_LANKA':  [WP.malacca_n, WP.sri_lanka_s],                                   // Colombo
+  'BANGLADESH|MALACCA': [WP.bengal_ne, WP.bengal_e, WP.malacca_n],                        // Chittagong (Bay of Bengal northbound)
+
+  // Med / NW Europe — Suez route, skip bengal_e (was a 470nm zigzag north-then-south)
+  'MALACCA|NW_EU':      [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
+  'MALACCA|MED':        [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.suez_s, WP.suez_n, WP.med_c],
+  'MALACCA|WAFRICA':    [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.wa_app],
 
   // Vietnam ↔ South Borneo (Banjarmasin)
   'BORNEO_S|VN_C': [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
@@ -2277,7 +2311,7 @@ const customRoutes = {
   // (direct lines would cut across southern Vietnam / Cambodia / Malay Peninsula).
   'CN_S|MAL_E':    [WP.scs_central],                                                    // HK → scs_central → Kuantan
   'CN_S|SG':       [WP.scs_central, WP.scs_south, WP.sg_strait],
-  'CN_S|MALACCA':  [WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+  'CN_S|MALACCA':  [WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_mid],   // was malacca_n (wrong direction U-turn for Penang/Belawan eastbound)
   // ── South China ↔ South Asia — backbone bi=20 (taiwan_s[22,118.5]) is east of Guangzhou/Fangcheng,
   // causing a ~600nm eastward spike before turning back west.  Route south through SCS→Malacca instead.
   'CN_S|SRI_LANKA': [WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
@@ -2433,7 +2467,7 @@ const customRoutes = {
   // ── Malacca Strait ↔ Singapore — straight down the Strait via malacca_s.
   // Default routes via malacca_n (top of Sumatra) for all MALACCA ports, detouring
   // 600+nm north before coming back. Skip malacca_n; MALACCA ports → malacca_s → sg_strait.
-  'MALACCA|SG': [WP.malacca_s, WP.sg_strait],
+  'MALACCA|SG': [WP.malacca_mid, WP.malacca_s],   // dropped sg_strait — port_klang sits BEFORE it on the path; spore/pasir_gudang are close enough to malacca_s
 
   // ── North China ↔ East China coastal — default routes via bi=22 (way south) then north.
   // Adjacent ports like Lianyungang (CN_E) and Rizhao (CN_N) are 40nm apart but get 1300nm
@@ -2624,7 +2658,7 @@ const customRoutes = {
   // ── India West ↔ East/SE Asia — eastbound routes must round India's south tip via
   // sri_lanka_s, NOT detour NW to indian_w[15,68] (which is the Arabian-Sea branch for
   // westbound traffic).  Without customs the reversed branch sends ships 900nm the wrong way.
-  'INDIA_W|MALACCA':  [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n],
+  'INDIA_W|MALACCA':  [WP.sri_lanka_s, WP.malacca_n],   // dropped bengal_e (zigzag) AND indian_w (detour for south India ports — cochin/mangalore are south of indian_w[15,68])
   'INDIA_W|SG':       [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait],
   'INDIA_W|GOT':      [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.got_entrance, WP.got_mid, WP.got_north],
   'INDIA_W|MAL_E':    [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south],
@@ -2775,7 +2809,11 @@ function routeDistanceNm(route) {
   for (let i = 0; i < route.length - 1; i++) {
     d += haversineNm(route[i], route[i+1]);
   }
-  return Math.round(d);
+  // Routing overhead: real shipping lanes run ~5% longer than the great-circle
+  // waypoint sum due to coastal hugging, traffic separation schemes, weather
+  // routing, and avoidance of shoals/oil rigs. Calibrated against ~60 reference
+  // distances (sea-distances.org / searates.com).
+  return Math.round(d * 1.05);
 }
 
 // ─── ALTERNATIVE ROUTES (Panama / Cape) ───────────────────────────────────────
