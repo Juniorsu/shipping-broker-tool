@@ -243,6 +243,13 @@
       padding-bottom: 6px; border-bottom: 2px solid #333;
     }
     #tceResults::before { content: 'Broker Intelligence Suite — TCE Reverse Calculation'; }
+    /* For the Fixture Note: hide the auto-header (the draft already has its own
+       "FIXTURE NOTE" title) and print the draft body using its serif font. */
+    #fnResults::before { display: none !important; }
+    #fnDraft {
+      border: none !important; padding: 0 !important; margin: 0 !important;
+      font-size: 10.5pt !important; line-height: 1.45 !important;
+    }
   }
 
   /* MULTI-PORT STOP ROW */
@@ -467,6 +474,7 @@
         <button class="tab-btn active" data-tab="tab-freight" onclick="switchTab('tab-freight')">&#9875; Freight</button>
         <button class="tab-btn"        data-tab="tab-tce"     onclick="switchTab('tab-tce')">&#128200; TCE</button>
         <button class="tab-btn"        data-tab="tab-multi"   onclick="switchTab('tab-multi')">&#128205; Multi-Port</button>
+        <button class="tab-btn"        data-tab="tab-fn"      onclick="switchTab('tab-fn')">&#128221; Fixture Note</button>
       </div>
 
       <div id="tab-freight" class="tab-content active">
@@ -1034,6 +1042,186 @@
           </p>
         </div>
       </div><!-- /tab-multi -->
+
+      <!-- ========== FIXTURE NOTE TAB ========== -->
+      <div id="tab-fn" class="tab-content">
+        <form id="fnForm" onsubmit="return false;">
+          <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
+            &#128221; <b>Fixture Note draft generator:</b> fill the variables below — the 29-clause boilerplate is hardcoded to match your house template. Empty fields show as <code>[PLEASE ADVISE]</code>.
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>FN No.</label>
+              <input type="text" id="fnNo" placeholder="auto-generated">
+              <div class="form-hint">Auto = MV{vessel-initials}{YYYYMMDD}. Edit if needed.</div>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="fnDate">
+              <div class="form-hint">Defaults to today.</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Charterer Name</label>
+            <input type="text" id="fnCharterer" placeholder="e.g. SUPAS VIETNAM COMPANY LIMITED">
+          </div>
+          <div class="form-group">
+            <label>Charterer Address</label>
+            <textarea id="fnChartererAddr" rows="2" placeholder="Full registered address" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Owner Name</label>
+            <input type="text" id="fnOwner" placeholder="e.g. TRANSMARINE STEAMSHIP CO., LIMITED">
+          </div>
+          <div class="form-group">
+            <label>Owner Address</label>
+            <textarea id="fnOwnerAddr" rows="2" placeholder="Full registered address" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
+              <input type="checkbox" id="fnIncludeBank" onchange="document.getElementById('fnBankBlock').style.display=this.checked?'block':'none'">
+              <span style="font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;font-size:.7rem">Include Owner Bank Details (optional)</span>
+            </label>
+            <div id="fnBankBlock" style="display:none;margin-top:8px;padding:12px;background:var(--navy2);border-radius:6px;border:1px solid var(--border)">
+              <div class="form-group">
+                <label>Beneficiary Name</label>
+                <input type="text" id="fnBankBeneficiary" placeholder="usually same as Owner Name">
+              </div>
+              <div class="form-group">
+                <label>Beneficiary Address</label>
+                <textarea id="fnBankBeneficiaryAddr" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Account Number</label>
+                  <input type="text" id="fnBankAcct">
+                </div>
+                <div class="form-group">
+                  <label>Bank Name</label>
+                  <input type="text" id="fnBankName">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>SWIFT Code</label>
+                  <input type="text" id="fnBankSwift">
+                </div>
+                <div class="form-group">
+                  <label>Bank Code / Branch Code</label>
+                  <input type="text" id="fnBankCode" placeholder="e.g. 035 / 802">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Bank Address</label>
+                <textarea id="fnBankAddr" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+
+          <div class="form-group">
+            <label>Vessel Name</label>
+            <input type="text" id="fnVesselName" placeholder="e.g. MV HONOR SPRING">
+            <div class="form-hint">Used to auto-generate FN No.</div>
+          </div>
+          <div class="form-group">
+            <label>Vessel Particulars (optional)</label>
+            <textarea id="fnVesselParticulars" rows="4" placeholder="e.g.&#10;BOX VSL (LOG AVAILABLE)&#10;PANAMA FLAG BLT 2022 DWT/DWCC/GRT/NRT 8200/8000/5582/2834MT&#10;LENGTH/BREADTH/DEPTH/DRAFT 109.55/18.30/8.50/6.50M&#10;G/B CAPA 10119/10000CBM 2H/2H HATCH SIZE: NO.1:31.45X13.65M; NO.2: 31.45X13.65M&#10;STL BTM GEARLESS SD P&amp;I AND CLASS COVERED ADA WOG" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Vessel Itinerary (optional)</label>
+            <textarea id="fnItinerary" rows="3" placeholder="e.g.&#10;VESSEL IS DISCHARGING AT WEIFANG:&#10;ATA WEIFANG : 0030 26TH JAN, 2026&#10;ETD WEIFANG : PM 30TH JAN, 2026" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+
+          <div class="form-group">
+            <label>Cargo &amp; Quantity (Clause 2)</label>
+            <textarea id="fnCargo" rows="2" placeholder="e.g. 7,800 - 8,000 MT NET WEIGHT CEMENT IN JUMBO BAGS (1.5-2.0 MT / BAGS) AT OWNER OPTION..." style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+            <div class="form-hint">Free text — include MIN/MAX, packaging, owner-option clauses if any.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Loading Port (Clause 3)</label>
+              <input type="text" id="fnLoadPort" placeholder="e.g. 1SAP HONGAI, VIETNAM">
+            </div>
+            <div class="form-group">
+              <label>Discharging Port (Clause 4)</label>
+              <input type="text" id="fnDischPort" placeholder="e.g. 1 SBP TANJUNG MANIS PORT, SARAWAK, MALAYSIA">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Laycan (Clause 5)</label>
+              <input type="text" id="fnLaycan" placeholder="e.g. 24-28TH FEB, 2026">
+            </div>
+            <div class="form-group">
+              <label>Freight (Clause 7)</label>
+              <input type="text" id="fnFreight" placeholder="e.g. USD 15.50 / NET WEIGHT MT FIOST BSS 1/1">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Loading Rate (Clause 6)</label>
+              <input type="text" id="fnLoadRate" placeholder="e.g. 2,500MTS PWWD SHINC">
+            </div>
+            <div class="form-group">
+              <label>Discharging Rate (Clause 6)</label>
+              <input type="text" id="fnDischRate" placeholder="e.g. 2,000MTS PWWD SHINC">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Demurrage / Despatch / Detention (Clause 8)</label>
+            <input type="text" id="fnDemDes" placeholder="e.g. USD 3,500 PDPR / DHD">
+            <div class="form-hint">Per fixture — leave blank if still under negotiation.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Commission % (Clause 24)</label>
+              <input type="text" id="fnCommission" placeholder="e.g. 2.5">
+            </div>
+            <div class="form-group">
+              <label>Commission Payable To</label>
+              <input type="text" id="fnCommBroker" placeholder="e.g. DELIGHT STAR SHIPPING">
+            </div>
+          </div>
+
+          <button class="calc-btn" onclick="generateFN()">
+            &#128221; Generate Fixture Note Draft
+          </button>
+        </form>
+
+        <!-- FN OUTPUT -->
+        <div class="results" id="fnResults">
+          <hr class="result-divider">
+
+          <div id="fnDraft" style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:24px;margin:16px 0;font-family:'Times New Roman',Georgia,serif;font-size:11pt;line-height:1.5;color:#000;white-space:pre-wrap;word-wrap:break-word"></div>
+
+          <div class="action-btn-row">
+            <button class="copy-btn" id="copyFnBtn" onclick="copyQuote('fn')">
+              &#128203; Copy
+            </button>
+            <button class="print-btn" onclick="printQuote('fn')">
+              &#128424; Print / PDF
+            </button>
+          </div>
+
+          <p class="disclaimer">
+            Draft only. Review every clause against the actual deal before sending.
+            29-clause body matches house template (Honor Spring style); commercial inputs from form above.
+          </p>
+        </div>
+      </div><!-- /tab-fn -->
 
     </div>
   </div>
@@ -3776,17 +3964,237 @@ function calculateMulti() {
 const _origSwitchTab = (typeof switchTab === 'function') ? switchTab : null;
 window.addEventListener('DOMContentLoaded', () => { setTimeout(initMultiStops, 100); });
 
+// ─── FIXTURE NOTE GENERATOR ─────────────────────────────────────────────────
+// Produces a 29-clause fixture note draft matching the Honor Spring house template.
+// Variable inputs come from the form; everything else is hardcoded boilerplate.
+// Empty fields render as [PLEASE ADVISE].
+
+function _fnVal(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  return (el.value || '').trim();
+}
+function _fnOr(v, fallback) { return v && v.length ? v : (fallback || '[PLEASE ADVISE]'); }
+
+function _fnAutoFnNo(vesselName, dateStr) {
+  // MV{initials of vessel name (capital letters only)}{YYYYMMDD}
+  if (!vesselName) return '';
+  const initials = vesselName.toUpperCase()
+    .replace(/^MV\.?\s+/, '')   // strip leading "MV " or "MV."
+    .split(/\s+/)
+    .map(w => w[0])
+    .filter(c => c && /[A-Z]/.test(c))
+    .join('');
+  const ymd = dateStr ? dateStr.replace(/-/g,'') : '';
+  return 'MV' + initials + ymd;
+}
+
+function _fnFormatDate(isoDate) {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-');
+  if (!y || !m || !d) return isoDate;
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const day = parseInt(d, 10);
+  const suffix = (day === 1 || day === 21 || day === 31) ? 'ST'
+              : (day === 2 || day === 22)              ? 'ND'
+              : (day === 3 || day === 23)              ? 'RD' : 'TH';
+  return day + suffix + ' ' + months[parseInt(m,10)-1] + ', ' + y;
+}
+
+function generateFN() {
+  // Defaults: today's date if blank
+  const dateInp = document.getElementById('fnDate');
+  if (!dateInp.value) {
+    const today = new Date();
+    dateInp.value = today.toISOString().slice(0,10);
+  }
+
+  // Vessel — auto-suggest FN No. if user left it blank
+  const vesselName = _fnVal('fnVesselName');
+  const fnNoInp = document.getElementById('fnNo');
+  if (!fnNoInp.value && vesselName && dateInp.value) {
+    fnNoInp.value = _fnAutoFnNo(vesselName, dateInp.value);
+  }
+
+  const PA = '[PLEASE ADVISE]';
+  const fnNo       = _fnOr(_fnVal('fnNo'), PA);
+  const dateText   = _fnOr(_fnFormatDate(dateInp.value), PA);
+  const charterer  = _fnOr(_fnVal('fnCharterer'), PA);
+  const chartAddr  = _fnOr(_fnVal('fnChartererAddr'), PA);
+  const owner      = _fnOr(_fnVal('fnOwner'), PA);
+  const ownerAddr  = _fnOr(_fnVal('fnOwnerAddr'), PA);
+  const vessel     = _fnOr(vesselName.toUpperCase(), PA);
+  const vparts     = _fnVal('fnVesselParticulars');   // optional, no default
+  const itinerary  = _fnVal('fnItinerary');           // optional
+  const cargo      = _fnOr(_fnVal('fnCargo'), PA);
+  const loadPort   = _fnOr(_fnVal('fnLoadPort'), PA);
+  const dischPort  = _fnOr(_fnVal('fnDischPort'), PA);
+  const laycan     = _fnOr(_fnVal('fnLaycan'), PA);
+  const loadRate   = _fnOr(_fnVal('fnLoadRate'), PA);
+  const dischRate  = _fnOr(_fnVal('fnDischRate'), PA);
+  const freight    = _fnOr(_fnVal('fnFreight'), PA);
+  const demDes     = _fnOr(_fnVal('fnDemDes'), PA);
+  const commPct    = _fnOr(_fnVal('fnCommission'), PA);
+  const commBroker = _fnOr(_fnVal('fnCommBroker'), PA);
+
+  // Optional bank block
+  const includeBank = document.getElementById('fnIncludeBank').checked;
+  let bankBlock = '';
+  if (includeBank) {
+    const bankBene     = _fnOr(_fnVal('fnBankBeneficiary'), owner);
+    const bankBeneAddr = _fnOr(_fnVal('fnBankBeneficiaryAddr'), PA);
+    const bankAcct     = _fnOr(_fnVal('fnBankAcct'), PA);
+    const bankName     = _fnOr(_fnVal('fnBankName'), PA);
+    const bankSwift    = _fnOr(_fnVal('fnBankSwift'), PA);
+    const bankCode     = _fnOr(_fnVal('fnBankCode'), PA);
+    const bankAddr     = _fnOr(_fnVal('fnBankAddr'), PA);
+    bankBlock =
+`OWNER BANK DETAILS:
+BENEFICIARY: ${bankBene}
+BENEFICIARY ADDRESS: ${bankBeneAddr}
+ACCT NUMBER: ${bankAcct}
+BANK NAME: ${bankName}
+SWIFT CODE: ${bankSwift}
+BANK CODE / BRANCH CODE: ${bankCode}
+BANK ADDRESS: ${bankAddr}
+
+`;
+  }
+
+  const vesselBlock = vparts ? vesselName.toUpperCase() + '\n' + vparts : vessel;
+  const itineraryBlock = itinerary
+    ? '\n\nVESSEL ITINERARY:\n' + itinerary
+    : '';
+
+  // ───── Build the FN body ─────
+  const fnText =
+`                                              FIXTURE NOTE
+
+                                                                      DATE: ${dateText}
+
+FN NO.: ${fnNo}
+IT IS THIS DAY MUTUALLY AGREED BETWEEN:
+
+THE CHARTERER  : ${charterer}
+ADDRESS        : ${chartAddr}
+
+THE OWNER      : ${owner}
+ADDRESS        : ${ownerAddr}
+
+${bankBlock}THAT THE OWNER WILL ARRANGE THE VESSEL TO PERFORM THE SHIPMENT FOR THE CHARTERER UNDER FOLLOWING TERMS AND CONDITIONS:
+
+- OWNERS GUARANTEE THAT THE PERFORMING VESSEL SHALL NOT CHANGE THE OWNER, CLASS, FLAG, AND NAME FOR THE DURATION OF THIS CHARTER. ANY TIME AND LOSS DUE TO THIS TO BE FOR OWNERS ACCOUNT.
+
+- THE OWNER GUARANTEES THAT THE VESSEL IS, AND WILL REMAIN, FREE FROM ANY DETAINMENT, SEIZURE, OR ARREST BY ANY COURT OR GOVERNMENTAL AUTHORITY THROUGHOUT THE DURATION OF THIS CHARTER PARTY. IN THE EVENT THAT THE VESSEL IS DETAINED, SEIZED, OR ARRESTED, THE OWNER SHALL TAKE ALL NECESSARY STEPS TO SECURE THE IMMEDIATE RELEASE OF THE VESSEL. ANY COSTS, LOSSES, OR DAMAGES ARISING FROM SUCH DETAINMENT, SEIZURE, OR ARREST SHALL BE BORNE BY THE OWNER.
+
+- OWNERS GUARANTEE THEIR BANK ACCOUNT IS LAWFUL AND NOT DESIGNATED IN ANY SANCTIONS LIST ISSUED BY THE UN, US OR EU.
+
+1. VESSEL
+${vesselBlock}${itineraryBlock}
+
+FOR
+2. CARGO & QUANTITY: ${cargo}
+
+3. LOADING PORT: ${loadPort}
+
+4. DISCHARGING PORT: ${dischPort}
+
+5. LAYCAN: ${laycan}
+
+6. LOADING RATE: ${loadRate}
+   DISCHARGING RATE: ${dischRate}
+
+7. FREIGHT: ${freight}
+
+8. DEM/DES AT BENDS: ${demDes}
+DEM/DES AT LOAD PORT WILL BE SETTLED WITH OFRT
+DEM/DES AT DISCHARGING PORT TO BE SETTLED W/I 7 DAYS AFTER COMPLETION OF DISCHARGING.
+DETENTION: DETENTION CHARGE AT RATE OF ${demDes} BENDS IF CGO/DOCUMENT NOT READY BEFORE VSL ARRIVAL AT BENDS. DETENTION CHARGE INCURRIED AT LOADING PORT IF ANY, TB SETTLED TOGETHER WZ FRT PAYMENT. DETENTION WHICH INCURRED AT DISCHG PORT IF ANY TO BE SETTLED BEFORE VESSEL DEPARTURED DISCHG PORT.
+
+9. FREIGHT PAYMENT: 100% FULL FREIGHT TO BE PAID BY THE CHARTERER TO THE OWNERS' NOMINATED BANK ACCOUNT WITHIN 03 (THREE) BANKING DAYS AFTER VESSEL'S COMPLETION OF LOADING BUT ALWAYS BEFORE BREAKING BULK. IF CHTR REQUEST "FREIGHT PREPAID" B/L, SAME TO BE RELEASED WHEN THE CHARTERER SEND THE OWNER BANKSLIP FOR FREIGHT PAYMENT. FULL FREIGHT DEEMED TO BE EARNED ONCE CARGO ON BOARD, NON-RETURNABLE, NON-DEDUCTABLE, WHETHER CARGO/VESSEL LOSS OR NOT. THE OB/L WILL BE SURRENDERED AT LOADING PORT. THE OWNER SHOULD INSTRUCT THE AGENT TO ISSUE SURRENDERED B/L ONCE THE OWNER RCVD THE BANK SLIP.
+ONCE THE CHARTERER HAS FULLY EFFECTED THE PAYMENT AND PROVIDED THE SELLER WITH THE BANK'S PAYMENT CONFIRMATION (MT103), ANY DELAY CAUSED BY INTERMEDIARY BANKS (IF HAVE) SHALL NOT BE CONSIDERED AS A DELAY IN PAYMENT. THE VESSEL OWNER SHALL ACCORDINGLY RELEASE THE CARGO AND PROVIDE ALL RELATED DOCUMENTS FOR CUSTOMS CLEARANCE WITHOUT OBJECTION.
+
+10. N.O.R. TO BE TENDERED TO THE SHIPPERS/RECEIVERS UPON VESSEL'S ARRIVED AT PILOT STATION AND READY IN ALL PHYSICAL CONDITION TO LOAD AS PER C/P ON WIPON, WIIBON, WFPON, WCCON BY SHIP'S MASTER IN WRITING OR BY TELEX OR EMAIL AT ANY TIME DAY OR NIGHT SUNDAYS OR HOLIDAYS INCLUDED. IN CASE OF ANY DISAGREEMENT ON LAYTIME CALCULATION GENCON. LAYTIME TO BE COMMENCED AT 13.00LT IF NOR TENDERED BEFORE AND INCLUDE 12.00LT, AND TO BE COMMENCED AT 08.00LT NEXT DAY IF NOR TENDERED AFTER 12.00LT. IN CASE LOADING/DISCHARGING COMMENCE EARLIER, ACTUAL TIME USED TO BE COUNTED. LAYTIME STOP TO COUNT UPON COMPLETE LOADING/DISCHARGING. LAYTIME ALLOWED FOR LOADING/DISCHARGING SHALL BE CALCULATED BASE ON BILL OF LADING QUANTITY.
+
+IF THE VESSEL ARRIVES AT THE LOADING PORT EARLIER THAN THE LAYCAN ACCEPTED, LAYTIME SHALL BE COUNTED AT 0800HRS OF THE COMMENCING DAY, UNLESS SOONER LOADING AND IN SUCH CASE LAYTIME SHALL START COUNTING AT THE TIME OF COMMENCE LOADING. LAYTIME CEASE TO BE COUNTED AFTER COMPLETION OF LOADING THE CONTRACTED PRODUCT.
+
+11. CHTR'S AGENT AT BENDS SUBJECT TO REASONABLE PDA
+
+12. IF VESSEL ARRIVES DISCHARGING PORT BUT ORIGINAL B/L CAN NOT BE PRESENTED IN TIME, OWRS/MASTER AGREE TO DISCHARGE/RELEASE CGO AGAINST CHARTERER/SHIPPER AND RECEIVER'S LOI.
+
+13. MASTERS AND/OR OWNERS INFORM CHTRS OF VSL'S ETA BY 7/5/3/2/1 DAYS PRIOR NOTICE FOR BOTH LOADING/DISCHARGING PORT.
+
+14. IF VESSEL ORDERED BY PORT AUTHORITIES TO LEAVE DUE TO BAD WEATHER, TIME SO LOST NOT TO COUNT AS LAYTIME IF VESSEL IS NOT ON DEMURRAGE, BUT TIME LOST TO COUNT AS LAYTIME IF VESSEL IS ON DEMURRAGE. ONCE THE VESSEL IN ON DEMURRAGE ALWAYS ON DEMURRAGE. ANY SHIFFTING IF REQUESTED BY CHTR, SHIFTING FEE WILL BE FOR CHTR'S ACCT. ANY SHIFTING IF REQUESTED BY PORT AUTHORITIES DUE TO BAD WEATHER, SHIFTING FEE TO BE FOR CHARTERER'S ACCOUNT IF VESSEL IS ALREADY ON DEMURRAGE, AND TO BE FOR OWNER'S ACCOUNT IF VESSEL NOT YET ON DEMURRAGE. SHIFTING IF ANY DUE TO VESSEL'S PROBLEM, TIME AND FEES TO BE FOR OWNER'S ACCT.
+
+15. OWNERS WILL BE RESPONSIBLE FOR ANY RESTRICTION/DETAIN/DELAY CAUSED BY VSSL FLAG, NATIONALITY, CREW AND OWNERS/VSSL FAULT. OTHERS TO BE FOR CHARTERER'S ACCOUNT.
+
+16. CHTR WILL ARRANGE SURVEYOR SGS VIETNAM, AT CHTR'S ACCOUNT, TO DO TALLY AND CALCULATE FOR CARGO QUANTITY, TOGETHER WITH VSL CREWS AND/OR OWNER'S APPOINTED TALLY.
+
+CARGO QUANTITY TO BE ASCERTAINED ON DELIVERY BY TALLY DATA, WHICH IS ARRANGED BY CHARTERERS / SHIPPERS / RECEIVERS AT THEIR EXPENSES AT BOTH ENDS. SHIP'S SIDE TALLY TO BE ARRANGED BY OWNERS VIA AGENT AND ON OWNERS' ACCOUNT (INCLUDING IN PDA). SHIPOWNERS MUST UNDERTAKE THAT VESSEL IS IN QUALIFIED CONDITIONS FOR CONDUCTION OF DRAFT SURVEY BUT TIME NOT COUNT AS LAYTIME. QUANTITY OF CARGO TO BE DECLARED ON MATE'S RECEIPT AND B(S)/L BY SHIPPER'S FIGURE AT LOADING PORT.
+
+17. THE VSL'S HOLDS SHALL BE CLEAN, DRY AND FREE FROM RESIDUE OF ANY PREVIOUS CGO ON ARRIVAL AT LOADING PORT. IF FAILS ON THIS, TIME LOST FROM FAILING TIME TO PASSING HOLD INSPECTION TO BE FOR THE OWNER'S ACCOUNT.
+THE VESSEL HOLDS SHALL BE CLEAN AND DRY IN EVERY RESPECT AND SUITABLE FOR LOADING BAGGEDCEMENT. IF THE VESSEL HOLDS FAIL TO MEET THE INITIAL INSPECTION STANDARD, CHR OR AGENT SHALLREQUEST THE MASTER TO CLEAN THE VESSEL HOLDS SUBJECT TO THE CHR'S SATISFACTION BASED ONOWNER'S ACCOUNT. IN THE EVENT OF DISPUTE PRIOR TO THE LOADING, THE CHR OR AGENT SHALLREQUEST TO THE MASTER TO APPOINT A JOINT SURVEYOR TO DECIDE ON CLEANLINESS MATTER OF THEVESSEL HOLDS. IF THE JOINT SURVEY CONSIDERS THAT VESSEL HOLDS ARE SUITABLE FOR LOADINGBAGGED CEMENT, THE COSTS OF APPOINTING JOINT SURVEY SHALL BE AT CHR'S ACCOUNT BUT IF THEJOINT SURVEYOR CONSIDERS THAT VESSEL HOLDS ARE INSUFFICIENT CLEAN AND DRY TO LOAD BAGGEDCEMENT, THEN COST FOR CLEANING VESSEL HOLDS SHALL BE AT OWNER'S ACCOUNT. TIME LOST ON SUCHSURVEY AND CLEANING THE VESSEL HOLDS SHALL NOT BE COUNTED AS LAYTIME.
+
+18. OWNERS GUARANTEE THAT ALL CERTIFICATES RELATED TO THE SAID VSL OF REGISTER, CLASS, P&I AND ISM CODE ARE TRUE AND VALID, OTHERWISE, OWRS WL BE FULLY RESPONSIBLE FOR ALL LOSS/ DAMAGE, IF ANY, DURING THE VOYAGE. ALL DOCUMENT MUST BE MADE IN ENGLISH.
+
+19. GENERAL AVERAGE, IF ANY, TO BE SETTLED ACCORDING TO YORK- ANTWERP RULES 1994
+
+20. NEW JASON CLAUSE, THE GENERAL PARAMOUNT CLAUSE, WAR RISK 1993, BOTH-TO-BLAME COLLISION CLAUSE, POLUTION CLAUSE, P & I BUNKERING DEVIATIONLAUSE DEEMED TO BE INCORPORATED IN THIS CHARTER PARTY.
+
+21. TAXES/DUES ON VSL AND/OR FREIGHT TBF OWRS ACCT, TAXES/DUES ON CGO TBF CHTRS ACCT.
+
+22. ARBITRATION IN SINGPORE AND ENGLISH LAW TO APPLY
+
+23. OTHER TERMS AS PER GENCON CHARTER PARTY 1994 WITH LATEST AMENDMENTS
+
+24. COMM TTL ${commPct}% IAC BSS ON F/D/D PAYABLE BY OWNER TO ${commBroker}
+
+25. THE OWNER GIVE UNDERTAKING THAT THE VESSEL IS FREE FROM UNITED NATIONS SANCTION AND HARASSMENT.
+
+26. STEVEDORE DAMAGE
+ANY STEVEDORE DAMAGE TO THE VESSEL CAUSED BY STEVEDORE'S OPERATIONS AT PORT OF LOADING SHALL BE SETTLED DIRECTLY BETWEEN SHIP OWNER AND STEVEDORE AS MUCH AS POSSIBLE AND WHENEVER POSSIBLE. MASTER SHALL NOTIFY SELLER OR THEIR AGENTS IN WRITING OF SUCH DAMAGE WITHIN 48 HOURS AFTER OCCURRENCE. SELLER SHALL ASSIST BUYER/SHIP OWNER IN OBTAINING COMPENSATION WITHIN THIRTY (30) DAYS OF PRESENTATION OF CLAIM FOR THE DIRECT AND INDIRECT PROVEN COSTS OF REPAIR OF ANY DAMAGES TO ANY PART OF THE VESSEL AT THE PORT OF LOADING CAUSED BY STEVEDORE HIRED BY SELLER.
+HOWEVER, SELLER WILL REMAIN ULTIMATELY RESPONSIBLE FOR ANY STEVEDORE DAMAGE AND SETTLE DIRECTLY WITH BUYER, IF STEVEDORE FAILS TO SETTLE WITH SHIP OWNER OR THEIR AGENTS.
+
+27. TIME LOST DUE TO DISPUTE ON FINAL DRAFT SURVEY NOT BE COUNTED AS LAYTIME.
+
+28. SHORE/FLOATING CRANE AT BOTH ENDS TO BE FOR CHARTERER'S ARRANGEMENT AND ACCT
+
+29. L/S/D IF ANY TO BE FOR CHARTERER'S ACCT AND ARRANGEMENT
+
+THIS FIXTURE NOTE COMES INTO EFFECT UPON SIGNED BY BOTH PARTIES VIA FAX OR EMAIL.
+***END***
+
+
+FOR AND ON BEHALF OF                                FOR AND ON BEHALF OF
+THE CHARTERER                                       THE OWNER
+
+
+
+_______________________                             _______________________
+Authorized Signature(s)                             Authorized Signature(s)`;
+
+  document.getElementById('fnDraft').textContent = fnText;
+  document.getElementById('fnResults').classList.add('show');
+  document.getElementById('fnResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Stash for copy/print
+  window._lastFnQuote = { text: fnText, fnNo, vessel };
+}
+
 // ─── PRINT / SAVE AS PDF ─────────────────────────────────────────────────────
 // Hides the OTHER tab's results so only the active quote prints. The print
 // stylesheet (in @media print) handles all UI chrome cleanup.
 function printQuote(which) {
   const stash = which === 'tce'   ? window._lastTceQuote
                : which === 'multi' ? window._lastMultiQuote
+               : which === 'fn'    ? window._lastFnQuote
                : window._lastFreightQuote;
-  if (!stash) { alert('Calculate first, then print.'); return; }
-  // Toggle other tabs' results off so only the active quote prints
-  const allResultIds = ['results', 'tceResults', 'multiResults'];
-  const activeId = which === 'tce' ? 'tceResults' : which === 'multi' ? 'multiResults' : 'results';
+  if (!stash) { alert(which === 'fn' ? 'Generate the fixture note first.' : 'Calculate first, then print.'); return; }
+  const allResultIds = ['results', 'tceResults', 'multiResults', 'fnResults'];
+  const activeId = which === 'tce'   ? 'tceResults'
+                  : which === 'multi' ? 'multiResults'
+                  : which === 'fn'    ? 'fnResults'
+                  : 'results';
   const wasShown = {};
   allResultIds.forEach(id => {
     if (id === activeId) return;
@@ -3798,7 +4206,6 @@ function printQuote(which) {
   });
   setTimeout(() => {
     window.print();
-    // Restore visibility after print dialog closes
     Object.keys(wasShown).forEach(id => {
       if (wasShown[id]) document.getElementById(id).classList.add('show');
     });
@@ -3809,8 +4216,9 @@ function printQuote(which) {
 function copyQuote(which) {
   const q = which === 'tce'   ? window._lastTceQuote
            : which === 'multi' ? window._lastMultiQuote
+           : which === 'fn'    ? window._lastFnQuote
            : window._lastFreightQuote;
-  if (!q) { alert('Calculate first, then copy.'); return; }
+  if (!q) { alert(which === 'fn' ? 'Generate the fixture note first.' : 'Calculate first, then copy.'); return; }
 
   let text;
   if (which === 'tce') {
@@ -3867,6 +4275,9 @@ ${legsList}
 
 💰 INDICATIVE FREIGHT: $${q.freightRate.toFixed(2)} / MT (blended)
    Market range: $${q.freightLow} – $${q.freightHigh} / MT`;
+  } else if (which === 'fn') {
+    // Fixture note — copy the rendered draft text verbatim
+    text = q.text;
   } else {
     text =
 `🔎 INDICATIVE FREIGHT — ${(portNames[q.loadPort]||q.loadPort)} → ${(portNames[q.dischPort]||q.dischPort)}
@@ -3889,7 +4300,10 @@ ${legsList}
   }
 
   navigator.clipboard.writeText(text).then(() => {
-    const btnId = which === 'tce' ? 'copyTceBtn' : which === 'multi' ? 'copyMultiBtn' : 'copyFreightBtn';
+    const btnId = which === 'tce'   ? 'copyTceBtn'
+                : which === 'multi' ? 'copyMultiBtn'
+                : which === 'fn'    ? 'copyFnBtn'
+                : 'copyFreightBtn';
     const btn = document.getElementById(btnId);
     if (!btn) return;
     const originalHTML = btn.innerHTML;
