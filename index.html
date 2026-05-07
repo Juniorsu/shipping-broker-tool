@@ -226,7 +226,7 @@
     body { background: #fff !important; }
     header, .news-col, .map-section, .tabs,
     form, #commodityList, .calc-btn, .copy-btn, .print-btn, .action-btn-row,
-    .baltic-ticker, .news-list, .news-feed, .news-sources, .news-filter,
+    .news-list, .news-feed, .news-sources, .news-filter,
     .quote-header { display: none !important; }
     .main { display: block !important; padding: 0 !important; max-width: 100% !important; }
     .quote-card { border: none !important; box-shadow: none !important; position: static !important; }
@@ -360,45 +360,6 @@
   .map-placeholder .ph-icon { font-size: 3rem; opacity: .4; }
   .map-placeholder p { font-size: .82rem; }
 
-  /* BALTIC TICKER */
-  .baltic-ticker {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 16px; margin-top: 4px;
-  }
-  .baltic-ticker-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
-  }
-  .baltic-ticker-title {
-    font-size: .72rem; font-weight: 700; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--accent2);
-  }
-  .baltic-ticker-meta { font-size: .68rem; color: var(--muted); }
-  .baltic-ticker-meta a { color: var(--accent2); text-decoration: none; }
-  .baltic-ticker-meta a:hover { text-decoration: underline; }
-  .baltic-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
-  }
-  .baltic-cell {
-    padding: 8px 4px; text-align: center; border-radius: 6px;
-    background: var(--navy2); border: 1px solid var(--border); transition: all .15s;
-  }
-  .baltic-cell:hover { background: var(--blue); border-color: var(--accent); }
-  .baltic-name {
-    font-size: .65rem; font-weight: 700; letter-spacing: .5px;
-    color: var(--muted); text-transform: uppercase;
-  }
-  .baltic-value {
-    font-size: 1.05rem; font-weight: 700; color: var(--text); margin: 2px 0 0;
-  }
-  .baltic-delta { font-size: .65rem; font-weight: 600; }
-  .baltic-delta.up { color: var(--green); }
-  .baltic-delta.dn { color: var(--red); }
-  .baltic-delta.flat { color: var(--muted); }
-  @media (max-width: 600px) {
-    .baltic-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-
   /* RESPONSIVE */
   @media (max-width: 900px) {
     .main { grid-template-columns: 1fr; }
@@ -476,25 +437,6 @@
         <div class="src-name">PortNews</div>
         <div class="src-desc">Port intelligence</div>
       </a>
-    </div>
-
-    <!-- BALTIC INDEX TICKER -->
-    <div class="baltic-ticker" id="balticTicker">
-      <div class="baltic-ticker-header">
-        <span class="baltic-ticker-title">📊 Baltic Indices</span>
-        <span class="baltic-ticker-meta">
-          <span id="balticAsOf">Loading…</span>
-          &nbsp;|&nbsp;
-          <a href="https://www.balticexchange.com/en/data-services/market-information0/indices.html" target="_blank">Live →</a>
-        </span>
-      </div>
-      <div class="baltic-grid" id="balticGrid">
-        <div class="baltic-cell"><div class="baltic-name">BDI</div><div class="baltic-value">—</div><div class="baltic-delta flat">—</div></div>
-        <div class="baltic-cell"><div class="baltic-name">BCI (Cape)</div><div class="baltic-value">—</div><div class="baltic-delta flat">—</div></div>
-        <div class="baltic-cell"><div class="baltic-name">BPI (Pmx)</div><div class="baltic-value">—</div><div class="baltic-delta flat">—</div></div>
-        <div class="baltic-cell"><div class="baltic-name">BSI (Smx)</div><div class="baltic-value">—</div><div class="baltic-delta flat">—</div></div>
-        <div class="baltic-cell"><div class="baltic-name">BHSI (HS)</div><div class="baltic-value">—</div><div class="baltic-delta flat">—</div></div>
-      </div>
     </div>
 
     <!-- News feed -->
@@ -3324,68 +3266,6 @@ function calculateFreight() {
 
   updateMapRoute();
 }
-
-// ─── BALTIC INDICES TICKER ───────────────────────────────────────────────────
-// Hardcoded recent values + attempts a live fetch from Yahoo Finance via the
-// existing CORS proxy. Fallback is fine because brokers usually want a quick
-// "is the market up or down this week" sanity check.
-const BALTIC_FALLBACK = {
-  // Updated periodically — these are May 2026 ballpark levels
-  BDI:  { value: 1486, delta: -32,  asOf: '2026-04-30' },
-  BCI:  { value: 2241, delta: -68,  asOf: '2026-04-30' },
-  BPI:  { value: 1489, delta: +14,  asOf: '2026-04-30' },
-  BSI:  { value: 1098, delta: -8,   asOf: '2026-04-30' },
-  BHSI: { value: 626,  delta: +3,   asOf: '2026-04-30' },
-};
-
-function renderBalticTicker(data, asOf) {
-  const grid = document.getElementById('balticGrid');
-  if (!grid) return;
-  const order = ['BDI','BCI','BPI','BSI','BHSI'];
-  const labels = {BDI:'BDI', BCI:'BCI (Cape)', BPI:'BPI (Pmx)', BSI:'BSI (Smx)', BHSI:'BHSI (HS)'};
-  grid.innerHTML = order.map(k => {
-    const d = data[k] || {value:'—', delta:0};
-    const dCls = d.delta > 0 ? 'up' : d.delta < 0 ? 'dn' : 'flat';
-    const dArrow = d.delta > 0 ? '▲' : d.delta < 0 ? '▼' : '–';
-    const dStr = d.delta === '—' ? '—' : `${dArrow} ${Math.abs(d.delta).toLocaleString()}`;
-    return `<div class="baltic-cell">
-      <div class="baltic-name">${labels[k]}</div>
-      <div class="baltic-value">${typeof d.value === 'number' ? d.value.toLocaleString() : d.value}</div>
-      <div class="baltic-delta ${dCls}">${dStr}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('balticAsOf').textContent = `as of ${asOf}`;
-}
-
-async function fetchBalticTicker() {
-  // Try Yahoo Finance via CORS proxy (existing news-feed pattern uses allorigins.win)
-  // BDI ticker on Yahoo: ^BDIY (sometimes BDIY); others may not be on Yahoo at all.
-  // We attempt BDI; fall back to hardcoded values for everything if any error.
-  try {
-    const proxyBase = 'https://api.allorigins.win/raw?url=';
-    const yahooUrl = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EBDIY?range=5d&interval=1d');
-    const r = await fetch(proxyBase + yahooUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined });
-    if (!r.ok) throw new Error('proxy fetch failed');
-    const j = await r.json();
-    const meta = j?.chart?.result?.[0]?.meta;
-    const closes = j?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
-    if (meta && meta.regularMarketPrice) {
-      const lastClose = closes[closes.length - 2];
-      const price = meta.regularMarketPrice;
-      const delta = lastClose ? Math.round(price - lastClose) : 0;
-      const asOf = new Date(meta.regularMarketTime * 1000).toISOString().slice(0,10);
-      // We got BDI live; keep hardcoded values for others as those rarely have free APIs
-      const data = {...BALTIC_FALLBACK, BDI: { value: Math.round(price), delta }};
-      renderBalticTicker(data, asOf + ' (BDI live, others static)');
-      return;
-    }
-  } catch (e) {
-    // silent fallback
-  }
-  // Fall back to hardcoded
-  renderBalticTicker(BALTIC_FALLBACK, BALTIC_FALLBACK.BDI.asOf + ' (static)');
-}
-fetchBalticTicker();
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
 function switchTab(tabId) {
