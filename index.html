@@ -2062,8 +2062,9 @@ const distTable = {
   rotterdam:  { spore:9800,  port_klang:9650, bangkok:10350, ho_chi_minh:10030,jakarta:10150,surabaya:10300,manila:10750,mundra:6700, kandla:6750, nhava_sheva:6880, colombo:7500, chittagong:8300, shanghai:11900,qingdao:12150,guangzhou:11400,busan:12300,dubai:6550,dammam:6750, sohar:6450, salalah:5900, mombasa:7100, dar_es_salaam:7300, lagos:4500, durban:6400, rotterdam:0,    antwerp:140,  hamburg:350,  genoa:1800, istanbul:2200, houston:5400, new_orleans:5550, baltimore:3800, santos:5800 },
   antwerp:    { spore:9900,  port_klang:9750, bangkok:10450, ho_chi_minh:10130,jakarta:10250,surabaya:10400,manila:10850,mundra:6800, kandla:6850, nhava_sheva:6980, colombo:7600, chittagong:8400, shanghai:12000,qingdao:12250,guangzhou:11500,busan:12400,dubai:6650,dammam:6850, sohar:6550, salalah:6000, mombasa:7200, dar_es_salaam:7400, lagos:4600, durban:6500, rotterdam:140,  antwerp:0,    hamburg:450,  genoa:1900, istanbul:2300, houston:5500, new_orleans:5650, baltimore:3900, santos:5900 },
   hamburg:    { spore:10100, port_klang:9950, bangkok:10650, ho_chi_minh:10330,jakarta:10450,surabaya:10600,manila:11050,mundra:7000, kandla:7050, nhava_sheva:7180, colombo:7800, chittagong:8600, shanghai:12200,qingdao:12450,guangzhou:11700,busan:12600,dubai:6850,dammam:7050, sohar:6750, salalah:6200, mombasa:7400, dar_es_salaam:7600, lagos:4800, durban:6700, rotterdam:350,  antwerp:450,  hamburg:0,    genoa:2000, istanbul:2400, houston:5600, new_orleans:5750, baltimore:4000, santos:6000 },
-  genoa:      { spore:9500,  port_klang:9350, bangkok:10050, ho_chi_minh:9730, jakarta:9850, surabaya:10000,manila:10450,mundra:6400, kandla:6450, nhava_sheva:6580, colombo:7200, chittagong:8000, shanghai:11600,qingdao:11850,guangzhou:11100,busan:12000,dubai:6250,dammam:6450, sohar:6150, salalah:5600, mombasa:6800, dar_es_salaam:7000, lagos:4500, durban:6100, rotterdam:1800, antwerp:1900, hamburg:2000, genoa:0,    istanbul:800,  houston:5800, new_orleans:5950, baltimore:4500, santos:5700 },
-  istanbul:   { spore:9000,  port_klang:8850, bangkok:9550,  ho_chi_minh:9230, jakarta:9350, surabaya:9500, manila:9950, mundra:5900, kandla:5950, nhava_sheva:6080, colombo:6700, chittagong:7500, shanghai:11100,qingdao:11350,guangzhou:10600,busan:11500,dubai:5750,dammam:5950, sohar:5650, salalah:5100, mombasa:6300, dar_es_salaam:6500, lagos:5000, durban:5800, rotterdam:2200, antwerp:2300, hamburg:2400, genoa:800,  istanbul:0,    houston:6200, new_orleans:6350, baltimore:4800, santos:6000 },
+  // Genoa & Istanbul distTable rows kept short-leg only; Asia routes now use waypoint routing.
+  genoa:      { rotterdam:1800, antwerp:1900, hamburg:2000, genoa:0, istanbul:800, houston:5800, new_orleans:5950, baltimore:4500, santos:5700 },
+  istanbul:   { rotterdam:2200, antwerp:2300, hamburg:2400, genoa:800, istanbul:0, houston:6200, new_orleans:6350, baltimore:4800, santos:6000 },
   houston:    { spore:11500, port_klang:11350,bangkok:12050, ho_chi_minh:11730,jakarta:11850,surabaya:12000,manila:12450,mundra:9400, kandla:9450, nhava_sheva:9580, colombo:10200,chittagong:10800,shanghai:13600,qingdao:13850,guangzhou:13100,busan:14000,dubai:9250,dammam:9450, sohar:9150, salalah:8600, mombasa:10600,dar_es_salaam:10800,lagos:5800,durban:8100, rotterdam:5400, antwerp:5500, hamburg:5600, genoa:5800, istanbul:6200, houston:0,    new_orleans:300,  baltimore:1700, santos:4800 },
   new_orleans:{ spore:11700, port_klang:11550,bangkok:12250, ho_chi_minh:11930,jakarta:12050,surabaya:12200,manila:12650,mundra:9600, kandla:9650, nhava_sheva:9780, colombo:10400,chittagong:11000,shanghai:13800,qingdao:14050,guangzhou:13300,busan:14200,dubai:9450,dammam:9650, sohar:9350, salalah:8800, mombasa:10800,dar_es_salaam:11000,lagos:5900,durban:8300, rotterdam:5550, antwerp:5650, hamburg:5750, genoa:5950, istanbul:6350, houston:300,  new_orleans:0,    baltimore:1500, santos:5000 },
   baltimore:  { spore:11200, port_klang:11050,bangkok:11750, ho_chi_minh:11430,jakarta:11550,surabaya:11700,manila:12150,mundra:9100, kandla:9150, nhava_sheva:9280, colombo:9900, chittagong:10500,shanghai:13300,qingdao:13550,guangzhou:12800,busan:13700,dubai:8950,dammam:9150, sohar:8850, salalah:8300, mombasa:10300,dar_es_salaam:10500,lagos:5400,durban:7800, rotterdam:3800, antwerp:3900, hamburg:4000, genoa:4500, istanbul:4800, houston:1700, new_orleans:1500, baltimore:0,    santos:4500 },
@@ -2084,6 +2085,14 @@ const DIST_TABLE_BLOCKLIST = new Set([
   'cailan|ho_chi_minh',      // table: 870, routing should use customs anyway
   'ho_chi_minh|surabaya',    // table: 1050, real ~1450
   'bangkok|shanghai',        // table: 2650, real ~2200
+  // Genoa & Istanbul ↔ Asia — table values were calibrated against the old broken
+  // routing. Force waypoint routing now that MED zones are properly anchored.
+  'genoa|shanghai', 'genoa|qingdao', 'genoa|guangzhou', 'genoa|busan',
+  'genoa|spore', 'genoa|port_klang', 'genoa|bangkok', 'genoa|ho_chi_minh',
+  'genoa|jakarta', 'genoa|surabaya', 'genoa|manila', 'genoa|kuantan',
+  'istanbul|shanghai', 'istanbul|qingdao', 'istanbul|guangzhou', 'istanbul|busan',
+  'istanbul|spore', 'istanbul|port_klang', 'istanbul|bangkok', 'istanbul|ho_chi_minh',
+  'istanbul|jakarta', 'istanbul|surabaya', 'istanbul|manila', 'istanbul|kuantan',
 ]);
 
 function getDistanceFromTable(a, b) {
@@ -2102,11 +2111,21 @@ const WP = {
   english_ch:  [50.50, 0.50],
   biscay:      [46.00, -5.00],
   gibraltar:   [36.00, -5.50],
+  alboran:     [36.20, -2.00],   // Alboran Sea (W Med, between Gibraltar and Algeria coast)
+  med_w:       [37.50,  4.50],   // West-central Med (S of Balearics), between Valencia/Marseille and med_c
   med_c:       [37.00, 16.00],
   med_e:       [34.00, 32.00],
+  aegean_s:    [36.00, 25.00],   // South Aegean (S of Cyclades)
+  aegean_n:    [39.20, 25.00],   // North Aegean (approach to Dardanelles)
+  dardanelles: [40.20, 26.40],   // Dardanelles strait
+  marmara:     [40.80, 28.00],   // Sea of Marmara
+  bosphorus:   [41.20, 29.10],   // Bosphorus (Istanbul to Black Sea)
+  black_sea_w: [44.00, 30.50],   // West Black Sea (Constanta approach)
+  black_sea_e: [44.00, 36.00],   // East Black Sea (Novorossiysk approach)
   suez_n:      [31.25, 32.35],
   suez_s:      [29.95, 32.55],
   red_sea_n:   [27.50, 34.00],
+  red_sea_mid: [20.00, 38.50],   // mid Red Sea (off Jeddah)
   red_sea_s:   [15.00, 42.00],
   bab_mandeb:  [12.60, 43.30],
   gulf_aden:   [12.50, 48.00],
@@ -2187,6 +2206,23 @@ const WP = {
   cape_agulhas:[-35.50,  20.00], // Cape Agulhas (true southern tip)
   s_atl_w:     [-25.00, -10.00], // mid South Atlantic
   s_atl_nw:    [-10.00, -25.00], // NW South Atlantic
+  // East Africa offshore (avoid Somali coast cuts)
+  somalia_off: [ 10.00,  52.00],   // off the Horn of Africa (cape Guardafui)
+  mozambique_n:[-12.00,  41.00],   // mid Mozambique Channel, N
+  mozambique_s:[-25.00,  35.00],   // S Mozambique Channel (Inhambane area)
+  // Australia waypoints
+  aus_nw:      [-15.00, 118.00],   // NW Australia (off Port Hedland/Dampier)
+  aus_w:       [-32.00, 115.00],   // off Fremantle / Perth
+  aus_sw:      [-35.00, 117.00],   // south-west tip (Cape Leeuwin)
+  aus_s:       [-38.00, 130.00],   // south of Australia (Great Australian Bight)
+  aus_se:      [-39.00, 145.00],   // SE Australia / Bass Strait approach
+  aus_e:       [-30.00, 153.50],   // off east coast (Brisbane/Newcastle)
+  aus_ne:      [-15.00, 148.00],   // NE Australia / Coral Sea
+  torres:      [-10.50, 142.00],   // Torres Strait (north of Cape York)
+  arafura:     [-10.00, 132.00],   // Arafura Sea (north of Darwin)
+  banda:       [ -5.00, 128.00],   // Banda Sea (between Sulawesi and Indonesia E)
+  // Indian Ocean midway points
+  io_mid:      [-15.00,  75.00],   // mid Indian Ocean (south of equator)
 };
 
 const portZone = {
@@ -2242,7 +2278,7 @@ const portZone = {
   lagos:'WAFRICA', durban:'SAFRICA',
   // Europe
   rotterdam:'NW_EU', antwerp:'NW_EU', hamburg:'NW_EU',
-  genoa:'MED', istanbul:'MED',
+  genoa:'MED', istanbul:'MARMARA',
   // Americas
   houston:'US_GULF', new_orleans:'US_GULF',
   baltimore:'US_EAST', savannah:'US_EAST',
@@ -2260,8 +2296,8 @@ const portZone = {
   // Red Sea — new zone
   jeddah:'RED_SEA', yanbu:'RED_SEA',
   sokhna:'RED_SEA', aqaba:'RED_SEA',
-  // Mediterranean East / Levant
-  haifa:'MED', alexandria:'MED',
+  // Mediterranean East / Levant — these route eastward via Suez (NOT via Gibraltar)
+  haifa:'MED_E', alexandria:'MED_E',
   // East Africa expansion
   djibouti:'ADEN',  // geographically Red Sea but routes mostly via Aden gulf — group with ADEN
   maputo:'EAFRICA', beira:'EAFRICA', nacala:'EAFRICA',
@@ -2270,23 +2306,26 @@ const portZone = {
   walvis_bay:'SAFRICA',  // Namibia — SE Africa cluster
   // West Africa expansion
   tema:'WAFRICA', abidjan:'WAFRICA', dakar:'WAFRICA',
-  // Mediterranean expansion
-  piraeus:'MED', valencia:'MED', marseille:'MED', algeciras:'MED',
+  // Mediterranean expansion — west Med stays in MED (anchored at Gibraltar bi:3); Piraeus routes east via Aegean
+  piraeus:'MED_E', valencia:'MED', marseille:'MED', algeciras:'MED',
   // North America West Coast — new zone
   vancouver:'NORTH_AM_W', seattle:'NORTH_AM_W',
   long_beach:'NORTH_AM_W', oakland:'NORTH_AM_W',
   // South America Pacific — new zone
   callao:'S_AM_W', iquique:'S_AM_W', san_antonio:'S_AM_W',
-  // Australia — new zone
-  newcastle_au:'AUSTRALIA', port_hedland:'AUSTRALIA', dampier:'AUSTRALIA',
-  gladstone:'AUSTRALIA', brisbane:'AUSTRALIA', fremantle:'AUSTRALIA',
+  // Australia — east coast (Coral Sea / trans-Pacific) vs west/NW coast (Indian Ocean)
+  newcastle_au:'AUS_E', brisbane:'AUS_E', gladstone:'AUS_E',
+  port_hedland:'AUS_NW', dampier:'AUS_NW',
+  fremantle:'AUS_W',
   // SE Asia additional
   sihanoukville:'GOT', yangon:'INDIA_E',  // Yangon routes Bay of Bengal — closer to INDIA_E
-  // Black Sea — new zone (still uses MED routing via Bosphorus)
-  constanta:'BLACK_SEA', novorossiysk:'BLACK_SEA', istanbul_marm:'BLACK_SEA',
+  // Black Sea — accessed via Aegean → Dardanelles → Marmara → Bosphorus
+  constanta:'BLACK_SEA', novorossiysk:'BLACK_SEA', istanbul_marm:'MARMARA',
 };
 
-// Backbone waypoints ordered west-to-east (NW Europe to North China)
+// Backbone waypoints ordered west-to-east (NW Europe to North China).
+// Red Sea has three points (suez_s → red_sea_n → red_sea_mid → red_sea_s) so the
+// great-circle interpolation hugs the sea's NW→SE curve and doesn't clip African land.
 const backbone = [
   /* 0  */ WP.north_sea,
   /* 1  */ WP.english_ch,
@@ -2295,85 +2334,92 @@ const backbone = [
   /* 4  */ WP.med_c,
   /* 5  */ WP.suez_n,
   /* 6  */ WP.suez_s,
-  /* 7  */ WP.red_sea_s,
-  /* 8  */ WP.bab_mandeb,
-  /* 9  */ WP.gulf_aden,
-  /* 10 */ WP.arabian_s,
-  /* 11 */ WP.sri_lanka_s,
-  /* 12 */ WP.bengal_e,
-  /* 13 */ WP.malacca_n,
-  /* 14 */ WP.malacca_s,
-  /* 15 */ WP.sg_strait,
-  /* 16 */ WP.scs_south,
-  /* 17 */ WP.scs_central,
-  /* 18 */ WP.scs_paracel,
-  /* 19 */ WP.scs_north,
-  /* 20 */ WP.taiwan_s,
-  /* 21 */ WP.taiwan_str,
-  /* 22 */ WP.ecs,
-  /* 23 */ WP.ecs_n,
-  /* 24 */ WP.yellow_s,
-  /* 25 */ WP.yellow_n,
-  /* 26 */ WP.bohai_e,
+  /* 7  */ WP.red_sea_n,
+  /* 8  */ WP.red_sea_mid,
+  /* 9  */ WP.red_sea_s,
+  /* 10 */ WP.bab_mandeb,
+  /* 11 */ WP.gulf_aden,
+  /* 12 */ WP.arabian_s,
+  /* 13 */ WP.sri_lanka_s,
+  /* 14 */ WP.bengal_e,
+  /* 15 */ WP.malacca_n,
+  /* 16 */ WP.malacca_s,
+  /* 17 */ WP.sg_strait,
+  /* 18 */ WP.scs_south,
+  /* 19 */ WP.scs_central,
+  /* 20 */ WP.scs_paracel,
+  /* 21 */ WP.scs_north,
+  /* 22 */ WP.taiwan_s,
+  /* 23 */ WP.taiwan_str,
+  /* 24 */ WP.ecs,
+  /* 25 */ WP.ecs_n,
+  /* 26 */ WP.yellow_s,
+  /* 27 */ WP.yellow_n,
+  /* 28 */ WP.bohai_e,
 ];
 
 const zoneConfig = {
+  // Note: bi values reflect the post-Red-Sea-split backbone (red_sea_n=7, red_sea_mid=8, red_sea_s=9).
   NW_EU:      { bi: 0,  branch: [WP.north_sea] },
-  MED:        { bi: 3,  branch: [WP.med_c, WP.med_e] },
-  ADEN:       { bi: 8,  branch: [] },
-  PG:         { bi: 10, branch: [WP.arabian_n, WP.hormuz] },
-  INDIA_W:    { bi: 11, branch: [WP.indian_w] },
-  INDIA_E:    { bi: 11, branch: [] },   // east coast: goes south around Sri Lanka's tip
-  SRI_LANKA:  { bi: 11, branch: [] },
-  BANGLADESH: { bi: 12, branch: [WP.bengal_ne] },
-  MALACCA:    { bi: 13, branch: [] },
-  SG:         { bi: 15, branch: [] },
-  GOT:        { bi: 15, branch: [WP.got_entrance, WP.got_mid, WP.got_north] },
-  // East coast Peninsular Malaysia (Kuantan, Kemaman) — anchored at scs_south on the SCS backbone.
-  MAL_E:      { bi: 16, branch: [] },
-  SARAWAK:    { bi: 16, branch: [WP.scs_natuna] },
-  SABAH:      { bi: 16, branch: [WP.borneo_ne] },
-  VN_S:       { bi: 17, branch: [] },
-  VN_C:       { bi: 18, branch: [] },
-  VN_N:       { bi: 19, branch: [] },
-  CN_S:       { bi: 20, branch: [] },
-  // PH_N (Manila / Subic) is anchored directly at scs_north on the backbone — no extra branch.
-  PH_N:       { bi: 19, branch: [] },
-  PH_C:       { bi: 17, branch: [WP.sulu_sea, WP.visayas] },
-  PH_S:       { bi: 17, branch: [WP.sulu_sea, WP.mindanao_s] },
-  JAVA_W:     { bi: 15, branch: [WP.karimata, WP.java_sea_w] },
-  JAVA_E:     { bi: 15, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e] },
-  BORNEO_S:   { bi: 16, branch: [WP.karimata] },
-  BORNEO_E:   { bi: 16, branch: [WP.makassar_n] },
-  SULAWESI:   { bi: 16, branch: [WP.karimata, WP.java_sea_c, WP.makassar_s] },
-  CN_E:       { bi: 22, branch: [] },
-  CN_N:       { bi: 26, branch: [] },
-  KR:         { bi: 24, branch: [WP.korea_str] },
-  JAPAN:      { bi: 22, branch: [WP.japan_s] },  // ecs[28,122.5] → japan_s[31.5,130.5] → port
-  // Taiwan ports anchor at taiwan_str (bi=21) — mid-Taiwan Strait, centre of gravity for all five ports.
-  TAIWAN:     { bi: 21, branch: [] },
-  EAFRICA:    { bi: 8,  branch: [] },
+  // MED = west Mediterranean (Valencia, Algeciras, Marseille, Genoa, Naples). Anchored at med_c (bi:4)
+  // so east-bound traffic flows straight east. Westbound to NW_EU/WAFRICA uses customRoutes
+  // that bypass the med_c→gibraltar backtrack.
+  MED:        { bi: 4,  branch: [] },
+  // MED_E = east Mediterranean (Piraeus, Alexandria, Haifa). Anchored at suez_n (bi:5) with a med_e
+  // branch so east-bound traffic exits via Suez directly. Westbound to MED/NW_EU is handled by
+  // customRoutes so we don't traverse the suez_n→med_c→gib zigzag.
+  MED_E:      { bi: 5,  branch: [WP.med_e] },
+  // MARMARA = Istanbul and similar Marmara-Sea ports. Reached via Aegean → Dardanelles.
+  MARMARA:    { bi: 5,  branch: [WP.med_e, WP.aegean_s, WP.aegean_n, WP.dardanelles] },
+  // BLACK_SEA = Constanta, Novorossiysk. Adds Marmara + Bosphorus to the Marmara chain.
+  BLACK_SEA:  { bi: 5,  branch: [WP.med_e, WP.aegean_s, WP.aegean_n, WP.dardanelles, WP.marmara, WP.bosphorus] },
+  ADEN:       { bi: 10, branch: [] },
+  PG:         { bi: 12, branch: [WP.arabian_n, WP.hormuz] },
+  INDIA_W:    { bi: 13, branch: [WP.indian_w] },
+  INDIA_E:    { bi: 13, branch: [] },
+  SRI_LANKA:  { bi: 13, branch: [] },
+  BANGLADESH: { bi: 14, branch: [WP.bengal_ne] },
+  MALACCA:    { bi: 15, branch: [] },
+  SG:         { bi: 17, branch: [] },
+  GOT:        { bi: 17, branch: [WP.got_entrance, WP.got_mid, WP.got_north] },
+  MAL_E:      { bi: 18, branch: [] },
+  SARAWAK:    { bi: 18, branch: [WP.scs_natuna] },
+  SABAH:      { bi: 18, branch: [WP.borneo_ne] },
+  VN_S:       { bi: 19, branch: [] },
+  VN_C:       { bi: 20, branch: [] },
+  VN_N:       { bi: 21, branch: [] },
+  CN_S:       { bi: 22, branch: [] },
+  PH_N:       { bi: 21, branch: [] },
+  PH_C:       { bi: 19, branch: [WP.sulu_sea, WP.visayas] },
+  PH_S:       { bi: 19, branch: [WP.sulu_sea, WP.mindanao_s] },
+  JAVA_W:     { bi: 17, branch: [WP.karimata, WP.java_sea_w] },
+  JAVA_E:     { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e] },
+  BORNEO_S:   { bi: 18, branch: [WP.karimata] },
+  BORNEO_E:   { bi: 18, branch: [WP.makassar_n] },
+  SULAWESI:   { bi: 18, branch: [WP.karimata, WP.java_sea_c, WP.makassar_s] },
+  CN_E:       { bi: 24, branch: [] },
+  CN_N:       { bi: 28, branch: [] },
+  KR:         { bi: 26, branch: [WP.korea_str] },
+  JAPAN:      { bi: 24, branch: [WP.japan_s] },
+  TAIWAN:     { bi: 23, branch: [] },
+  EAFRICA:    { bi: 10, branch: [] },
   WAFRICA:    { bi: 3,  branch: [WP.wa_app] },
-  SAFRICA:    { bi: 8,  branch: [WP.cape_good] },
+  SAFRICA:    { bi: 10, branch: [WP.cape_good] },
   US_GULF:    { bi: 2,  branch: [WP.carib, WP.florida, WP.gom] },
   US_EAST:    { bi: 2,  branch: [WP.carib, WP.florida, WP.us_east_app] },
   BRAZIL:     { bi: 2,  branch: [WP.sa_mid] },
-  // Mexican Pacific coast — via Panama Canal from the Atlantic backbone
   MX_PAC_NW:     { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw] },
   MX_GULF_CAL:   { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.gulf_cal] },
-  // ─── NEW ZONES (added with port batch) ───
-  // Pakistan — Karachi area, north Arabian Sea
-  PAKISTAN:      { bi: 10, branch: [WP.arabian_n] },
-  // Red Sea ports — Jeddah, Yanbu, Sokhna, Aqaba (between bab_mandeb and Suez)
-  RED_SEA:       { bi: 7,  branch: [WP.red_sea_n] },
-  // Black Sea — accessed via Med + Bosphorus (no dedicated WP, treated as MED extension)
-  BLACK_SEA:     { bi: 4,  branch: [WP.med_e] },
-  // North America West Coast — Panama Canal route from Atlantic backbone
+  PAKISTAN:      { bi: 12, branch: [WP.arabian_n] },
+  // Red Sea ports — anchored at red_sea_mid (bi:8). Jeddah/Yanbu sit at the mid; Aqaba/Sokhna
+  // need extra red_sea_n branching but their customRoutes handle it explicitly.
+  RED_SEA:       { bi: 8,  branch: [] },
   NORTH_AM_W:    { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw] },
-  // South America Pacific — Panama route too (Callao, San Antonio etc.)
   S_AM_W:        { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s] },
-  // Australia — anchor at SG strait, route south through Lombok Strait
-  AUSTRALIA:     { bi: 15, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok] },
+  // Australia split — east coast routes via Coral Sea/Torres or trans-Pacific; west/NW coast via Indian Ocean / Lombok.
+  AUS_E:         { bi: 19, branch: [WP.makassar_n, WP.banda, WP.arafura, WP.torres, WP.aus_ne, WP.aus_e] },
+  AUS_NW:        { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok, WP.aus_nw] },
+  AUS_W:         { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok, WP.aus_w] },
 };
 
 // ─── CUSTOM ROUTE OVERRIDES ──────────────────────────────────────────────────
@@ -2382,8 +2428,96 @@ const zoneConfig = {
 // If zone pair matches, these waypoints are used verbatim, bypassing the
 // backbone (which would otherwise force coastal ports through offshore detours).
 const customRoutes = {
-  // Intra-Vietnam (coastal hugging)
-  'VN_C|VN_N':     [WP.vn_c_off, WP.vn_n_off],
+  // ─── AUSTRALIA ROUTES ────────────────────────────────────────────────────────
+  // Fremantle/Perth ↔ South Africa: direct GC across the south Indian Ocean. No need to round Cape Agulhas — Durban is well north of it.
+  'AUS_W|SAFRICA':     [WP.aus_w, [-32.00, 75.00]],
+  'AUS_NW|SAFRICA':    [WP.aus_nw, [-25.00, 75.00]],
+  'AUS_E|SAFRICA':     [WP.aus_e, WP.aus_sw, WP.aus_w, [-32.00, 75.00]],
+  // East Australia ↔ NE Asia — near-great-circle through Coral Sea / Bismarck Sea (north of PNG) / Philippine Sea.
+  // The single mid-waypoint at (-10,148) keeps the line in open water without adding detour.
+  'AUS_E|JAPAN':       [[-10.00, 148.00]],
+  'AUS_E|CN_E':        [[-10.00, 148.00], [15.00, 130.00], WP.taiwan_e, WP.ecs],
+  'AUS_E|CN_N':        [[-10.00, 148.00], [15.00, 130.00], WP.taiwan_e, WP.ecs, WP.ecs_n, WP.yellow_s],
+  'AUS_E|KR':          [[-10.00, 148.00], [15.00, 130.00], WP.taiwan_e, WP.korea_str],
+  'AUS_E|TAIWAN':      [WP.aus_e, WP.aus_ne, [-7.00, 158.00], [10.00, 135.00], WP.taiwan_e],
+  'AUS_E|PH_N':        [WP.aus_e, WP.aus_ne, [-7.00, 158.00], [10.00, 135.00]],
+  'AUS_E|PH_C':        [WP.aus_e, WP.aus_ne, [-7.00, 152.00], WP.visayas],
+  'AUS_E|PH_S':        [WP.aus_e, WP.aus_ne, [-7.00, 152.00], WP.mindanao_s],
+  // East Australia ↔ SE Asia — via Coral Sea / Torres / Arafura / Java Sea (the western exit)
+  'AUS_E|SG':          [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait],
+  'AUS_E|MAL_E':       [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.scs_south],
+  'AUS_E|MALACCA':     [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
+  'AUS_E|GOT':         [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.got_entrance, WP.got_mid, WP.got_north],
+  'AUS_E|JAVA_E':      [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_e],
+  'AUS_E|JAVA_W':      [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w],
+  'AUS_E|VN_S':        [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off],
+  // East Australia ↔ Europe/Africa — via Cape Agulhas (south of Australia, across south Indian Ocean)
+  'AUS_E|NW_EU':       [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.biscay, WP.english_ch],
+  'AUS_E|MED':         [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.gibraltar, WP.med_c],
+  'AUS_E|WAFRICA':     [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app],
+  // NW Australia (Port Hedland, Dampier) → NE Asia via Makassar + Sulu Sea + Philippine Sea
+  'AUS_NW|JAPAN':      [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s, [15.00, 130.00], WP.japan_s],
+  'AUS_NW|CN_E':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs],
+  'AUS_NW|CN_N':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n],
+  'AUS_NW|CN_S':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north],
+  'AUS_NW|KR':         [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
+  'AUS_NW|TAIWAN':     [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s],
+  'AUS_NW|PH_S':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
+  'AUS_NW|PH_C':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.visayas],
+  // Fremantle (AUS_W) → NE Asia — go up west of Sumatra and through Malacca, OR via Lombok + Makassar
+  'AUS_W|JAPAN':       [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s, [15.00, 130.00], WP.japan_s],
+  'AUS_W|CN_E':        [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs],
+  'AUS_W|CN_N':        [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n],
+  'AUS_W|CN_S':        [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north],
+  'AUS_W|KR':          [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
+  // Fremantle ↔ NW_EU via Cape Agulhas
+  'AUS_W|NW_EU':       [WP.aus_w, [-32.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.biscay, WP.english_ch, WP.north_sea],
+  'AUS_W|MED':         [WP.aus_w, [-32.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.gibraltar, WP.med_c],
+  'AUS_NW|NW_EU':      [WP.aus_nw, [-25.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.biscay, WP.english_ch, WP.north_sea],
+  'AUS_NW|MED':        [WP.aus_nw, [-25.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.gibraltar, WP.med_c],
+
+  // ─── MED (west) WESTBOUND — skip the med_c backtrack ─────────────────────────
+  'MED|NW_EU':         [WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
+  'MED|WAFRICA':       [WP.gibraltar, WP.wa_app],
+
+  // ─── MED ZONE WESTBOUND BYPASSES ─────────────────────────────────────────────
+  // For ports near Suez (MED_E/MARMARA/BLACK_SEA), the algorithmic westbound path
+  // forces a suez_n→med_c zigzag. Custom routes use a direct med_c path.
+  'MED_E|NW_EU':       [WP.med_e, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
+  'MED_E|MED':         [WP.med_e, WP.med_c],
+  'MED_E|WAFRICA':     [WP.med_e, WP.med_c, WP.gibraltar, WP.wa_app],
+  'MARMARA|NW_EU':     [WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
+  'MARMARA|MED':       [WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c],
+  'MARMARA|MED_E':     [WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e],
+  'BLACK_SEA|NW_EU':   [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
+  'BLACK_SEA|MED':     [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c],
+  'BLACK_SEA|MED_E':   [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e],
+  'BLACK_SEA|MARMARA': [WP.bosphorus, WP.marmara],
+  // BLACK_SEA → Asia — the algorithmic backbone path already routes through Suez via the long Marmara chain;
+  // explicit customs improve smoothing and avoid the suez_n→med_e zigzag on the egress.
+  'BLACK_SEA|SG':      [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait],
+
+  // ─── MED (west) DIRECT-TO-INDIA / PG (skip Sri Lanka detour) ─────────────────
+  // For Med ports going to India W coast or Persian Gulf, the natural path is via Suez+Bab al Mandeb
+  // and then directly NE across the Arabian Sea. The default backbone routes through sri_lanka_s
+  // which adds a ~1500 nm detour. Custom routes bypass it.
+  'INDIA_W|MED':       [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c],
+  'INDIA_W|MED_E':     [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_e],
+  'INDIA_W|MARMARA':   [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_e, WP.aegean_s, WP.aegean_n, WP.dardanelles],
+  'INDIA_W|NW_EU':     [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
+  // Persian Gulf / Arabian Sea direct to Med (skip sri_lanka detour)
+  'MED|PG':            [WP.med_c, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.arabian_n, WP.hormuz],
+  'MED_E|PG':          [WP.med_e, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.arabian_n, WP.hormuz],
+  // RED_SEA ↔ NW_EU / SG — direct via Suez (the algorithmic path adds backbone overshoot)
+  'NW_EU|RED_SEA':     [WP.north_sea, WP.english_ch, WP.biscay, WP.gibraltar, WP.med_c, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid],
+  'MED|RED_SEA':       [WP.med_c, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid],
+  'MED_E|RED_SEA':     [WP.med_e, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid],
+  'RED_SEA|SG':        [WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait],
+
+  // ─── INTRA-MED COVERAGE ──────────────────────────────────────────────────────
+  // MED ↔ MARMARA / MED_E / BLACK_SEA — already covered above
+
+
   'VN_C|VN_S':     [WP.vn_c_off, WP.vn_s_off],
   'VN_N|VN_S':     [WP.vn_n_off, WP.vn_c_off, WP.vn_s_off],
 
@@ -2442,9 +2576,9 @@ const customRoutes = {
   'BANGLADESH|MALACCA': [WP.bengal_ne, WP.bengal_e, WP.malacca_n],                        // Chittagong (Bay of Bengal northbound)
 
   // Med / NW Europe — Suez route, skip bengal_e (was a 470nm zigzag north-then-south)
-  'MALACCA|NW_EU':      [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
-  'MALACCA|MED':        [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.suez_s, WP.suez_n, WP.med_c],
-  'MALACCA|WAFRICA':    [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.wa_app],
+  'MALACCA|NW_EU':      [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
+  'MALACCA|MED':        [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c],
+  'MALACCA|WAFRICA':    [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.wa_app],
 
   // Vietnam ↔ South Borneo (Banjarmasin)
   'BORNEO_S|VN_C': [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
@@ -3000,11 +3134,14 @@ function routeDistanceNm(route) {
 }
 
 // ─── ALTERNATIVE ROUTES (Panama / Cape) ───────────────────────────────────────
-const ASIA_ZONES = ['CN_N','CN_E','CN_S','KR','JAPAN','TAIWAN','VN_N','VN_C','VN_S','SG','GOT','MAL_E','MALACCA','SARAWAK','PH_N','PH_C','PH_S','JAVA_W','JAVA_E','BORNEO_S','BORNEO_E','SULAWESI'];
+const ASIA_ZONES = ['CN_N','CN_E','CN_S','KR','JAPAN','TAIWAN','VN_N','VN_C','VN_S','SG','GOT','MAL_E','MALACCA','SARAWAK','SABAH','PH_N','PH_C','PH_S','JAVA_W','JAVA_E','BORNEO_S','BORNEO_E','SULAWESI'];
 const AMERICAS_ATL_ZONES = ['US_EAST','US_GULF','BRAZIL'];
-const AMERICAS_PAC_ZONES = ['MX_PAC_NW','MX_GULF_CAL'];
-const EUROPE_ZONES = ['NW_EU','MED'];
-const INDIAN_ZONES = ['INDIA_W','SRI_LANKA','BANGLADESH','PG','ADEN','EAFRICA'];
+const AMERICAS_PAC_ZONES = ['MX_PAC_NW','MX_GULF_CAL','NORTH_AM_W','S_AM_W'];
+const EUROPE_ZONES = ['NW_EU','MED','MED_E','MARMARA','BLACK_SEA'];
+const INDIAN_ZONES = ['INDIA_W','INDIA_E','SRI_LANKA','BANGLADESH','PG','ADEN','EAFRICA','RED_SEA','PAKISTAN'];
+const AUSTRALIA_ZONES = ['AUS_E','AUS_W','AUS_NW'];
+
+function isAustralia(z) { return AUSTRALIA_ZONES.includes(z); }
 
 function isAsia(z)    { return ASIA_ZONES.includes(z); }
 function isAmericasAtl(z) { return AMERICAS_ATL_ZONES.includes(z); }
@@ -3036,6 +3173,11 @@ const asianToPacificGateway = {
   BORNEO_E:[WP.makassar_n, WP.sulu_sea, WP.mindanao_s, WP.pac_japan_e],
   SULAWESI:[WP.makassar_s, WP.flores, WP.mindanao_s, WP.pac_japan_e],
   JAPAN:   [WP.japan_s, WP.pac_japan_e],
+  SABAH:   [WP.borneo_ne, WP.sulu_sea, WP.mindanao_s, WP.pac_japan_e],
+  // Australia → trans-Pacific via mid-Pacific (E coast directly, NW/W up through Coral Sea or PNG)
+  AUS_E:   [WP.aus_e, WP.aus_ne, WP.pac_japan_e],
+  AUS_NW:  [WP.aus_nw, WP.arafura, WP.banda, WP.mindanao_s, WP.pac_japan_e],
+  AUS_W:   [WP.aus_w, WP.aus_nw, WP.arafura, WP.banda, WP.mindanao_s, WP.pac_japan_e],
 };
 
 // Trans-Pacific crossing (pac_japan_e → east Pacific)
@@ -3187,7 +3329,7 @@ function getDistance(a, b, via) {
   if (via && via !== 'auto') {
     return routeDistanceNm(getSeaRouteVia(a, b, via));
   }
-  // Auto: try legacy table first (fast), then waypoint routing
+  // Auto: try legacy table first (fast, hand-curated), then waypoint routing.
   const legacy = getDistanceFromTable(a, b);
   if (legacy !== null) return legacy;
   return routeDistanceNm(getSeaRouteVia(a, b, 'auto'));
@@ -3372,9 +3514,9 @@ function calculateFreight() {
   // Rates are $/DWT for ONE port call (loading or discharging).
   const PORT_RATE = {
     // Premium NW (high agency + pilotage + dues + dock fees)
-    NW_EU: 1.85, MED: 1.55, US_GULF: 1.70, US_EAST: 1.80,
+    NW_EU: 1.85, MED: 1.55, MED_E: 1.55, MARMARA: 1.50, US_GULF: 1.70, US_EAST: 1.80,
     NORTH_AM_W: 1.80,                    // NEW — US/Canada West Coast (Vancouver, LA, Seattle)
-    AUSTRALIA: 1.65,                     // NEW — Newcastle, Port Hedland, Gladstone, Fremantle
+    AUS_E: 1.65, AUS_W: 1.65, AUS_NW: 1.65,  // Australia (split by coast)
     // Mid-tier
     JAPAN: 1.30, KR: 1.25, TAIWAN: 1.25,
     SAFRICA: 1.45, WAFRICA: 1.55, EAFRICA: 1.40,
@@ -3607,7 +3749,7 @@ function calculateTCE() {
 
   // Per-zone port costs
   const PORT_RATE = {
-    NW_EU:1.85, MED:1.55, US_GULF:1.70, US_EAST:1.80, NORTH_AM_W:1.80, AUSTRALIA:1.65,
+    NW_EU:1.85, MED:1.55, MED_E:1.55, MARMARA:1.50, US_GULF:1.70, US_EAST:1.80, NORTH_AM_W:1.80, AUS_E:1.65, AUS_W:1.65, AUS_NW:1.65,
     JAPAN:1.30, KR:1.25, TAIWAN:1.25,
     SAFRICA:1.45, WAFRICA:1.55, EAFRICA:1.40,
     BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40, S_AM_W:1.45,
@@ -3902,7 +4044,7 @@ function calculateMulti() {
 
   // Per-zone port costs — one charge per stop
   const PORT_RATE = {
-    NW_EU:1.85, MED:1.55, US_GULF:1.70, US_EAST:1.80, NORTH_AM_W:1.80, AUSTRALIA:1.65,
+    NW_EU:1.85, MED:1.55, MED_E:1.55, MARMARA:1.50, US_GULF:1.70, US_EAST:1.80, NORTH_AM_W:1.80, AUS_E:1.65, AUS_W:1.65, AUS_NW:1.65,
     JAPAN:1.30, KR:1.25, TAIWAN:1.25,
     SAFRICA:1.45, WAFRICA:1.55, EAFRICA:1.40,
     BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40, S_AM_W:1.45,
