@@ -1064,8 +1064,11 @@
           </div>
 
           <div class="form-group">
-            <label>Charterer Name</label>
-            <input type="text" id="fnCharterer" placeholder="e.g. SUPAS VIETNAM COMPANY LIMITED">
+            <label>Charterer Name <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">&mdash; type to search or paste new</span></label>
+            <div class="port-wrap" style="position:relative">
+              <input type="text" id="fnCharterer" placeholder="e.g. SUPAS VIETNAM COMPANY LIMITED" autocomplete="off" spellcheck="false">
+              <div class="port-suggestions" id="fnCharterer-sugg" style="display:none"></div>
+            </div>
           </div>
           <div class="form-group">
             <label>Charterer Address</label>
@@ -1073,12 +1076,19 @@
           </div>
 
           <div class="form-group">
-            <label>Owner Name</label>
-            <input type="text" id="fnOwner" placeholder="e.g. TRANSMARINE STEAMSHIP CO., LIMITED">
+            <label>Owner Name <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">&mdash; type to search or paste new</span></label>
+            <div class="port-wrap" style="position:relative">
+              <input type="text" id="fnOwner" placeholder="e.g. TRANSMARINE STEAMSHIP CO., LIMITED" autocomplete="off" spellcheck="false">
+              <div class="port-suggestions" id="fnOwner-sugg" style="display:none"></div>
+            </div>
           </div>
           <div class="form-group">
             <label>Owner Address</label>
             <textarea id="fnOwnerAddr" rows="2" placeholder="Full registered address" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+            <div style="margin-top:6px;font-size:.7rem">
+              <button type="button" id="fnSavePartiesBtn" onclick="savePartyDb()" style="padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-size:.7rem">&#128190; Save these parties to my local DB</button>
+              <span id="fnSavePartiesStatus" style="margin-left:8px;color:var(--green);font-weight:600"></span>
+            </div>
           </div>
 
           <div class="form-group">
@@ -1207,12 +1217,15 @@
 
           <div id="fnDraft" style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:24px;margin:16px 0;font-family:'Times New Roman',Georgia,serif;font-size:11pt;line-height:1.5;color:#000;white-space:pre-wrap;word-wrap:break-word"></div>
 
-          <div class="action-btn-row">
+          <div class="action-btn-row" style="grid-template-columns:1fr 1fr 1fr">
             <button class="copy-btn" id="copyFnBtn" onclick="copyQuote('fn')">
               &#128203; Copy
             </button>
             <button class="print-btn" onclick="printQuote('fn')">
               &#128424; Print / PDF
+            </button>
+            <button class="print-btn" onclick="exportFNWord()" style="border-color:#2c5f9b;color:#2c5f9b" onmouseover="this.style.background='#2c5f9b';this.style.color='#fff'" onmouseout="this.style.background='var(--card)';this.style.color='#2c5f9b'">
+              &#128221; Word (.doc)
             </button>
           </div>
 
@@ -3963,6 +3976,162 @@ function calculateMulti() {
 // Auto-init multi-port stops when tab is first opened
 const _origSwitchTab = (typeof switchTab === 'function') ? switchTab : null;
 window.addEventListener('DOMContentLoaded', () => { setTimeout(initMultiStops, 100); });
+
+// ─── PARTY DATABASE (charterers + owners with addresses) ─────────────────────
+// Extracted via _extract_parties.py from \\nasc20023\Chartering\VOYAGE DATA:
+// 246 .docx FNs scanned across 2023-2026, 182 successfully parsed.
+// User additions stored in localStorage merge on top of this seed dataset.
+const PARTY_DB_SEED = {"charterers":[{"name":"ADITYA BIRLA GLOBAL TRADING (SINGAPORE) PTE LTD.","address":"ROOM S239, 2/F, THE CAPITAL, 61-65 CHATHAM ROAD SOUTH, TSIM SHA TSUI, KOWLOON, HONG KONG"},{"name":"DUC QUAN TRADING AND MANUFACTURING COMPANY LIMITED","address":"DONG HOI NORTHWEST INDUSTRIAL PARK, BAC LY WARD, DONG HOI CITY, QUANG BINH PROVINCE, VIETNAM"},{"name":"FIRST EDITON ENTERPRISE CORPORATION","address":"ROOM 1607 TREND CENTRE 29-31 CHEUNG LEE STREET CHAI WAN HONGKONG"},{"name":"HIGHLINE UNION SDN BHD (778852-T) – WISMA HUBLLINE","address":"LEASE 3815, LOT 10914, SECTION 64 KTLD, JALAN DATUK ABANG ABDUL RAHIM 93450 KUCHING, SARAWAK, MALAYSIA"},{"name":"LE HOANG MINH CO., LTD","address":"11/F CAPITAL CENTRE 151 GLOUCESTER ROAD WAN CHAI HK"},{"name":"MILLION SUPER CORP","address":"60 MARKET SQUARE, BELIZE CITY, BELIZE"},{"name":"NEW UNIVERSAL PTE LTD","address":"151 CHIN SWEE ROAD #04-03 MANHATTAN HOUSE SINGAPORE 169876"},{"name":"OPL LOGISTICS JSC.","address":"5TH FLOOR, CENTURY TOWER, 458 MINH KHAI STREET, VINH TUY WARD, HAI BA TRUNG DISTRICT, HANOI, VIETNAM"},{"name":"PETROEAST SINGAPORE PTE LTD","address":"6 TEMASEK BOULEVARD #39-01 SUNTEC TOWER FOUR SINGAPORE 038986"},{"name":"STAVIAN VP JSC.","address":"5TH FLOOR, OFFICE AREA - CENTURY TOWER, 458 MINH KHAI STREET, VINH TUY WARD, HAI BA TRUNG DISTRICT, HANOI, VIETNAM"},{"name":"SUPAS VIETNAM COMPANY LIMITED","address":"NO.651, GROUP NO.78, 7A AREA, CUA ONG WARD, QUANG NINH PROVINCE, VIETNAM."},{"name":"TOPSEED AGRI PRODUCTS TRADING","address":"220 ESGUERRA ST. BALATONG B. PULILAN BULACAN 3005 PHILIPPINES"},{"name":"VIETNAM EXEM TRADING CO., LTD","address":"Yen Market Area, Bo Dau Village, NAM HOA LU WARD, Ninh Binh Province, Vietnam"},{"name":"VINABRIDGE SHIPPING CO ., LTD","address":"ROOM 1607 TREND CENTRE 29-31 CHEUNG LEE STREET CHAI WAN HONGKONG"},{"name":"YUE SHI INTERNATIONAL TRADING CO., LTD.","address":"3FL.NO7 SU DON JON RD.SUAO.TAIWAN."}],"owners":[{"name":"AN SHUN SHIPPING (HK) LIMITED","address":"ROOM S239, 2/F, THE CAPITAL, 61-65 CHATHAM ROAD SOUTH, TSIM SHA TSUI, KOWLOON, HONG KONG"},{"name":"AN TIEN MANH COMPANY LIMITED","address":"NAM AN POPULATION, TRUC NINH DIST, NAM DINH PROVINCE, VIETNAM"},{"name":"CHUNWEI INTERNATIONAL SHIPPING CO., LIMITED","address":"TRUST COMPANY COMPLEX, AJELTAKE ROAD, AJELTAKE ISLAND, MAJURO, REPUBLIC OF THE MARSHALL ISLANDS MH 96960"},{"name":"FORTUNE LOGISTICS LIMITED","address":"Vistra Corporate Services Centre, Suite 23, 1st Floor, Eden Plaza, Eden Island, Mahe, Republic of Seychelles"},{"name":"HK GREEN PEACE MARINE CO.,LIMITED","address":"FLAT/RM 225-06,2/F MEGA CUBE,NO.8 WANG KWONG ROAD KOWLOON BAY, KOWLOON, HONG KONG"},{"name":"HOANG TRIEU JOINT STOCK COMPANY","address":"CAT THANH VILLAGE, TRUC NINH DISTRICTS, NAM DINH PROVINCE, VIETNAM"},{"name":"HONGKONG HONGPENG SHIPPING CO., LTD","address":"UNIT 1105 HUA QIN INT'L BLDG 340 QUEEN'S RD CENTRAL HK"},{"name":"LK SHIPPING COMPANY LIMITED","address":"Group no.14, Nam Hai dist., hai an Dist., hai phong city"},{"name":"M/S. PVS INTERNATIONAL (S) PTE LTD","address":"10 ANSON ROAD, # 14-03, INTERNATIONAL PLAZA, SINGAPORE 079903"},{"name":"MINH THANG TRADING TRANSPORT CO., LTD","address":"BO DE HAMLET, THUY DUONG COMMUNE,THUY NGUYEN DICT, HAI PHONG CITY,  VIET NAM"},{"name":"ORIENT SHIPPING SERVICE CO., LTD","address":"429 DA NANG STREET, DOAN XA II, DONG HAI WARD , HAIPHONG CITY, VIETNAM"},{"name":"ORIENTAL PRIME SHIPPING CO., LTD","address":"20F, BLOCK A, ZHONGLANG INTERNATIONAL BUILDING, NO. 101 GANGHANG ROAD, QIANDAO STREET, DINGHAI DISTRICT, ZHOUSHAN CITY, ZHEJIANG PROVINCE, CHINA"},{"name":"STELLAR SHIPPING CO.,LIMITED","address":"151 DES VOEUX RD,CENTRAL,HONG KONG"},{"name":"TRANSMARINE STEAMSHIP CO., LIMITED","address":"FLAT/RM 225-06, 2/F MEGA CUBE, NO.8 WANG KWONG ROAD, KOWLOON BAY, KLN, HONG KONG"},{"name":"TRUONG SON SHIPPING COMPANY LIMITED","address":"CAT THANH TOWN, NINH BINH PROVINCE, VIETNAM"},{"name":"VAN SAM SHIPPING COMPANY LIMITED","address":"VAN PHONG RESIDENT GROUP, AN HAI WARD, HAI PHONG CITY, VIET NAM."},{"name":"YIHAIYUAN(HONGKONG)SHIPPING CO., LIMITED","address":"ROOM 1202, FLAT A, 12/F, EFFICIENCY HOUSE, 35 TAI YAU STREET, SAN PO KONG, HONG KONG"}]};
+
+const PARTY_DB_LS_KEY = 'fn_party_db_v1';
+function getPartyList(role) {
+  // role: 'charterers' | 'owners' — merge seed + user-saved entries
+  const seed = PARTY_DB_SEED[role] || [];
+  let user = [];
+  try {
+    const raw = localStorage.getItem(PARTY_DB_LS_KEY);
+    if (raw) { const obj = JSON.parse(raw); user = obj[role] || []; }
+  } catch(e) {}
+  // Dedupe by normalized name (user entries win if name matches)
+  const norm = s => s.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const seen = new Set();
+  const out = [];
+  [...user, ...seed].forEach(p => {
+    const k = norm(p.name);
+    if (!seen.has(k)) { seen.add(k); out.push(p); }
+  });
+  return out.sort((a,b) => a.name.localeCompare(b.name));
+}
+
+function savePartyDb() {
+  const charterer = document.getElementById('fnCharterer').value.trim();
+  const chartAddr = document.getElementById('fnChartererAddr').value.trim();
+  const owner     = document.getElementById('fnOwner').value.trim();
+  const ownerAddr = document.getElementById('fnOwnerAddr').value.trim();
+  const status = document.getElementById('fnSavePartiesStatus');
+  if (!charterer && !owner) { status.textContent = '⚠ Fill at least one party first.'; status.style.color = '#c0392b'; return; }
+  let saved = { charterers: [], owners: [] };
+  try { saved = JSON.parse(localStorage.getItem(PARTY_DB_LS_KEY) || '{}'); } catch(e) {}
+  if (!saved.charterers) saved.charterers = [];
+  if (!saved.owners) saved.owners = [];
+  let added = 0;
+  const norm = s => s.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  function addParty(arr, name, address) {
+    if (!name || !address) return;
+    const k = norm(name);
+    const seedHas = (PARTY_DB_SEED[arr === saved.charterers ? 'charterers' : 'owners'] || []).some(p => norm(p.name) === k);
+    const userHas = arr.some(p => norm(p.name) === k);
+    if (seedHas || userHas) return;
+    arr.push({ name, address });
+    added++;
+  }
+  addParty(saved.charterers, charterer, chartAddr);
+  addParty(saved.owners, owner, ownerAddr);
+  localStorage.setItem(PARTY_DB_LS_KEY, JSON.stringify(saved));
+  status.style.color = 'var(--green)';
+  status.textContent = added ? `✓ Saved ${added} new ${added===1?'entry':'entries'} to local DB.` : '✓ Already in DB.';
+  setTimeout(() => { status.textContent = ''; }, 3000);
+}
+
+function setupFNPartyAutocomplete(inputId, role, addrFieldId) {
+  const inp = document.getElementById(inputId);
+  const box = document.getElementById(inputId + '-sugg');
+  const addrEl = document.getElementById(addrFieldId);
+  if (!inp || !box) return;
+
+  function hide() { box.style.display = 'none'; }
+
+  function pick(name, address) {
+    inp.value = name;
+    if (addrEl && (!addrEl.value || confirm('Overwrite the current address field with the database entry?'))) {
+      addrEl.value = address;
+    } else if (addrEl && !addrEl.value) {
+      addrEl.value = address;
+    }
+    hide();
+  }
+
+  function render(query) {
+    const list = getPartyList(role);
+    const q = (query || '').trim().toLowerCase();
+    if (q.length < 1) { hide(); return; }
+    const matches = list.filter(p => p.name.toLowerCase().includes(q)).slice(0, 8);
+    if (!matches.length) { hide(); return; }
+    function highlight(text, q) {
+      const idx = text.toLowerCase().indexOf(q);
+      if (idx < 0) return text;
+      const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      return esc(text.slice(0,idx)) + '<em>' + esc(text.slice(idx, idx+q.length)) + '</em>' + esc(text.slice(idx+q.length));
+    }
+    box.innerHTML = matches.map(p =>
+      `<div class="ps-item" data-name="${p.name.replace(/"/g,'&quot;')}" data-address="${p.address.replace(/"/g,'&quot;')}">
+         <span class="ps-name">${highlight(p.name, q)}</span>
+         <span class="ps-country" style="max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.address.slice(0,60)}${p.address.length>60?'…':''}</span>
+       </div>`
+    ).join('');
+    box.style.display = 'block';
+  }
+
+  inp.addEventListener('input', () => render(inp.value));
+  inp.addEventListener('focus', () => { if (inp.value.trim().length >= 1) render(inp.value); });
+  box.addEventListener('mousedown', e => {
+    const item = e.target.closest('.ps-item');
+    if (item) { e.preventDefault(); pick(item.dataset.name, item.dataset.address); }
+  });
+  document.addEventListener('mousedown', e => {
+    if (!inp.contains(e.target) && !box.contains(e.target)) hide();
+  });
+}
+
+// Wire FN-tab autocompletes once DOM is ready
+window.addEventListener('DOMContentLoaded', () => {
+  setupFNPartyAutocomplete('fnCharterer', 'charterers', 'fnChartererAddr');
+  setupFNPartyAutocomplete('fnOwner',     'owners',     'fnOwnerAddr');
+});
+
+// ─── EXPORT FIXTURE NOTE AS WORD (.doc) ─────────────────────────────────────
+// Uses the "HTML-as-Word" trick: build a minimal HTML doc with Word-friendly
+// styles, blob it with MIME `application/msword`, trigger a download.
+// Word opens it cleanly and the user can Save As .docx to convert.
+function exportFNWord() {
+  const q = window._lastFnQuote;
+  if (!q || !q.text) { alert('Generate the fixture note first.'); return; }
+  // Escape HTML in the body, preserve line breaks
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const bodyHtml = esc(q.text).replace(/\n/g,'<br>\n');
+  const docHtml =
+`<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>${esc(q.fnNo || 'Fixture Note')}</title>
+<!--[if gte mso 9]><xml>
+  <w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument>
+</xml><![endif]-->
+<style>
+  @page WordSection1 { size: 8.5in 11in; margin: 0.7in 0.7in 0.7in 0.7in; }
+  div.WordSection1 { page: WordSection1; }
+  body { font-family: 'Times New Roman', serif; font-size: 10.5pt; line-height: 1.45; color: #000; }
+  p { margin: 0; }
+</style>
+</head>
+<body>
+<div class="WordSection1">
+<p>${bodyHtml}</p>
+</div>
+</body>
+</html>`;
+  const blob = new Blob(['﻿', docHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = (q.fnNo || 'FixtureNote').replace(/[^A-Z0-9_-]/gi,'_');
+  a.download = `FN_${safeName}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 // ─── FIXTURE NOTE GENERATOR ─────────────────────────────────────────────────
 // Produces a 29-clause fixture note draft matching the Honor Spring house template.
