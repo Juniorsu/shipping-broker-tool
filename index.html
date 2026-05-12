@@ -2072,8 +2072,25 @@ const distTable = {
   tanjung_manis:{ spore:650, port_klang:500, bangkok:1100, ho_chi_minh:700, jakarta:850,  surabaya:950,  manila:800,  mundra:3600, kandla:3550, nhava_sheva:3700, colombo:2100, chittagong:2200, shanghai:2500, qingdao:2750, guangzhou:1750, busan:2850, dubai:3850, dammam:4050, sohar:3750, salalah:3250, mombasa:4350, dar_es_salaam:4550, lagos:8950, durban:6250, rotterdam:10250,antwerp:10350,hamburg:10550,genoa:9950, istanbul:9450, houston:11950,new_orleans:12150,baltimore:11650,santos:11250 },
 };
 
+// Legacy distTable entries with known-bad values (great-circle cuts across land,
+// or otherwise incorrect). These fall through to waypoint routing instead.
+// NOTE: keys are alphabetically sorted (the smaller string first).
+const DIST_TABLE_BLOCKLIST = new Set([
+  'bangkok|ho_chi_minh',     // table: 380nm, real ~830 (route around Vietnam tip)
+  'bangkok|jakarta',         // table: 1100, real ~1700
+  'bangkok|surabaya',        // table: 1400, real ~1820
+  'ho_chi_minh|jakarta',     // table: 780, real ~1100
+  'bangkok|cailan',          // table: 600, real ~1400 (was wrong order before)
+  'cailan|ho_chi_minh',      // table: 870, routing should use customs anyway
+  'ho_chi_minh|surabaya',    // table: 1050, real ~1450
+  'bangkok|shanghai',        // table: 2650, real ~2200
+]);
+
 function getDistanceFromTable(a, b) {
   if (a === b) return 0;
+  // Skip blocklisted pairs (force waypoint routing for known bad table values)
+  const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+  if (DIST_TABLE_BLOCKLIST.has(key)) return null;
   if (distTable[a] && distTable[a][b] !== undefined) return distTable[a][b];
   if (distTable[b] && distTable[b][a] !== undefined) return distTable[b][a];
   return null; // not found
@@ -2381,9 +2398,11 @@ const customRoutes = {
   'SG|VN_S':       [WP.sg_strait, WP.vn_tip, WP.vn_s_off],
 
   // Vietnam ↔ Gulf of Thailand (Bangkok etc.)
-  'GOT|VN_C':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
-  'GOT|VN_N':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'GOT|VN_S':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off],
+  // Bangkok area → Vietnam: exit Gulf via got_mid (skip got_entrance + vn_tip
+  // which add a ~300nm SE-then-NE detour for HCM-direction routes)
+  'GOT|VN_C':      [WP.got_north, WP.got_mid, WP.vn_s_off, WP.vn_c_off],
+  'GOT|VN_N':      [WP.got_north, WP.got_mid, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+  'GOT|VN_S':      [WP.got_north, WP.got_mid, WP.vn_s_off],
 
   // ─── MALACCA-zone routes (Penang / Belawan / Lhokseumawe) ───
   // Strategy:
@@ -2704,7 +2723,7 @@ const customRoutes = {
   // ── Sarawak ↔ Philippines (central/south via Sulu Sea; north via SCS)
   'PH_C|SARAWAK':  [WP.visayas, WP.sulu_sea, WP.borneo_ne],
   'PH_S|SARAWAK':  [WP.mindanao_s, WP.sulu_sea, WP.borneo_ne],
-  'PH_N|SARAWAK':  [WP.scs_north, WP.scs_paracel, WP.scs_natuna],
+  'PH_N|SARAWAK':  [WP.borneo_ne],   // Manila→Bintulu direct via Borneo NE (skips Sulu Sea + Natuna zigzag)
 
   // ── Sabah (Kota Kinabalu / Sandakan / Tawau / Labuan) custom routing
   // Default backbone would force SCS south detour; these keep routes natural.
@@ -2715,10 +2734,10 @@ const customRoutes = {
   'SABAH|SULAWESI':[WP.borneo_ne, WP.makassar_n, WP.makassar_s],
   'PH_C|SABAH':    [WP.visayas, WP.sulu_sea],
   'PH_S|SABAH':    [WP.mindanao_s, WP.sulu_sea],
-  'PH_N|SABAH':    [WP.scs_north, WP.scs_paracel, WP.borneo_ne],
+  'PH_N|SABAH':    [],   // Manila→KK direct (great-circle ~590nm; passes near Palawan but acceptable for indicative)
   'CN_N|SABAH':    [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
   'CN_E|SABAH':    [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
-  'CN_S|SABAH':    [WP.qiongzhou, WP.hainan_e, WP.scs_paracel, WP.borneo_ne],
+  'CN_S|SABAH':    [WP.borneo_ne],   // HK→KK direct across SCS (dropped qiongzhou/hainan_e detour saves ~400nm)
   'KR|SABAH':      [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
   'SABAH|SG':      [WP.borneo_ne, WP.scs_natuna, WP.sg_strait],
   'GOT|SABAH':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],
@@ -2726,7 +2745,7 @@ const customRoutes = {
   'SABAH|SARAWAK': [WP.borneo_ne],  // NW Borneo coast; scs_natuna added a 600nm loop
   'SABAH|VN_S':    [WP.borneo_ne, WP.scs_natuna, WP.vn_s_off],
   'SABAH|VN_C':    [WP.borneo_ne, WP.scs_paracel, WP.vn_c_off],
-  'SABAH|VN_N':    [WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.vn_n_off],
+  'SABAH|VN_N':    [WP.borneo_ne, WP.scs_paracel, WP.vn_n_off],   // direct trans-SCS (was hugging full VN coast, +400nm)
 
   // ── Taiwan ↔ mainland China — direct across open Taiwan Strait / East China Sea.
   // Backbone would loop via taiwan_s waypoints; direct line clears all land.
@@ -2778,9 +2797,9 @@ const customRoutes = {
   // Anchored at scs_south (bi=16). Default backbone routing handles CN_*/KR fine
   // (Kuantan → scs_south → SCS spine → northern destination). These customs cover
   // pairs where the default would detour via Singapore Strait or up the Gulf of Thailand.
-  'MAL_E|SG':       [],                                              // direct: open SCS along east coast
+  'MAL_E|SG':       [WP.sg_strait],                                  // Kuantan→Spore around southern Malay tip via Singapore Strait (direct line cut through land)
   'MALACCA|MAL_E':  [WP.malacca_s, WP.sg_strait],                    // via Singapore Strait
-  'GOT|MAL_E':      [WP.got_north, WP.got_mid, WP.got_entrance],     // exit gulf, then south to Kuantan
+  'GOT|MAL_E':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait],   // exit gulf + round Malay tip via Singapore (was: direct cut through peninsula land)
   'MAL_E|SARAWAK':  [WP.scs_natuna],                                 // across SCS to Natuna
   'MAL_E|SABAH':    [WP.scs_natuna, WP.borneo_ne],
   'BORNEO_S|MAL_E': [WP.karimata],                                   // direct via Karimata
@@ -2788,9 +2807,30 @@ const customRoutes = {
   'JAVA_W|MAL_E':   [WP.java_sea_w, WP.karimata],                    // safely west of Belitung, then up
   'JAVA_E|MAL_E':   [WP.karimata],                                   // direct across Java Sea to Karimata
   'MAL_E|SULAWESI': [WP.karimata, WP.makassar_s],                    // via Karimata + Makassar Strait south
-  'MAL_E|VN_S':     [WP.vn_s_off],                                   // direct across SCS to HCM offshore
-  'MAL_E|VN_C':     [WP.scs_central, WP.vn_c_off],
-  'MAL_E|VN_N':     [WP.scs_central, WP.scs_paracel, WP.vn_n_off],
+  // East Malaysia coast (Kuantan, Kemaman) → Vietnam: hug Vietnamese coast, no mid-SCS detour
+  'MAL_E|VN_S':     [WP.vn_tip, WP.vn_s_off],                                              // Kuantan→HCM via Ca Mau
+  'MAL_E|VN_C':     [WP.vn_tip, WP.vn_s_off, WP.vn_c_off],                                 // → Danang via SVN coast
+  'MAL_E|VN_N':     [WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],                    // → Haiphong via full coast (NOT scs_paracel)
+
+  // ── VN_N (Hai Phong / Cai Lan) to elsewhere — hugging Vietnam coast for short trips,
+  // direct across SCS to N. Asia destinations to avoid backbone over-counting.
+  // STORAGE DIRECTION matters: zone keys are alphabetical (CN_E|VN_N stored CN_E→VN_N).
+  'CN_E|VN_N':      [WP.vn_n_off],                                // Shanghai→Haiphong direct across SCS (no Hainan detour)
+  'KR|VN_N':        [WP.ecs, WP.vn_n_off],                        // Busan→Haiphong via ECS open water
+  'SULAWESI|VN_N':  [WP.makassar_s, WP.java_sea_c, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
+
+  // ── GOT (Bangkok / Laem Chabang) to Asia destinations — must exit Gulf first
+  'GOT|JAVA_W':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_natuna, WP.karimata, WP.java_sea_w],
+  'GOT|JAVA_E':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_natuna, WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e],
+  'GOT|JAPAN':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.japan_s],
+
+  // ── Borneo & Sulawesi routes that need explicit customs
+  'BORNEO_S|SG':    [WP.karimata],                                                   // Banjarmasin→Spore direct via Karimata
+  'BORNEO_E|JAPAN': [WP.sulu_sea, WP.japan_s],                                        // Balikpapan→Japan via Sulu Sea (open Pacific E of Taiwan)
+  'CN_E|SULAWESI':  [WP.ecs, WP.visayas, WP.sulu_sea, WP.makassar_n],                 // Shanghai→Makassar via open ECS + Sulu Sea (stored CN_E→SULAWESI)
+
+  // ── CN_N|KR was using backbone — direct via korea_str is shorter
+  'CN_N|KR':        [WP.korea_str],                      // Tianjin/Qingdao ↔ Busan: direct, no Japan detour
   'MAL_E|PH_N':     [WP.scs_central, WP.scs_paracel, WP.scs_north], // along SCS spine to Luzon
   'MAL_E|PH_C':     [WP.scs_central, WP.visayas],
   'MAL_E|PH_S':     [WP.scs_central, WP.sulu_sea, WP.mindanao_s],
