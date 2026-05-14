@@ -2951,6 +2951,8 @@ const customRoutes = {
   // STORAGE DIRECTION matters: zone keys are alphabetical (CN_E|VN_N stored CN_E→VN_N).
   'CN_E|VN_N':      [WP.vn_n_off],                                // Shanghai→Haiphong direct across SCS (no Hainan detour)
   'KR|VN_N':        [WP.ecs, WP.vn_n_off],                        // Busan→Haiphong via ECS open water
+  'KR|VN_C':        [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.vn_c_off],               // Busan→Da Nang via ECS+SCS
+  'KR|VN_S':        [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.vn_s_off], // Busan/Gwangyang→HCM direct through ECS+SCS
   'SULAWESI|VN_N':  [WP.makassar_s, WP.java_sea_c, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
 
   // ── GOT (Bangkok / Laem Chabang) to Asia destinations — must exit Gulf first
