@@ -2574,7 +2574,7 @@ const customRoutes = {
   'MALACCA|PG':         [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.hormuz], // dropped arabian_n (wrong-direction zigzag — Dubai/Sohar are right inside Hormuz)
   'MALACCA|SRI_LANKA':  [WP.malacca_n, WP.sri_lanka_s],                                   // Colombo
   'BANGLADESH|MALACCA': [WP.bengal_ne, WP.bengal_e, WP.malacca_n],                        // Chittagong (Bay of Bengal northbound)
-  'BANGLADESH|SG':      [WP.bengal_ne, WP.bengal_e, WP.malacca_n, WP.malacca_s],           // Chittagong→Dumai/Singapore via Andaman + Malacca (not via SG-first detour)
+  'BANGLADESH|SG':      [WP.malacca_n, WP.malacca_s],                                       // Chittagong→Dumai/Singapore: direct Andaman Sea → Malacca (skip bengal_e western detour)
 
   // Med / NW Europe — Suez route, skip bengal_e (was a 470nm zigzag north-then-south)
   'MALACCA|NW_EU':      [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
