@@ -2337,7 +2337,7 @@ const portZone = {
   port_hedland:'AUS_NW', dampier:'AUS_NW',
   fremantle:'AUS_W',
   // SE Asia additional
-  sihanoukville:'GOT', yangon:'INDIA_E',  // Yangon routes Bay of Bengal — closer to INDIA_E
+  sihanoukville:'GOT', yangon:'ANDAMAN',  // Yangon: Andaman Sea port — routes south through Andaman Sea to Malacca
   // Black Sea — accessed via Aegean → Dardanelles → Marmara → Bosphorus
   constanta:'BLACK_SEA', novorossiysk:'BLACK_SEA', istanbul_marm:'MARMARA',
 };
@@ -2399,6 +2399,11 @@ const zoneConfig = {
   SRI_LANKA:  { bi: 13, branch: [] },
   BANGLADESH: { bi: 14, branch: [WP.bengal_ne] },
   MALACCA:    { bi: 15, branch: [] },
+  // ANDAMAN = Yangon (Myanmar) and other Andaman Sea ports (96–98°E). Anchored at malacca_n (bi:15,
+  // 5.8°N/97.5°E) — ship goes south through the Andaman Sea to the top of the Malacca Strait.
+  // Eastbound (SG, Philippines, China): backbone continues malacca_n→malacca_s→sg_strait→SCS ✓
+  // Westbound (Bay of Bengal, India, Europe): backbone reverses malacca_n→bengal_e→sri_lanka_s→ ✓
+  ANDAMAN:    { bi: 15, branch: [] },
   SG:         { bi: 17, branch: [] },
   GOT:        { bi: 17, branch: [WP.got_entrance, WP.got_mid, WP.got_north] },
   MAL_E:      { bi: 18, branch: [] },
@@ -2607,6 +2612,15 @@ const customRoutes = {
   'MALACCA|SRI_LANKA':  [WP.malacca_n, WP.sri_lanka_s],                                   // Colombo
   'BANGLADESH|MALACCA': [WP.bengal_ne, WP.bengal_e, WP.malacca_n],                        // Chittagong (Bay of Bengal northbound)
   'BANGLADESH|SG':      [WP.malacca_n, WP.malacca_s],                                       // Chittagong→Dumai/Singapore: direct Andaman Sea → Malacca (skip bengal_e western detour)
+
+  // ── ANDAMAN zone (Yangon/Myanmar) custom routes ──────────────────────────────────────────────
+  // Yangon is at 96.16°E/16.78°N — Andaman Sea. Backbone routes via malacca_n (5.8N,97.5E).
+  // EASTBOUND (to Philippines, SG, GOT, China): backbone malacca_n→malacca_s→sg_strait→SCS ✓
+  // These customs fix the few cases where backbone adds unnecessary waypoints.
+  'ANDAMAN|BANGLADESH':  [],                                           // Direct GC Yangon→Chittagong across Bay of Bengal (open water)
+  'ANDAMAN|INDIA_E':     [],                                           // Direct GC Yangon→Chennai/Vizag across Bay of Bengal
+  'ANDAMAN|SRI_LANKA':   [WP.bengal_e, WP.sri_lanka_s],              // Via Bay of Bengal, south of Sri Lanka (avoids clipping island)
+  'ANDAMAN|INDIA_W':     [WP.bengal_e, WP.sri_lanka_s],              // Via Bay of Bengal + south Sri Lanka tip → Cochin/Mangalore
 
   // Med / NW Europe — Suez route, skip bengal_e (was a 470nm zigzag north-then-south)
   'MALACCA|NW_EU':      [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
@@ -3566,6 +3580,7 @@ function calculateFreight() {
     CN_N: 1.20, CN_E: 1.20, CN_S: 1.15,
     // South Asia
     INDIA_W: 1.05, INDIA_E: 1.05, BANGLADESH: 1.00, SRI_LANKA: 1.00,
+    ANDAMAN: 1.00,                 // Myanmar (Yangon) — lower port costs, moderate infrastructure
     // SE Asia
     SG: 1.10, MALACCA: 1.00, GOT: 0.95, MAL_E: 0.95,
     // Vietnam
@@ -3793,7 +3808,7 @@ function calculateTCE() {
     BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40, S_AM_W:1.45,
     ADEN:1.30, PG:1.20, RED_SEA:1.35, BLACK_SEA:1.40, PAKISTAN:1.10,
     CN_N:1.20, CN_E:1.20, CN_S:1.15,
-    INDIA_W:1.05, INDIA_E:1.05, BANGLADESH:1.00, SRI_LANKA:1.00,
+    INDIA_W:1.05, INDIA_E:1.05, BANGLADESH:1.00, SRI_LANKA:1.00, ANDAMAN:1.00,
     SG:1.10, MALACCA:1.00, GOT:0.95, MAL_E:0.95,
     VN_N:1.00, VN_C:0.95, VN_S:1.00,
     PH_N:1.00, PH_C:0.95, PH_S:0.95,
@@ -4090,7 +4105,7 @@ function calculateMulti() {
     BRAZIL:1.50, MX_PAC_NW:1.45, MX_GULF_CAL:1.40, S_AM_W:1.45,
     ADEN:1.30, PG:1.20, RED_SEA:1.35, BLACK_SEA:1.40, PAKISTAN:1.10,
     CN_N:1.20, CN_E:1.20, CN_S:1.15,
-    INDIA_W:1.05, INDIA_E:1.05, BANGLADESH:1.00, SRI_LANKA:1.00,
+    INDIA_W:1.05, INDIA_E:1.05, BANGLADESH:1.00, SRI_LANKA:1.00, ANDAMAN:1.00,
     SG:1.10, MALACCA:1.00, GOT:0.95, MAL_E:0.95,
     VN_N:1.00, VN_C:0.95, VN_S:1.00,
     PH_N:1.00, PH_C:0.95, PH_S:0.95,
@@ -4875,7 +4890,7 @@ function syncSpeed(el) {
     CN_N:'China', CN_E:'China', CN_S:'China',
     KR:'South Korea', JAPAN:'Japan', TAIWAN:'Taiwan',
     VN_N:'Vietnam', VN_C:'Vietnam', VN_S:'Vietnam',
-    SG:'Singapore', MAL_E:'Malaysia', MALACCA:'Malaysia',
+    SG:'Singapore', MAL_E:'Malaysia', MALACCA:'Malaysia', ANDAMAN:'Myanmar',
     SABAH:'Malaysia', SARAWAK:'Malaysia',
     GOT:'Thailand', MYA:'Myanmar', BGD:'Bangladesh', LKA:'Sri Lanka',
     IND_W:'India', IND_E:'India',
