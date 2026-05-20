@@ -1841,6 +1841,17 @@ const portCoords = {
   hakata:        [33.59,  130.40],
   kitakyushu:    [33.87,  130.87],
   chiba:         [35.59,  140.07],
+  // Japan (expanded)
+  kashima:       [35.90,  140.65],   // Pacific coast, north of Tokyo Bay — major coal/steel port
+  kawasaki:      [35.53,  139.70],   // Tokyo Bay (Keihin industrial zone)
+  niigata:       [37.92,  139.04],   // Sea of Japan coast — bulk/fertiliser hub
+  mizushima:     [34.48,  133.74],   // Seto Inland Sea — major iron ore/steel complex (Kurashiki)
+  oita:          [33.23,  131.62],   // Kyushu — steel/petrochemical
+  muroran:       [42.31,  140.97],   // Hokkaido — steel, coal import
+  shimizu:       [35.01,  138.52],   // Shizuoka (Suruga Bay) — bulk, paper
+  // South Pacific
+  port_vila:     [-17.74,  168.32],  // Vanuatu capital — Efate Island
+  apia:          [-13.83, -171.77],  // Samoa capital (Western Samoa) — across date line
   // Philippines (expanded)
   subic:         [14.82,  120.27],
   limay:         [14.57,  120.60],
@@ -1954,6 +1965,10 @@ const portNames = {
   // Japan
   yokohama:'Yokohama', nagoya:'Nagoya', osaka:'Osaka', kobe:'Kobe',
   hiroshima:'Hiroshima', hakata:'Hakata / Fukuoka', kitakyushu:'Kitakyushu', chiba:'Chiba',
+  kashima:'Kashima', kawasaki:'Kawasaki', niigata:'Niigata',
+  mizushima:'Mizushima (Kurashiki)', oita:'Oita', muroran:'Muroran', shimizu:'Shimizu',
+  // South Pacific
+  port_vila:'Port Vila (Vanuatu)', apia:'Apia (Samoa)',
   // Philippines (expanded)
   subic:'Subic Bay', limay:'Limay / Bataan', zamboanga:'Zamboanga', sual:'Sual',
   // China (Qinzhou) + Taiwan
@@ -2201,6 +2216,7 @@ const WP = {
   pac_mid_n:   [45.00, -175.00], // mid North Pacific (near Aleutians S)
   pac_ne_n:    [40.00, -150.00], // NE Pacific
   pac_ne:      [30.00, -125.00], // east Pacific off California
+  s_pac:       [-15.00, 170.00], // South Pacific central (between Vanuatu/Coral Sea and Samoa)
   // Cape of Good Hope waypoints (S.Indian / S.Atlantic)
   s_indian:    [-28.00,  65.00], // south Indian Ocean
   cape_agulhas:[-35.50,  20.00], // Cape Agulhas (true southern tip)
@@ -2273,6 +2289,9 @@ const portZone = {
   busan:'KR', incheon:'KR', ulsan:'KR', pohang:'KR', gwangyang:'KR',
   yokohama:'JAPAN', nagoya:'JAPAN', osaka:'JAPAN', kobe:'JAPAN',
   hiroshima:'JAPAN', hakata:'JAPAN', kitakyushu:'JAPAN', chiba:'JAPAN',
+  kashima:'JAPAN', kawasaki:'JAPAN', niigata:'JAPAN',
+  mizushima:'JAPAN', oita:'JAPAN', muroran:'JAPAN', shimizu:'JAPAN',
+  port_vila:'S_PACIFIC', apia:'S_PACIFIC',
   // Africa
   mombasa:'EAFRICA', dar_es_salaam:'EAFRICA',
   lagos:'WAFRICA', durban:'SAFRICA',
@@ -2420,6 +2439,9 @@ const zoneConfig = {
   AUS_E:         { bi: 19, branch: [WP.makassar_n, WP.banda, WP.arafura, WP.torres, WP.aus_ne, WP.aus_e] },
   AUS_NW:        { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok, WP.aus_nw] },
   AUS_W:         { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok, WP.aus_w] },
+  // South Pacific Islands (Vanuatu, Samoa) — anchored at scs_central via aus_ne + s_pac branch.
+  // All inter-zone routes covered by customRoutes; backbone is fallback only.
+  S_PACIFIC:     { bi: 19, branch: [WP.aus_ne, WP.s_pac] },
 };
 
 // ─── CUSTOM ROUTE OVERRIDES ──────────────────────────────────────────────────
@@ -2455,6 +2477,16 @@ const customRoutes = {
   'AUS_E|NW_EU':       [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.biscay, WP.english_ch],
   'AUS_E|MED':         [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.gibraltar, WP.med_c],
   'AUS_E|WAFRICA':     [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app],
+  // ── South Pacific Islands (Port Vila/Vanuatu, Apia/Samoa) ────────────────────
+  // s_pac = (-15°S, 170°E): central waypoint between Vanuatu and Samoa.
+  // Port Vila (168°E) and Apia (188°E/−172°W) both use s_pac as their Pacific hub.
+  'AUS_E|S_PACIFIC':      [WP.aus_ne, WP.s_pac],                                                   // Brisbane/Newcastle via Coral Sea
+  'JAPAN|S_PACIFIC':      [WP.japan_s, WP.pac_japan_e, WP.s_pac],                                  // Japan via open Pacific SE
+  'KR|S_PACIFIC':         [WP.korea_str, WP.pac_japan_e, WP.s_pac],                                 // Korea via Pacific
+  'CN_E|S_PACIFIC':       [WP.ecs, WP.pac_japan_e, WP.s_pac],                                       // China (East) via ECS + Pacific
+  'CN_S|S_PACIFIC':       [WP.taiwan_s, WP.ecs, WP.pac_japan_e, WP.s_pac],                          // China (South) via Taiwan + Pacific
+  'NORTH_AM_W|S_PACIFIC': [WP.pac_ne, WP.pac_ne_n, WP.pac_mid_n, WP.s_pac],                        // US West coast trans-Pacific south
+  'NW_EU|S_PACIFIC':      [WP.english_ch, WP.biscay, WP.wa_app, WP.s_atl_nw, WP.cape_agulhas, [-37.00, 60.00], [-43.00, 110.00], WP.aus_ne, WP.s_pac], // Europe via Cape
   // NW Australia (Port Hedland, Dampier) → NE Asia via Makassar + Sulu Sea + Philippine Sea
   'AUS_NW|JAPAN':      [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s, [15.00, 130.00], WP.japan_s],
   'AUS_NW|CN_E':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs],
@@ -3546,6 +3578,8 @@ function calculateFreight() {
     // East Malaysia (Sabah/Sarawak) — Bintulu, Tanjung Manis, KK etc.
     // Bumped 0.90 → 1.25 (palm oil / LNG / methanol hubs with higher DA than typical regional outports)
     SARAWAK: 1.25, SABAH: 1.25,
+    // Remote South Pacific — high DA (agency, pilotage, limited port infrastructure)
+    S_PACIFIC: 1.90,
   };
   const portRateFor = (portKey) => {
     const z = portZone[portKey];
@@ -3766,6 +3800,7 @@ function calculateTCE() {
     JAVA_W:0.95, JAVA_E:0.95, SULAWESI:0.90,
     BORNEO_S:0.90, BORNEO_E:0.90,
     SARAWAK:1.25, SABAH:1.25,
+    S_PACIFIC:1.90,
   };
   const lr = PORT_RATE[portZone[loadPort]]  || 1.10;
   const dr = PORT_RATE[portZone[dischPort]] || 1.10;
@@ -4062,6 +4097,7 @@ function calculateMulti() {
     JAVA_W:0.95, JAVA_E:0.95, SULAWESI:0.90,
     BORNEO_S:0.90, BORNEO_E:0.90,
     SARAWAK:1.25, SABAH:1.25,
+    S_PACIFIC:1.90,
   };
   let portCosts = 0;
   const portLines = [];
@@ -4837,7 +4873,7 @@ function syncSpeed(el) {
   // Country hints derived from portZone for context.
   const zoneCountry = {
     CN_N:'China', CN_E:'China', CN_S:'China',
-    KR:'South Korea', TAIWAN:'Taiwan', JP_PAC_N:'Japan', JP_PAC_S:'Japan', JP_WEST:'Japan',
+    KR:'South Korea', JAPAN:'Japan', TAIWAN:'Taiwan',
     VN_N:'Vietnam', VN_C:'Vietnam', VN_S:'Vietnam',
     SG:'Singapore', MAL_E:'Malaysia', MALACCA:'Malaysia',
     SABAH:'Malaysia', SARAWAK:'Malaysia',
@@ -4854,6 +4890,8 @@ function syncSpeed(el) {
     US_EAST:'USA East', US_GULF:'USA Gulf', US_WEST:'USA West',
     MX_PAC_NW:'Mexico', MX_GULF_CAL:'Mexico',
     SA_E:'S. America', SA_W:'S. America',
+    AUS_E:'Australia', AUS_W:'Australia', AUS_NW:'Australia',
+    S_PACIFIC:'Pacific Islands',
   };
 
   const portList = Object.keys(portNames).map(key => ({
