@@ -3782,11 +3782,10 @@ function updateMapRoute() {
   // Update route comparison hint
   updateRouteInfoHint(lp, dp, routeVia);
 
-  // Get sea route waypoints and build smooth polyline
+  // Get sea route waypoints from marnet graph (already water-only, no smoothing needed)
   const waypoints = getSeaRouteVia(lp, dp, routeVia);
-  const smoothPts = buildSmoothRoute(waypoints);
   // Unwrap longitudes so trans-Pacific/antimeridian routes draw as one continuous line
-  const unwrapped = unwrapLongitudes(smoothPts);
+  const unwrapped = unwrapLongitudes(waypoints);
 
   const routeLine = L.polyline(unwrapped, { color:'#ff5500', weight:3, opacity:.95, dashArray:'10,6' })
     .addTo(leafletMap);
