@@ -6,6 +6,7 @@
 <title>Breakbulk & Drybulk Broker Dashboard</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="searoute-bundle.js"></script>
 <style>
   :root {
     --navy:   #f5f0e8;
@@ -2136,21 +2137,11 @@ const CANAL_WP = {
   cape:   [18.50, -34.50],  // Cape Agulhas — forces rounding South Africa
 };
 
-// Async load — fires once, triggers map redraw on completion
-(async () => {
-  try {
-    const mod = await import('https://cdn.skypack.dev/searoute-js');
-    _sr = mod.default;
-    // Redraw if ports are already selected
-    try {
-      const lp = readPort('loadPort'), dp = readPort('dischargePort');
-      if (lp && dp && typeof updateMapRoute === 'function') updateMapRoute();
-    } catch(_) {}
-    document.dispatchEvent(new Event('searouteReady'));
-  } catch(e) {
-    console.warn('searoute-js failed to load — using haversine fallback', e);
-  }
-})();
+// searoute-bundle.js loaded via <script> tag above — available synchronously
+_sr = (typeof window !== 'undefined' && typeof window.searoute === 'function')
+      ? window.searoute
+      : null;
+if (!_sr) console.warn('searoute bundle not found — distance will use haversine fallback');
 
 // Raw searoute call with caching; returns GeoJSON Feature or null
 function _callSr(lonlatA, lonlatB) {
