@@ -2088,9 +2088,11 @@ const distTable = {
   tanjung_manis:{ spore:650, port_klang:500, bangkok:1100, ho_chi_minh:700, jakarta:850,  surabaya:950,  manila:800,  mundra:3600, kandla:3550, nhava_sheva:3700, colombo:2100, chittagong:2200, shanghai:2500, qingdao:2750, guangzhou:1750, busan:2850, dubai:3850, dammam:4050, sohar:3750, salalah:3250, mombasa:4350, dar_es_salaam:4550, lagos:8950, durban:6250, rotterdam:10250,antwerp:10350,hamburg:10550,genoa:9950, istanbul:9450, houston:11950,new_orleans:12150,baltimore:11650,santos:11250 },
 };
 
-// Legacy distTable entries with known-bad values (great-circle cuts across land,
-// or otherwise incorrect). These fall through to waypoint routing instead.
-// NOTE: keys are alphabetically sorted (the smaller string first).
+// ─── SEAROUTE-JS MARITIME ROUTING ────────────────────────────────────────────
+// Replaces the hand-crafted waypoint/backbone/customRoutes system with the
+// searoute-js library (Eurostat marnet graph, Dijkstra shortest-path).
+// CDN via Skypack — bundles the 600 KB marnet dataset inline, runs client-side.
+// ─────────────────────────────────────────────────────────────────────────────
 const DIST_TABLE_BLOCKLIST = new Set([
   'bangkok|ho_chi_minh',     // table: 380nm, real ~830 (route around Vietnam tip)
   'bangkok|jakarta',         // table: 1100, real ~1700
@@ -2112,134 +2114,141 @@ const DIST_TABLE_BLOCKLIST = new Set([
 
 function getDistanceFromTable(a, b) {
   if (a === b) return 0;
-  // Skip blocklisted pairs (force waypoint routing for known bad table values)
   const key = a < b ? `${a}|${b}` : `${b}|${a}`;
   if (DIST_TABLE_BLOCKLIST.has(key)) return null;
   if (distTable[a] && distTable[a][b] !== undefined) return distTable[a][b];
   if (distTable[b] && distTable[b][a] !== undefined) return distTable[b][a];
-  return null; // not found
+  return null;
 }
 
-// ─── MARITIME WAYPOINT ROUTING SYSTEM ────────────────────────────────────────
-const WP = {
-  north_sea:   [52.00, 3.50],
-  english_ch:  [50.50, 0.50],
-  biscay:      [46.00, -5.00],
-  gibraltar:   [36.00, -5.50],
-  alboran:     [36.20, -2.00],   // Alboran Sea (W Med, between Gibraltar and Algeria coast)
-  med_w:       [37.50,  4.50],   // West-central Med (S of Balearics), between Valencia/Marseille and med_c
-  med_c:       [37.00, 16.00],
-  med_e:       [34.00, 32.00],
-  aegean_s:    [36.00, 25.00],   // South Aegean (S of Cyclades)
-  aegean_n:    [39.20, 25.00],   // North Aegean (approach to Dardanelles)
-  dardanelles: [40.20, 26.40],   // Dardanelles strait
-  marmara:     [40.80, 28.00],   // Sea of Marmara
-  bosphorus:   [41.20, 29.10],   // Bosphorus (Istanbul to Black Sea)
-  black_sea_w: [44.00, 30.50],   // West Black Sea (Constanta approach)
-  black_sea_e: [44.00, 36.00],   // East Black Sea (Novorossiysk approach)
-  suez_n:      [31.25, 32.35],
-  suez_s:      [29.95, 32.55],
-  red_sea_n:   [27.50, 34.00],
-  red_sea_mid: [20.00, 38.50],   // mid Red Sea (off Jeddah)
-  red_sea_s:   [15.00, 42.00],
-  bab_mandeb:  [12.60, 43.30],
-  gulf_aden:   [12.50, 48.00],
-  arabian_s:   [12.00, 60.00],
-  arabian_n:   [20.00, 65.00],
-  hormuz:      [26.00, 56.50],
-  sri_lanka_s: [5.80, 80.00],
-  bengal_e:    [8.00, 90.00],
-  bengal_ne:   [18.00, 88.00],
-  malacca_n:   [5.80, 97.50],
-  malacca_mid: [3.80, 100.30],   // mid-Malacca shipping lane offshore (Port Klang region)
-  malacca_s:   [2.40, 101.50],
-  sg_strait:   [1.20, 103.85],
-  scs_south:   [3.50, 107.00],
-  scs_natuna:  [5.00, 109.00],
-  scs_central: [10.00, 112.00],
-  scs_paracel: [15.50, 114.00],
-  scs_north:   [18.50, 116.50],
-  taiwan_s:    [22.00, 118.50],
-  taiwan_str:  [24.80, 119.50],
-  taiwan_e:    [25.00, 124.00],  // east of Taiwan, in Philippine Sea
-  luzon_w:     [18.00, 118.00],  // offshore NW of Luzon in SCS
-  manila_exit: [14.30, 120.20],  // just outside Manila Bay mouth, avoids Bataan peninsula
-  ecs:         [28.00, 122.50],
-  ecs_n:       [32.00, 122.50],
-  yellow_s:    [34.00, 123.00],
-  yellow_n:    [36.50, 122.50],
-  bohai_e:     [38.80, 121.50],
-  korea_str:   [34.50, 129.00],
-  japan_s:     [31.50, 130.50], // south approach to Japan — S of Kyushu, open East China Sea
-  got_entrance:[6.00, 102.50],
-  got_mid:     [8.50, 101.50],
-  got_north:   [12.50, 100.50],
-  karimata:    [0.00, 108.50],
-  java_sea_w:  [-3.50, 107.00],
-  java_sea_c:  [-5.50, 110.00],
-  java_sea_e:  [-6.00, 112.50],
-  makassar_s:  [-5.00, 117.50],
-  makassar_n:  [-1.50, 117.50],
-  sulu_sea:    [7.50, 120.00],
-  visayas:     [10.50, 124.00],
-  mindanao_s:  [6.00, 126.00],
-  borneo_ne:   [5.00, 115.00],
-  borneo_e:    [-0.50, 117.50],
-  lombok:      [-8.40, 115.80],
-  flores:      [-7.00, 120.00],
-  indian_w:    [15.00, 68.00],
-  cape_good:   [-34.50, 18.50],
-  wa_app:      [5.00, -2.00],
-  sa_mid:      [-15.00, -25.00],
-  carib:       [15.00, -75.00],
-  florida:     [25.50, -80.00],
-  us_east_app: [35.00, -74.00],
-  gom:         [26.00, -90.00],
-  // Vietnamese coastal waypoints (for hugging the shore, avoids offshore SCS detour)
-  vn_n_off:    [19.50, 108.00],  // offshore NE Vietnam (off Hai Phong / Cai Lan)
-  vn_c_off:    [14.50, 110.00],  // offshore central Vietnam (off Quy Nhon / Da Nang)
-  vn_s_off:    [9.50,  108.00],  // offshore southern Vietnam (off Vung Tau)
-  vn_tip:      [7.50,  105.00],  // off Ca Mau, southern tip of Vietnam
-  qiongzhou:   [20.50, 110.30],  // Hainan (Qiongzhou) Strait
-  hainan_e:    [18.00, 111.50],  // east of Hainan
-  // Panama Canal transit (Atlantic to Pacific)
-  panama_atl:  [9.36, -79.92],   // Colon (Atlantic entrance)
-  panama_pac:  [8.89, -79.51],   // Balboa (Pacific entrance)
-  mx_pac_s:    [16.00, -100.00], // off southern Mexican Pacific coast
-  baja_tip:    [22.80, -110.00], // off Cabo San Lucas (Baja southern tip)
-  gulf_cal:    [25.50, -110.00], // mid Gulf of California
-  baja_nw:     [30.00, -117.50], // off NW Baja California (for Ensenada)
-  ca_pac:      [ 7.50,  -82.50], // Pacific approach to Panama — Gulf of Chiriquí, offshore W Panama
-  // Trans-Pacific waypoints (great-circle arc through North Pacific)
-  pac_japan_e: [35.00,  145.00], // east of Japan
-  pac_kuroshio:[38.00,  160.00], // Kuroshio Extension
-  pac_mid_n:   [45.00, -175.00], // mid North Pacific (near Aleutians S)
-  pac_ne_n:    [40.00, -150.00], // NE Pacific
-  pac_ne:      [30.00, -125.00], // east Pacific off California
-  s_pac:       [-15.00, 170.00], // South Pacific central (between Vanuatu/Coral Sea and Samoa)
-  // Cape of Good Hope waypoints (S.Indian / S.Atlantic)
-  s_indian:    [-28.00,  65.00], // south Indian Ocean
-  cape_agulhas:[-35.50,  20.00], // Cape Agulhas (true southern tip)
-  s_atl_w:     [-25.00, -10.00], // mid South Atlantic
-  s_atl_nw:    [-10.00, -25.00], // NW South Atlantic
-  // East Africa offshore (avoid Somali coast cuts)
-  somalia_off: [ 10.00,  52.00],   // off the Horn of Africa (cape Guardafui)
-  mozambique_n:[-12.00,  41.00],   // mid Mozambique Channel, N
-  mozambique_s:[-25.00,  35.00],   // S Mozambique Channel (Inhambane area)
-  // Australia waypoints
-  aus_nw:      [-15.00, 118.00],   // NW Australia (off Port Hedland/Dampier)
-  aus_w:       [-32.00, 115.00],   // off Fremantle / Perth
-  aus_sw:      [-35.00, 117.00],   // south-west tip (Cape Leeuwin)
-  aus_s:       [-38.00, 130.00],   // south of Australia (Great Australian Bight)
-  aus_se:      [-39.00, 145.00],   // SE Australia / Bass Strait approach
-  aus_e:       [-30.00, 153.50],   // off east coast (Brisbane/Newcastle)
-  aus_ne:      [-15.00, 148.00],   // NE Australia / Coral Sea
-  torres:      [-10.50, 142.00],   // Torres Strait (north of Cape York)
-  arafura:     [-10.00, 132.00],   // Arafura Sea (north of Darwin)
-  banda:       [ -5.00, 128.00],   // Banda Sea (between Sulawesi and Indonesia E)
-  // Indian Ocean midway points
-  io_mid:      [-15.00,  75.00],   // mid Indian Ocean (south of equator)
+// ─── SEAROUTE-JS ENGINE ───────────────────────────────────────────────────────
+// Loaded asynchronously from Skypack CDN. Until loaded, distances fall back to
+// haversine × 1.15. After loading, all routes use the marnet shortest-path graph.
+
+let _sr = null;                  // searoute function (set after async load)
+const _srCache = new Map();      // LRU-ish cache: "lon,lat|lon,lat" → GeoJSON result
+
+// Forced waypoints [longitude, latitude] that ensure a specific canal is used.
+// These are used when the user explicitly selects Suez / Panama / Cape.
+const CANAL_WP = {
+  suez:   [38.50, 20.00],   // mid Red Sea  — forces route through Suez
+  panama: [-79.55, 8.90],   // Panama Canal Pacific entrance
+  cape:   [18.50, -34.50],  // Cape Agulhas — forces rounding South Africa
 };
+
+// Async load — fires once, triggers map redraw on completion
+(async () => {
+  try {
+    const mod = await import('https://cdn.skypack.dev/searoute-js');
+    _sr = mod.default;
+    // Redraw if ports are already selected
+    try {
+      const lp = readPort('loadPort'), dp = readPort('dischargePort');
+      if (lp && dp && typeof updateMapRoute === 'function') updateMapRoute();
+    } catch(_) {}
+    document.dispatchEvent(new Event('searouteReady'));
+  } catch(e) {
+    console.warn('searoute-js failed to load — using haversine fallback', e);
+  }
+})();
+
+// Raw searoute call with caching; returns GeoJSON Feature or null
+function _callSr(lonlatA, lonlatB) {
+  if (!_sr) return null;
+  const key = lonlatA[0].toFixed(3)+','+lonlatA[1].toFixed(3)+'|'+
+              lonlatB[0].toFixed(3)+','+lonlatB[1].toFixed(3);
+  if (_srCache.has(key)) return _srCache.get(key);
+  try { const r = _sr(lonlatA, lonlatB, 'nm'); _srCache.set(key, r); return r; }
+  catch(e) { return null; }
+}
+
+// Compose a route, optionally via a forced canal waypoint [lon,lat].
+// Returns [[lat,lon],...] for Leaflet.
+function _srRoute(portA, portB, viaLonLat) {
+  const cA = portCoords[portA], cB = portCoords[portB];
+  if (!cA || !cB) return [cA||[0,0], cB||[0,0]];
+  const llA = [cA[1], cA[0]], llB = [cB[1], cB[0]];
+  const toLatLon = r => r.geometry.coordinates.map(([ln,lt]) => [lt, ln]);
+
+  if (viaLonLat && _sr) {
+    const r1 = _callSr(llA, viaLonLat), r2 = _callSr(viaLonLat, llB);
+    if (r1 && r2) {
+      const pts = [...toLatLon(r1), ...toLatLon(r2).slice(1)];
+      return pts;
+    }
+  }
+  const r = _callSr(llA, llB);
+  return r ? toLatLon(r) : [cA, cB];
+}
+
+// Compute maritime distance (nm). Uses searoute's own length property — more
+// accurate than re-summing haversines on the GeoJSON coordinates.
+function _srDistance(portA, portB, viaLonLat) {
+  const cA = portCoords[portA], cB = portCoords[portB];
+  if (!cA || !cB) return 0;
+  const llA = [cA[1], cA[0]], llB = [cB[1], cB[0]];
+
+  if (viaLonLat && _sr) {
+    const r1 = _callSr(llA, viaLonLat), r2 = _callSr(viaLonLat, llB);
+    if (r1 && r2) return Math.round((r1.properties.length||0)+(r2.properties.length||0));
+  }
+  const r = _callSr(llA, llB);
+  if (r) return Math.round(r.properties.length || 0);
+  // Fallback: haversine × 1.15 (rough sea-distance estimate when not yet loaded)
+  return Math.round(haversineNm(cA, cB) * 1.15);
+}
+
+// ─── PUBLIC ROUTING API (same signatures as old system) ─────────────────────
+
+function haversineNm(p1, p2) {
+  const R = 3440.065;
+  const dLat = (p2[0]-p1[0])*Math.PI/180;
+  const dLon = (p2[1]-p1[1])*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(p1[0]*Math.PI/180)*Math.cos(p2[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function getSeaRoute(portA, portB) {
+  return _srRoute(portA, portB, null);
+}
+
+function routeDistanceNm(route) {
+  // Sum haversines along dense searoute output — no 1.05× needed, route is already maritime path
+  let d = 0;
+  for (let i = 0; i < route.length - 1; i++) d += haversineNm(route[i], route[i+1]);
+  return Math.round(d);
+}
+
+function getSeaRouteVia(portA, portB, via) {
+  via = via || 'auto';
+  return _srRoute(portA, portB, CANAL_WP[via] || null);
+}
+
+function getRouteOptions(portA, portB) {
+  if (!portA || !portB || portA === portB || !_sr) return [];
+  const auto   = _srDistance(portA, portB, null);
+  const suezNm = _srDistance(portA, portB, CANAL_WP.suez);
+  const panNm  = _srDistance(portA, portB, CANAL_WP.panama);
+  const capeNm = _srDistance(portA, portB, CANAL_WP.cape);
+  const opts = [{ via:'auto', name:'Shortest', nm: auto }];
+  if (Math.abs(suezNm - auto) > 100) opts.push({ via:'suez',   name:'Suez',   nm: suezNm });
+  if (Math.abs(panNm  - auto) > 100) opts.push({ via:'panama', name:'Panama',  nm: panNm  });
+  if (Math.abs(capeNm - auto) > 100) opts.push({ via:'cape',   name:'Cape',    nm: capeNm });
+  return opts;
+}
+
+function getDistance(a, b, via) {
+  if (a === b) return 0;
+  const wp = (via && via !== 'auto') ? (CANAL_WP[via] || null) : null;
+  if (_sr) return _srDistance(a, b, wp);
+  // Fallback while searoute loads: legacy table then haversine estimate
+  const legacy = getDistanceFromTable(a, b);
+  if (legacy !== null) return legacy;
+  return Math.round(haversineNm(portCoords[a], portCoords[b]) * 1.15);
+}
+
+// ── DEAD CODE REMOVED: WP, backbone, zoneConfig, customRoutes, asianToPacificGateway,
+// buildPanamaRoute, buildCapeRoute now handled by searoute-js library above. ──
 
 const portZone = {
   // China
@@ -2341,1055 +2350,6 @@ const portZone = {
   // Black Sea — accessed via Aegean → Dardanelles → Marmara → Bosphorus
   constanta:'BLACK_SEA', novorossiysk:'BLACK_SEA', istanbul_marm:'MARMARA',
 };
-
-// Backbone waypoints ordered west-to-east (NW Europe to North China).
-// Red Sea has three points (suez_s → red_sea_n → red_sea_mid → red_sea_s) so the
-// great-circle interpolation hugs the sea's NW→SE curve and doesn't clip African land.
-const backbone = [
-  /* 0  */ WP.north_sea,
-  /* 1  */ WP.english_ch,
-  /* 2  */ WP.biscay,
-  /* 3  */ WP.gibraltar,
-  /* 4  */ WP.med_c,
-  /* 5  */ WP.suez_n,
-  /* 6  */ WP.suez_s,
-  /* 7  */ WP.red_sea_n,
-  /* 8  */ WP.red_sea_mid,
-  /* 9  */ WP.red_sea_s,
-  /* 10 */ WP.bab_mandeb,
-  /* 11 */ WP.gulf_aden,
-  /* 12 */ WP.arabian_s,
-  /* 13 */ WP.sri_lanka_s,
-  /* 14 */ WP.bengal_e,
-  /* 15 */ WP.malacca_n,
-  /* 16 */ WP.malacca_s,
-  /* 17 */ WP.sg_strait,
-  /* 18 */ WP.scs_south,
-  /* 19 */ WP.scs_central,
-  /* 20 */ WP.scs_paracel,
-  /* 21 */ WP.scs_north,
-  /* 22 */ WP.taiwan_s,
-  /* 23 */ WP.taiwan_str,
-  /* 24 */ WP.ecs,
-  /* 25 */ WP.ecs_n,
-  /* 26 */ WP.yellow_s,
-  /* 27 */ WP.yellow_n,
-  /* 28 */ WP.bohai_e,
-];
-
-const zoneConfig = {
-  // Note: bi values reflect the post-Red-Sea-split backbone (red_sea_n=7, red_sea_mid=8, red_sea_s=9).
-  NW_EU:      { bi: 0,  branch: [WP.north_sea] },
-  // MED = west Mediterranean (Valencia, Algeciras, Marseille, Genoa, Naples). Anchored at med_c (bi:4)
-  // so east-bound traffic flows straight east. Westbound to NW_EU/WAFRICA uses customRoutes
-  // that bypass the med_c→gibraltar backtrack.
-  MED:        { bi: 4,  branch: [] },
-  // MED_E = east Mediterranean (Piraeus, Alexandria, Haifa). Anchored at suez_n (bi:5) with a med_e
-  // branch so east-bound traffic exits via Suez directly. Westbound to MED/NW_EU is handled by
-  // customRoutes so we don't traverse the suez_n→med_c→gib zigzag.
-  MED_E:      { bi: 5,  branch: [WP.med_e] },
-  // MARMARA = Istanbul and similar Marmara-Sea ports. Reached via Aegean → Dardanelles.
-  MARMARA:    { bi: 5,  branch: [WP.med_e, WP.aegean_s, WP.aegean_n, WP.dardanelles] },
-  // BLACK_SEA = Constanta, Novorossiysk. Adds Marmara + Bosphorus to the Marmara chain.
-  BLACK_SEA:  { bi: 5,  branch: [WP.med_e, WP.aegean_s, WP.aegean_n, WP.dardanelles, WP.marmara, WP.bosphorus] },
-  ADEN:       { bi: 10, branch: [] },
-  PG:         { bi: 12, branch: [WP.arabian_n, WP.hormuz] },
-  INDIA_W:    { bi: 13, branch: [WP.indian_w] },
-  INDIA_E:    { bi: 13, branch: [] },
-  SRI_LANKA:  { bi: 13, branch: [] },
-  BANGLADESH: { bi: 14, branch: [WP.bengal_ne] },
-  MALACCA:    { bi: 15, branch: [] },
-  // ANDAMAN = Yangon (Myanmar) and other Andaman Sea ports (96–98°E). Anchored at malacca_n (bi:15,
-  // 5.8°N/97.5°E) — ship goes south through the Andaman Sea to the top of the Malacca Strait.
-  // Eastbound (SG, Philippines, China): backbone continues malacca_n→malacca_s→sg_strait→SCS ✓
-  // Westbound (Bay of Bengal, India, Europe): backbone reverses malacca_n→bengal_e→sri_lanka_s→ ✓
-  ANDAMAN:    { bi: 15, branch: [] },
-  SG:         { bi: 17, branch: [] },
-  GOT:        { bi: 17, branch: [WP.got_entrance, WP.got_mid, WP.got_north] },
-  MAL_E:      { bi: 18, branch: [] },
-  SARAWAK:    { bi: 18, branch: [WP.scs_natuna] },
-  SABAH:      { bi: 18, branch: [WP.borneo_ne] },
-  VN_S:       { bi: 19, branch: [] },
-  VN_C:       { bi: 20, branch: [] },
-  VN_N:       { bi: 21, branch: [] },
-  CN_S:       { bi: 22, branch: [] },
-  PH_N:       { bi: 21, branch: [] },
-  PH_C:       { bi: 19, branch: [WP.sulu_sea, WP.visayas] },
-  PH_S:       { bi: 19, branch: [WP.sulu_sea, WP.mindanao_s] },
-  JAVA_W:     { bi: 17, branch: [WP.karimata, WP.java_sea_w] },
-  JAVA_E:     { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e] },
-  BORNEO_S:   { bi: 18, branch: [WP.karimata] },
-  BORNEO_E:   { bi: 18, branch: [WP.makassar_n] },
-  SULAWESI:   { bi: 18, branch: [WP.karimata, WP.java_sea_c, WP.makassar_s] },
-  CN_E:       { bi: 24, branch: [] },
-  CN_N:       { bi: 28, branch: [] },
-  KR:         { bi: 26, branch: [WP.korea_str] },
-  JAPAN:      { bi: 24, branch: [WP.japan_s] },
-  TAIWAN:     { bi: 23, branch: [] },
-  EAFRICA:    { bi: 10, branch: [] },
-  WAFRICA:    { bi: 3,  branch: [WP.wa_app] },
-  SAFRICA:    { bi: 10, branch: [WP.cape_good] },
-  US_GULF:    { bi: 2,  branch: [WP.carib, WP.florida, WP.gom] },
-  US_EAST:    { bi: 2,  branch: [WP.carib, WP.florida, WP.us_east_app] },
-  BRAZIL:     { bi: 2,  branch: [WP.sa_mid] },
-  MX_PAC_NW:     { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw] },
-  MX_GULF_CAL:   { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.gulf_cal] },
-  PAKISTAN:      { bi: 12, branch: [WP.arabian_n] },
-  // Red Sea ports — anchored at red_sea_mid (bi:8). Jeddah/Yanbu sit at the mid; Aqaba/Sokhna
-  // need extra red_sea_n branching but their customRoutes handle it explicitly.
-  RED_SEA:       { bi: 8,  branch: [] },
-  NORTH_AM_W:    { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw] },
-  S_AM_W:        { bi: 2,  branch: [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s] },
-  // Australia split — east coast routes via Coral Sea/Torres or trans-Pacific; west/NW coast via Indian Ocean / Lombok.
-  AUS_E:         { bi: 19, branch: [WP.makassar_n, WP.banda, WP.arafura, WP.torres, WP.aus_ne, WP.aus_e] },
-  AUS_NW:        { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok, WP.aus_nw] },
-  AUS_W:         { bi: 17, branch: [WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.lombok, WP.aus_w] },
-  // South Pacific Islands (Vanuatu, Samoa) — anchored at scs_central via aus_ne + s_pac branch.
-  // All inter-zone routes covered by customRoutes; backbone is fallback only.
-  S_PACIFIC:     { bi: 19, branch: [WP.aus_ne, WP.s_pac] },
-};
-
-// ─── CUSTOM ROUTE OVERRIDES ──────────────────────────────────────────────────
-// Key = "zoneA|zoneB" with zones sorted alphabetically.
-// Value = ordered array of intermediate waypoints from zoneA → zoneB.
-// If zone pair matches, these waypoints are used verbatim, bypassing the
-// backbone (which would otherwise force coastal ports through offshore detours).
-const customRoutes = {
-  // ─── AUSTRALIA ROUTES ────────────────────────────────────────────────────────
-  // Fremantle/Perth ↔ South Africa: direct GC across the south Indian Ocean. No need to round Cape Agulhas — Durban is well north of it.
-  'AUS_W|SAFRICA':     [WP.aus_w, [-32.00, 75.00]],
-  'AUS_NW|SAFRICA':    [WP.aus_nw, [-25.00, 75.00]],
-  'AUS_E|SAFRICA':     [WP.aus_e, WP.aus_sw, WP.aus_w, [-32.00, 75.00]],
-  // East Australia ↔ NE Asia — near-great-circle through Coral Sea / Bismarck Sea (north of PNG) / Philippine Sea.
-  // The single mid-waypoint at (-10,148) keeps the line in open water without adding detour.
-  'AUS_E|JAPAN':       [[-10.00, 148.00]],
-  'AUS_E|CN_E':        [[-10.00, 148.00], [15.00, 130.00], WP.taiwan_e, WP.ecs],
-  'AUS_E|CN_N':        [[-10.00, 148.00], [15.00, 130.00], WP.taiwan_e, WP.ecs, WP.ecs_n, WP.yellow_s],
-  'AUS_E|KR':          [[-10.00, 148.00], [15.00, 130.00], WP.taiwan_e, WP.korea_str],
-  'AUS_E|TAIWAN':      [WP.aus_e, WP.aus_ne, [-7.00, 158.00], [10.00, 135.00], WP.taiwan_e],
-  'AUS_E|PH_N':        [WP.aus_e, WP.aus_ne, [-7.00, 158.00], [10.00, 135.00]],
-  'AUS_E|PH_C':        [WP.aus_e, WP.aus_ne, [-7.00, 152.00], WP.visayas],
-  'AUS_E|PH_S':        [WP.aus_e, WP.aus_ne, [-7.00, 152.00], WP.mindanao_s],
-  // East Australia ↔ SE Asia — via Coral Sea / Torres / Arafura / Java Sea (the western exit)
-  'AUS_E|SG':          [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait],
-  'AUS_E|MAL_E':       [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.scs_south],
-  'AUS_E|MALACCA':     [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-  'AUS_E|GOT':         [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.got_entrance, WP.got_mid, WP.got_north],
-  'AUS_E|JAVA_E':      [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_e],
-  'AUS_E|JAVA_W':      [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w],
-  'AUS_E|VN_S':        [WP.aus_e, WP.aus_ne, WP.torres, WP.arafura, WP.banda, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off],
-  // East Australia ↔ Europe/Africa — via Cape Agulhas (south of Australia, across south Indian Ocean)
-  'AUS_E|NW_EU':       [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.biscay, WP.english_ch],
-  'AUS_E|MED':         [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.gibraltar, WP.med_c],
-  'AUS_E|WAFRICA':     [WP.aus_se, [-43.00, 110.00], [-37.00, 60.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app],
-  // ── South Pacific Islands (Port Vila/Vanuatu, Apia/Samoa) ────────────────────
-  // s_pac = (-15°S, 170°E): central waypoint between Vanuatu and Samoa.
-  // Port Vila (168°E) and Apia (188°E/−172°W) both use s_pac as their Pacific hub.
-  'AUS_E|S_PACIFIC':      [WP.aus_ne, WP.s_pac],                                                   // Brisbane/Newcastle via Coral Sea
-  'JAPAN|S_PACIFIC':      [WP.japan_s, WP.pac_japan_e, WP.s_pac],                                  // Japan via open Pacific SE
-  'KR|S_PACIFIC':         [WP.korea_str, WP.pac_japan_e, WP.s_pac],                                 // Korea via Pacific
-  'CN_E|S_PACIFIC':       [WP.ecs, WP.pac_japan_e, WP.s_pac],                                       // China (East) via ECS + Pacific
-  'CN_S|S_PACIFIC':       [WP.taiwan_s, WP.ecs, WP.pac_japan_e, WP.s_pac],                          // China (South) via Taiwan + Pacific
-  'NORTH_AM_W|S_PACIFIC': [WP.pac_ne, WP.pac_ne_n, WP.pac_mid_n, WP.s_pac],                        // US West coast trans-Pacific south
-  'NW_EU|S_PACIFIC':      [WP.english_ch, WP.biscay, WP.wa_app, WP.s_atl_nw, WP.cape_agulhas, [-37.00, 60.00], [-43.00, 110.00], WP.aus_ne, WP.s_pac], // Europe via Cape
-  // NW Australia (Port Hedland, Dampier) → NE Asia via Makassar + Sulu Sea + Philippine Sea
-  'AUS_NW|JAPAN':      [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s, [15.00, 130.00], WP.japan_s],
-  'AUS_NW|CN_E':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs],
-  'AUS_NW|CN_N':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n],
-  'AUS_NW|CN_S':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north],
-  'AUS_NW|KR':         [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-  'AUS_NW|TAIWAN':     [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s],
-  'AUS_NW|PH_S':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
-  'AUS_NW|PH_C':       [WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.visayas],
-  // Fremantle (AUS_W) → NE Asia — go up west of Sumatra and through Malacca, OR via Lombok + Makassar
-  'AUS_W|JAPAN':       [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s, [15.00, 130.00], WP.japan_s],
-  'AUS_W|CN_E':        [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs],
-  'AUS_W|CN_N':        [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n],
-  'AUS_W|CN_S':        [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north],
-  'AUS_W|KR':          [WP.aus_w, WP.aus_nw, WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-  // Fremantle ↔ NW_EU via Cape Agulhas
-  'AUS_W|NW_EU':       [WP.aus_w, [-32.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.biscay, WP.english_ch, WP.north_sea],
-  'AUS_W|MED':         [WP.aus_w, [-32.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.gibraltar, WP.med_c],
-  'AUS_NW|NW_EU':      [WP.aus_nw, [-25.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.biscay, WP.english_ch, WP.north_sea],
-  'AUS_NW|MED':        [WP.aus_nw, [-25.00, 75.00], WP.cape_agulhas, WP.s_atl_nw, WP.wa_app, WP.gibraltar, WP.med_c],
-
-  // ─── MED (west) WESTBOUND — skip the med_c backtrack ─────────────────────────
-  'MED|NW_EU':         [WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
-  'MED|WAFRICA':       [WP.gibraltar, WP.wa_app],
-
-  // ─── MED ZONE WESTBOUND BYPASSES ─────────────────────────────────────────────
-  // For ports near Suez (MED_E/MARMARA/BLACK_SEA), the algorithmic westbound path
-  // forces a suez_n→med_c zigzag. Custom routes use a direct med_c path.
-  'MED_E|NW_EU':       [WP.med_e, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
-  'MED_E|MED':         [WP.med_e, WP.med_c],
-  'MED_E|WAFRICA':     [WP.med_e, WP.med_c, WP.gibraltar, WP.wa_app],
-  'MARMARA|NW_EU':     [WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
-  'MARMARA|MED':       [WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c],
-  'MARMARA|MED_E':     [WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e],
-  'BLACK_SEA|NW_EU':   [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
-  'BLACK_SEA|MED':     [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.med_c],
-  'BLACK_SEA|MED_E':   [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e],
-  'BLACK_SEA|MARMARA': [WP.bosphorus, WP.marmara],
-  // BLACK_SEA → Asia — the algorithmic backbone path already routes through Suez via the long Marmara chain;
-  // explicit customs improve smoothing and avoid the suez_n→med_e zigzag on the egress.
-  'BLACK_SEA|SG':      [WP.bosphorus, WP.marmara, WP.dardanelles, WP.aegean_n, WP.aegean_s, WP.med_e, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait],
-
-  // ─── MED (west) DIRECT-TO-INDIA / PG (skip Sri Lanka detour) ─────────────────
-  // For Med ports going to India W coast or Persian Gulf, the natural path is via Suez+Bab al Mandeb
-  // and then directly NE across the Arabian Sea. The default backbone routes through sri_lanka_s
-  // which adds a ~1500 nm detour. Custom routes bypass it.
-  'INDIA_W|MED':       [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c],
-  'INDIA_W|MED_E':     [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_e],
-  'INDIA_W|MARMARA':   [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_e, WP.aegean_s, WP.aegean_n, WP.dardanelles],
-  'INDIA_W|NW_EU':     [WP.indian_w, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
-  // Persian Gulf / Arabian Sea direct to Med (skip sri_lanka detour)
-  'MED|PG':            [WP.med_c, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.arabian_n, WP.hormuz],
-  'MED_E|PG':          [WP.med_e, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.arabian_n, WP.hormuz],
-  // RED_SEA ↔ NW_EU / SG — direct via Suez (the algorithmic path adds backbone overshoot)
-  'NW_EU|RED_SEA':     [WP.north_sea, WP.english_ch, WP.biscay, WP.gibraltar, WP.med_c, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid],
-  'MED|RED_SEA':       [WP.med_c, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid],
-  'MED_E|RED_SEA':     [WP.med_e, WP.suez_n, WP.suez_s, WP.red_sea_n, WP.red_sea_mid],
-  'RED_SEA|SG':        [WP.red_sea_mid, WP.red_sea_s, WP.bab_mandeb, WP.gulf_aden, WP.arabian_s, WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait],
-
-  // ─── INTRA-MED COVERAGE ──────────────────────────────────────────────────────
-  // MED ↔ MARMARA / MED_E / BLACK_SEA — already covered above
-
-
-  'VN_C|VN_S':     [WP.vn_c_off, WP.vn_s_off],
-  'VN_N|VN_S':     [WP.vn_n_off, WP.vn_c_off, WP.vn_s_off],
-
-  // Vietnam ↔ Sarawak (Malaysian Borneo) — via Natuna
-  'SARAWAK|VN_C':  [WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
-  'SARAWAK|VN_N':  [WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'SARAWAK|VN_S':  [WP.scs_natuna, WP.vn_s_off],
-
-  // Vietnam ↔ Singapore — via VN coast + SG Strait
-  'SG|VN_C':       [WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
-  'SG|VN_N':       [WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'SG|VN_S':       [WP.sg_strait, WP.vn_tip, WP.vn_s_off],
-
-  // Vietnam ↔ Gulf of Thailand (Bangkok etc.)
-  // Bangkok area → Vietnam: exit Gulf via got_mid (skip got_entrance + vn_tip
-  // which add a ~300nm SE-then-NE detour for HCM-direction routes)
-  'GOT|VN_C':      [WP.got_north, WP.got_mid, WP.vn_s_off, WP.vn_c_off],
-  'GOT|VN_N':      [WP.got_north, WP.got_mid, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'GOT|VN_S':      [WP.got_north, WP.got_mid, WP.vn_s_off],
-
-  // ─── MALACCA-zone routes (Penang / Belawan / Lhokseumawe) ───
-  // Strategy:
-  //   Eastbound (sg_strait & beyond): use [malacca_mid, malacca_s, sg_strait, ...]
-  //                                   to track strait shipping lane (avoids
-  //                                   malacca_n westward detour for ports
-  //                                   already inside the strait).
-  //   Westbound (Indian Ocean / Med): exit via malacca_n directly, NO malacca_s
-  //                                   detour — Penang is east of malacca_n but
-  //                                   the natural westbound path goes through it.
-
-  // Vietnam (eastbound, via Singapore Strait then up SCS coast)
-  'MALACCA|VN_C':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off],
-  'MALACCA|VN_N':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'MALACCA|VN_S':  [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.vn_tip, WP.vn_s_off],
-
-  // Gulf of Thailand (eastbound to Bangkok / Laem Chabang etc.)
-  'GOT|MALACCA':   [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
-
-  // Indonesia Java (eastbound through Karimata Strait to Java Sea)
-  'JAVA_W|MALACCA': [WP.java_sea_w, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
-  'JAVA_E|MALACCA': [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
-
-  // Indonesia Borneo south (eastbound to Banjarmasin)
-  'BORNEO_S|MALACCA': [WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_mid],
-
-  // Sulawesi (eastbound to Makassar via Java Sea + Makassar Strait south)
-  'MALACCA|SULAWESI': [WP.malacca_mid, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_c, WP.makassar_s],
-
-  // Westbound Indian Ocean — ports exit via malacca_n directly (bypass bengal_e/bab_mandeb detours)
-  // Uses sri_lanka_s as the trans-Indian-Ocean pivot (5.8N latitude direct route works).
-  'ADEN|MALACCA':       [WP.arabian_s, WP.sri_lanka_s, WP.malacca_n],     // Salalah — dropped gulf_aden (Salalah is ~midway between arabian_s and gulf_aden, going via gulf_aden adds ~700nm zigzag)
-  'EAFRICA|MALACCA':    [WP.sri_lanka_s, WP.malacca_n],                                   // Mombasa / Dar es Salaam (direct cross-IO, no bab_mandeb)
-  'MALACCA|SAFRICA':    [WP.malacca_n, WP.sri_lanka_s, WP.cape_agulhas],                  // Durban (Cape route, no bab_mandeb)
-  'MALACCA|PG':         [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.hormuz], // dropped arabian_n (wrong-direction zigzag — Dubai/Sohar are right inside Hormuz)
-  'MALACCA|SRI_LANKA':  [WP.malacca_n, WP.sri_lanka_s],                                   // Colombo
-  'BANGLADESH|MALACCA': [WP.bengal_ne, WP.bengal_e, WP.malacca_n],                        // Chittagong (Bay of Bengal northbound)
-  'BANGLADESH|SG':      [WP.malacca_n, WP.malacca_s],                                       // Chittagong→Dumai/Singapore: direct Andaman Sea → Malacca (skip bengal_e western detour)
-
-  // ── ANDAMAN zone (Yangon/Myanmar) custom routes ──────────────────────────────────────────────
-  // Yangon is at 96.16°E/16.78°N — Andaman Sea. Backbone routes via malacca_n (5.8N,97.5E).
-  // EASTBOUND (to Philippines, SG, GOT, China): backbone malacca_n→malacca_s→sg_strait→SCS ✓
-  // These customs fix the few cases where backbone adds unnecessary waypoints.
-  'ANDAMAN|BANGLADESH':  [],                                           // Direct GC Yangon→Chittagong across Bay of Bengal (open water)
-  'ANDAMAN|INDIA_E':     [],                                           // Direct GC Yangon→Chennai/Vizag across Bay of Bengal
-  'ANDAMAN|SRI_LANKA':   [WP.bengal_e, WP.sri_lanka_s],              // Via Bay of Bengal, south of Sri Lanka (avoids clipping island)
-  'ANDAMAN|INDIA_W':     [WP.bengal_e, WP.sri_lanka_s],              // Via Bay of Bengal + south Sri Lanka tip → Cochin/Mangalore
-
-  // Med / NW Europe — Suez route, skip bengal_e (was a 470nm zigzag north-then-south)
-  'MALACCA|NW_EU':      [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.biscay, WP.english_ch, WP.north_sea],
-  'MALACCA|MED':        [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c],
-  'MALACCA|WAFRICA':    [WP.malacca_n, WP.sri_lanka_s, WP.arabian_s, WP.gulf_aden, WP.bab_mandeb, WP.red_sea_s, WP.red_sea_mid, WP.red_sea_n, WP.suez_s, WP.suez_n, WP.med_c, WP.gibraltar, WP.wa_app],
-
-  // Vietnam ↔ South Borneo (Banjarmasin)
-  'BORNEO_S|VN_C': [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
-  'BORNEO_S|VN_N': [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'BORNEO_S|VN_S': [WP.karimata, WP.scs_natuna, WP.vn_s_off],
-
-  // Vietnam ↔ West Java (Jakarta, Semarang, Cilacap)
-  'JAVA_W|VN_C':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
-  'JAVA_W|VN_N':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'JAVA_W|VN_S':   [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.vn_s_off],
-
-  // Vietnam ↔ East Java (Surabaya) — direct across Java Sea to Karimata
-  'JAVA_E|VN_C':   [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off],
-  'JAVA_E|VN_N':   [WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-  'JAVA_E|VN_S':   [WP.karimata, WP.scs_natuna, WP.vn_s_off],
-
-  // Cai Lan / Hai Phong ↔ South China (via Qiongzhou / Hainan Strait)
-  'CN_S|VN_N':     [WP.qiongzhou],
-
-  // ── South China (Hong Kong / Shenzhen / Guangzhou) ↔ South / Central Vietnam.
-  // Direct great-circle lines across SCS pass east of Hainan and west of Paracels — all open water.
-  'CN_S|VN_S':     [],                 // direct HK → Phu My / HCM / Vung Tau across open SCS
-  'CN_S|VN_C':     [WP.hainan_e],      // Da Nang / Quy Nhon — hainan_e keeps the line safely east of Hainan
-
-  // ── South China ↔ MAL_E / Singapore / Malacca / Sarawak — route through western SCS
-  // (direct lines would cut across southern Vietnam / Cambodia / Malay Peninsula).
-  'CN_S|MAL_E':    [WP.scs_central],                                                    // HK → scs_central → Kuantan
-  'CN_S|SG':       [WP.scs_central, WP.scs_south, WP.sg_strait],
-  'CN_S|MALACCA':  [WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_mid],   // was malacca_n (wrong direction U-turn for Penang/Belawan eastbound)
-  // ── South China ↔ South Asia — backbone bi=20 (taiwan_s[22,118.5]) is east of Guangzhou/Fangcheng,
-  // causing a ~600nm eastward spike before turning back west.  Route south through SCS→Malacca instead.
-  'CN_S|SRI_LANKA': [WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
-  'CN_S|INDIA_E':   [WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
-  'CN_S|INDIA_W':   [WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e, WP.sri_lanka_s],
-  'BANGLADESH|CN_S':[WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel],
-
-  // ── INDIA_E (Chennai / Vizag / Haldia / Paradip / Kakinada / Tuticorin) — east-coast India.
-  // bi=11 (sri_lanka_s) is correct for WESTBOUND routes (Middle East, Europe, Africa) — backbone
-  // naturally pivots south around India's tip.  But EASTBOUND routes to SE/East Asia must NOT
-  // first dip south to sri_lanka_s[5.8,80]; they should go directly east from bengal_e[8,90].
-  // Custom routes below skip that ~460 nm initial south detour.
-  'INDIA_E|MALACCA':  [WP.bengal_e, WP.malacca_n],
-  'INDIA_E|SG':       [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait],
-  'INDIA_E|MAL_E':    [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south],
-  'INDIA_E|SARAWAK':  [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_natuna],
-  'INDIA_E|SABAH':    [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.borneo_ne],
-  'INDIA_E|JAVA_W':   [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_w],
-  'INDIA_E|JAVA_E':   [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e],
-  'BORNEO_S|INDIA_E': [WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
-  'BORNEO_E|INDIA_E': [WP.makassar_n, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
-  'INDIA_E|SULAWESI': [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_c, WP.makassar_s],
-  'GOT|INDIA_E':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
-  'INDIA_E|VN_S':     [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central],
-  'INDIA_E|VN_C':     [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel],
-  'INDIA_E|VN_N':     [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.vn_n_off],
-  'INDIA_E|PH_N':     [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel],
-  'INDIA_E|PH_C':     [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.visayas],
-  'INDIA_E|PH_S':     [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.sulu_sea, WP.mindanao_s],
-  'CN_E|INDIA_E':     [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
-  'CN_N|INDIA_E':     [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e],
-  'INDIA_E|KR':       [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-  'INDIA_E|TAIWAN':   [WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.taiwan_str],
-
-  // ── India East ↔ Arabian/African zones — backbone INDIA_E (bi=11) going WEST via
-  // bab_mandeb is correct for Suez-route destinations (Europe, West Africa) but wrong for
-  // Gulf of Aden, East Africa, and South Africa which don't need the Red Sea approach.
-
-  // INDIA_E ↔ Gulf of Aden (Salalah) — around south India + across Arabian Sea.
-  // Without custom: vizag→salalah = 3635nm via gulf_aden+bab_mandeb backtrack (should be ~2400nm).
-  // Key stored ADEN→INDIA_E; reversed gives sri_lanka_s→arabian_s waypoints eastbound.
-  'ADEN|INDIA_E': [WP.arabian_s, WP.sri_lanka_s],
-
-  // INDIA_E ↔ East Africa (Mombasa / Dar es Salaam) — south around India + direct SW Indian Ocean.
-  // Without custom: vizag→mombasa = 3984nm via gulf_aden/bab_mandeb (should be ~3400nm via Cape).
-  'EAFRICA|INDIA_E': [WP.sri_lanka_s],
-
-  // INDIA_E ↔ South Africa (Durban) — south around India + south Indian Ocean to Cape.
-  // Without custom: vizag→durban = 6819nm via bab_mandeb+cape_good (should be ~5700nm direct).
-  'INDIA_E|SAFRICA': [WP.sri_lanka_s, WP.cape_agulhas],
-
-  'CN_S|SARAWAK':  [WP.scs_natuna],                                                     // HK → scs_natuna → Tanjung Manis
-
-  // ── South China ↔ Philippines — via Bashi Channel / Luzon Strait area
-  'CN_S|PH_N':     [WP.scs_north],                                                      // HK → scs_north → Manila (open SCS)
-  'CN_S|PH_C':     [WP.scs_north, WP.visayas],
-  'CN_S|PH_S':     [WP.scs_north, WP.scs_paracel, WP.sulu_sea, WP.mindanao_s],
-
-  // ── Gulf of Thailand (Bangkok) ↔ Philippines (direct via Ca Mau, skip Singapore)
-  'GOT|PH_N':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip],
-  'GOT|PH_C':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.sulu_sea, WP.visayas],
-  'GOT|PH_S':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.sulu_sea, WP.mindanao_s],
-
-  // ── Gulf of Thailand ↔ China / Korea (hug Vietnam coast instead of Singapore dip)
-  'CN_S|GOT':      [WP.hainan_e, WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.got_entrance, WP.got_mid, WP.got_north],
-  'CN_E|GOT':      [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.vn_tip, WP.got_entrance, WP.got_mid, WP.got_north],
-  'CN_N|GOT':      [WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.vn_tip, WP.got_entrance, WP.got_mid, WP.got_north],
-  'GOT|KR':        [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-
-  // ── Gulf of Thailand ↔ East Borneo (Balikpapan): old path cut across Borneo land.
-  // Route via Singapore Strait → Karimata → Makassar Strait instead.
-  'BORNEO_E|GOT':  [WP.makassar_n, WP.karimata, WP.sg_strait, WP.got_entrance, WP.got_mid, WP.got_north],
-
-  // ── China ↔ Java (skip the Singapore dip — exit SCS directly to Karimata)
-  // JAVA_E side: karimata → Surabaya is open Java Sea so no extra waypoints needed.
-  // JAVA_W side: keep java_sea_w to pass safely west of Belitung Island.
-  'CN_N|JAVA_E':   [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
-  'CN_N|JAVA_W':   [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
-  'CN_E|JAVA_E':   [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
-  'CN_E|JAVA_W':   [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
-  // CN_S covers ports from HK (114°E) to Fangcheng/Beihai (108°E).
-  // Fangcheng/Qinzhou/Beihai are WEST of Hainan Island in the Gulf of Tonkin.
-  // Routing directly to scs_north[21,116] (east of Hainan) forces a 7°-westward
-  // backtrack for these ports, creating a V-shape.  Fix: go east of Hainan via
-  // hainan_e[18,111.5] then through the Qiongzhou Strait (qiongzhou[20.5,110.3]).
-  // For HK/Guangzhou (114°E), this adds only ~80nm — acceptable.
-  'CN_S|JAVA_E':   [WP.qiongzhou, WP.hainan_e, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata],
-  'CN_S|JAVA_W':   [WP.qiongzhou, WP.hainan_e, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.karimata, WP.java_sea_w],
-
-  // ── Korea ↔ Java
-  'JAVA_E|KR':     [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-  'JAVA_W|KR':     [WP.java_sea_w, WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-
-  // ── East Borneo (Balikpapan / Samarinda / Bontang) ↔ Java — round Pulau Laut via Makassar Strait south
-  'BORNEO_E|JAVA_E': [WP.makassar_s],
-  'BORNEO_E|JAVA_W': [WP.makassar_s],
-
-  // ── South Borneo (Banjarmasin / Tarjun / Taboneo) ↔ Java — direct across Java Sea
-  'BORNEO_S|JAVA_E': [],
-  'BORNEO_S|JAVA_W': [],
-
-  // ── Sulawesi (Makassar) ↔ Java — direct across Java / Flores Sea
-  'JAVA_E|SULAWESI': [],
-  'JAVA_W|SULAWESI': [],
-
-  // ── Intra-Indonesia (direct where Java Sea / Makassar Strait is open water)
-  'BORNEO_S|SULAWESI': [],
-  'BORNEO_E|SULAWESI': [],
-  'BORNEO_E|BORNEO_S': [WP.makassar_s],
-  'JAVA_E|JAVA_W':     [],
-
-  // ── Philippines ↔ Java — north via SCS, central/south via Makassar Strait & Sulu Sea
-  'JAVA_E|PH_N':   [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north],
-  'JAVA_W|PH_N':   [WP.java_sea_w, WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north],
-  'JAVA_E|PH_C':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.visayas],
-  'JAVA_W|PH_C':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.visayas],
-  'JAVA_E|PH_S':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
-  'JAVA_W|PH_S':   [WP.makassar_s, WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
-
-  // ── East Borneo ↔ China / Korea — via Borneo's NE tip (don't cut across Kalimantan land)
-  'BORNEO_E|CN_N': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n, WP.bohai_e],
-  'BORNEO_E|CN_E': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs],
-  'BORNEO_E|CN_S': [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.hainan_e, WP.qiongzhou],
-  'BORNEO_E|KR':   [WP.makassar_n, WP.borneo_ne, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-
-  // ── East Borneo ↔ Philippines — via Sulu Sea
-  'BORNEO_E|PH_N': [WP.makassar_n, WP.sulu_sea, WP.scs_paracel, WP.scs_north],
-  'BORNEO_E|PH_C': [WP.makassar_n, WP.sulu_sea, WP.visayas],
-  'BORNEO_E|PH_S': [WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
-
-  // ── Sulawesi (Makassar) ↔ Philippines — via Sulu Sea + Makassar Strait
-  // Direction PH_* → SULAWESI: PH port → (approach) → sulu_sea → makassar_n → Makassar.
-  // PH_N: direct north through Sulu Sea to Manila; old route via scs_north+scs_paracel
-  //        added a big NW loop that doubled the distance (1982nm→1230nm real ~1100nm).
-  'PH_N|SULAWESI': [WP.sulu_sea, WP.makassar_n],
-  'PH_C|SULAWESI': [WP.visayas, WP.sulu_sea, WP.makassar_n],
-  'PH_S|SULAWESI': [WP.mindanao_s, WP.sulu_sea, WP.makassar_n],
-
-  // ── South Borneo (Banjarmasin) ↔ Philippines — via Makassar Strait + Sulu Sea
-  // (default routing would detour via Karimata / Java Sea / SCS spine — very long).
-  'BORNEO_S|PH_N': [WP.makassar_n, WP.sulu_sea, WP.scs_paracel, WP.scs_north],
-  'BORNEO_S|PH_C': [WP.makassar_n, WP.sulu_sea, WP.visayas],
-  'BORNEO_S|PH_S': [WP.makassar_n, WP.sulu_sea, WP.mindanao_s],
-
-  // ── Intra-Philippines — archipelagic routes, essentially direct between islands.
-  // Default backbone routing detours ~1500nm out to SCS via scs_central; these are all
-  // 200–400nm hops in reality. Use direct great-circle (renders across a few small islands
-  // but distance is accurate to a few %).
-  'PH_C|PH_N': [],
-  'PH_C|PH_S': [],
-  'PH_N|PH_S': [],
-
-  // ── Malacca Strait ↔ Singapore — straight down the Strait via malacca_s.
-  // Default routes via malacca_n (top of Sumatra) for all MALACCA ports, detouring
-  // 600+nm north before coming back. Skip malacca_n; MALACCA ports → malacca_s → sg_strait.
-  'MALACCA|SG': [WP.malacca_mid, WP.malacca_s],   // dropped sg_strait — port_klang sits BEFORE it on the path; spore/pasir_gudang are close enough to malacca_s
-
-  // ── North China ↔ East China coastal — default routes via bi=22 (way south) then north.
-  // Adjacent ports like Lianyungang (CN_E) and Rizhao (CN_N) are 40nm apart but get 1300nm
-  // routing. Direct line along coast is open Yellow Sea water.
-  'CN_E|CN_N': [],
-
-  // ── East China ↔ South China coastal (Wenzhou/Shanghai/Ningbo ↔ Fuzhou/Xiamen/Quanzhou).
-  // Default would detour via taiwan_s + scs_north. Direct line along Taiwan Strait stays
-  // west of Taiwan in open water.
-  'CN_E|CN_S': [],
-
-  // ── North China ↔ South China coastal — same logic as CN_E|CN_S, just further apart.
-  // Direct line runs down the East China Sea and Taiwan Strait, west of Taiwan.
-  'CN_N|CN_S': [],
-
-  // ── South China ↔ Korea (Hong Kong / Shenzhen / Guangzhou → Busan / Incheon / Gwangyang).
-  // Default backbone detoured east of Taiwan via ecs [28,122.5]. Go through Taiwan Strait
-  // instead: taiwan_s keeps us safely offshore of Fujian, taiwan_str puts us mid-Strait
-  // west of Taiwan, then a straight shot NE through open East China Sea to Korea Strait
-  // passing well west of the Ryukyus.
-  'CN_S|KR': [WP.taiwan_s, WP.taiwan_str, WP.korea_str],
-
-  // ── Japan ↔ Korea — direct via Korea Strait (backbone would detour west through ecs/yellow_s).
-  'JAPAN|KR': [WP.korea_str],
-
-  // ── Japan ↔ CN_N — via Korea Strait → Yellow Sea (avoids backbone west-then-north ecs detour).
-  'CN_N|JAPAN': [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.korea_str],
-
-  // ── Japan ↔ CN_E — direct across ECS (both bi=22; skips redundant japan_s↔ecs hops).
-  'CN_E|JAPAN': [],
-
-  // ── Japan ↔ CN_S — via Taiwan Strait (mirrors the KR↔CN_S route, just continues to japan_s).
-  'CN_S|JAPAN': [WP.taiwan_s, WP.taiwan_str, WP.ecs, WP.japan_s],
-
-  // ── Philippines (North/Manila) ↔ Korea — east-of-Taiwan route via Philippine Sea.
-  // Direct great-circle from Manila to Korea crosses Luzon land. Route exits Manila Bay
-  // (manila_exit avoids Bataan peninsula), goes NW along Luzon's west coast (luzon_w),
-  // through Bashi Channel, east of Taiwan (taiwan_e), then NE through Philippine Sea
-  // to Korea Strait. Stored KR→PH_N so Manila→Busan is the reverse.
-  'KR|PH_N': [WP.korea_str, WP.taiwan_e, WP.luzon_w, WP.manila_exit],
-
-  // ── Singapore-zone ↔ Manila — skip scs_north (goes too far NW before coming back SE).
-  // Direct northeast through SCS: sg_strait → scs_south → scs_central → Manila.
-  'PH_N|SG': [WP.scs_central, WP.scs_south],
-
-  // ── Japan / Korea / CN_E / CN_N ↔ PH_C (Cebu/Iloilo) and PH_S (Davao/GenSan) ─────
-  // Default backbone routes PH_C/PH_S via sulu_sea→scs_central then all the way back
-  // through the SCS spine — adding 700–1200 nm of west-then-east detour.
-  // Fix: go east of the Philippines through the open Philippine Sea via taiwan_e[25,124].
-  'CN_E|PH_C':  [WP.ecs, WP.taiwan_e, WP.visayas],
-  'CN_E|PH_S':  [WP.ecs, WP.taiwan_e, WP.mindanao_s],
-  'CN_N|PH_C':  [WP.bohai_e, WP.yellow_n, WP.ecs_n, WP.ecs, WP.taiwan_e, WP.visayas],
-  'CN_N|PH_S':  [WP.bohai_e, WP.yellow_n, WP.ecs_n, WP.ecs, WP.taiwan_e, WP.mindanao_s],
-  'KR|PH_C':    [WP.korea_str, WP.taiwan_e, WP.visayas],
-  'KR|PH_S':    [WP.korea_str, WP.taiwan_e, WP.mindanao_s],
-  'JAPAN|PH_C': [WP.japan_s, WP.ecs, WP.taiwan_e, WP.visayas],
-  'JAPAN|PH_S': [WP.japan_s, WP.ecs, WP.taiwan_e, WP.mindanao_s],
-
-  // ── Japan ↔ Manila (PH_N) — backbone detours deep into Taiwan Strait before coming back.
-  // Direct south via ecs then across: yokohama → japan_s → ecs → Manila.
-  'JAPAN|PH_N': [WP.japan_s, WP.ecs],
-
-  // ── Malacca Strait ↔ Sarawak — via Singapore + Natuna, skip malacca_n detour.
-  'MALACCA|SARAWAK': [WP.malacca_s, WP.sg_strait, WP.scs_natuna],
-
-  // ── South Borneo ↔ China / Korea — via Karimata + east SCS backbone
-  'BORNEO_S|CN_N': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.ecs_n, WP.yellow_s, WP.yellow_n, WP.bohai_e],
-  'BORNEO_S|CN_E': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs],
-  'BORNEO_S|CN_S': [WP.karimata, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.hainan_e, WP.qiongzhou],
-
-  // ── Sarawak (Tanjung Manis / Bintulu / Kuching / Miri) ↔ Java — direct via Karimata
-  // Stored in sortedZ[0] → sortedZ[1] direction (JAVA → SARAWAK here).
-  // Karimata → Surabaya is open Java Sea; Karimata → Jakarta passes very close to Belitung
-  // so we route Jakarta-side via java_sea_w to stay safely west of Belitung Island.
-  'JAVA_E|SARAWAK': [WP.karimata],
-  'JAVA_W|SARAWAK': [WP.java_sea_w, WP.karimata],
-
-  // ── Sarawak ↔ East Borneo — via Borneo's NE tip (don't cut across land)
-  // Most Sarawak ports (Miri, Bintulu, Tanjung Manis) sit NE of Kuching so going via
-  // borneo_ne keeps the route natural along NW Borneo coast. scs_natuna was adding a
-  // 600nm west-then-east loop. Kuching (far SW Sarawak) will slightly underestimate but
-  // most east-Borneo ↔ Sarawak traffic goes to the eastern Sarawak ports.
-  'BORNEO_E|SARAWAK': [WP.makassar_n, WP.borneo_ne],
-
-  // ── Sarawak ↔ South Borneo — direct via Karimata
-  'BORNEO_S|SARAWAK': [WP.karimata],
-
-  // ── Sarawak ↔ Sulawesi — via Borneo NE + Makassar Strait
-  'SARAWAK|SULAWESI': [WP.scs_natuna, WP.borneo_ne, WP.makassar_n, WP.makassar_s],
-
-  // ── Sarawak ↔ Philippines (central/south via Sulu Sea; north via SCS)
-  'PH_C|SARAWAK':  [WP.visayas, WP.sulu_sea, WP.borneo_ne],
-  'PH_S|SARAWAK':  [WP.mindanao_s, WP.sulu_sea, WP.borneo_ne],
-  'PH_N|SARAWAK':  [WP.borneo_ne],   // Manila→Bintulu direct via Borneo NE (skips Sulu Sea + Natuna zigzag)
-
-  // ── Sabah (Kota Kinabalu / Sandakan / Tawau / Labuan) custom routing
-  // Default backbone would force SCS south detour; these keep routes natural.
-  'JAVA_E|SABAH':  [WP.java_sea_e, WP.makassar_s, WP.makassar_n, WP.borneo_ne],
-  'JAVA_W|SABAH':  [WP.java_sea_w, WP.karimata, WP.scs_natuna, WP.borneo_ne],
-  'BORNEO_E|SABAH':[WP.makassar_n, WP.borneo_ne],
-  'BORNEO_S|SABAH':[WP.makassar_s, WP.makassar_n, WP.borneo_ne],  // around Pulau Laut + Makassar Strait
-  'SABAH|SULAWESI':[WP.borneo_ne, WP.makassar_n, WP.makassar_s],
-  'PH_C|SABAH':    [WP.visayas, WP.sulu_sea],
-  'PH_S|SABAH':    [WP.mindanao_s, WP.sulu_sea],
-  'PH_N|SABAH':    [],   // Manila→KK direct (great-circle ~590nm; passes near Palawan but acceptable for indicative)
-  'CN_N|SABAH':    [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
-  'CN_E|SABAH':    [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
-  'CN_S|SABAH':    [WP.borneo_ne],   // HK→KK direct across SCS (dropped qiongzhou/hainan_e detour saves ~400nm)
-  'KR|SABAH':      [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.borneo_ne],
-  'SABAH|SG':      [WP.borneo_ne, WP.scs_natuna, WP.sg_strait],
-  'GOT|SABAH':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],
-  'MALACCA|SABAH': [WP.malacca_s, WP.sg_strait, WP.scs_natuna, WP.borneo_ne],   // dropped malacca_n (Penang/Belawan already east of it)
-  'SABAH|SARAWAK': [WP.borneo_ne],  // NW Borneo coast; scs_natuna added a 600nm loop
-  'SABAH|VN_S':    [WP.borneo_ne, WP.scs_natuna, WP.vn_s_off],
-  'SABAH|VN_C':    [WP.borneo_ne, WP.scs_paracel, WP.vn_c_off],
-  'SABAH|VN_N':    [WP.borneo_ne, WP.scs_paracel, WP.vn_n_off],   // direct trans-SCS (was hugging full VN coast, +400nm)
-
-  // ── Taiwan ↔ mainland China — direct across open Taiwan Strait / East China Sea.
-  // Backbone would loop via taiwan_s waypoints; direct line clears all land.
-  'CN_S|TAIWAN':  [],   // HK/Xiamen/Fuzhou across Taiwan Strait — all open water
-  'CN_E|TAIWAN':  [],   // Shanghai/Ningbo/Wenzhou via ECS into strait — all open water
-  'CN_N|TAIWAN':  [],   // Qingdao/Tianjin via Yellow Sea + ECS + Taiwan Strait — open water
-
-  // ── Taiwan ↔ Korea — via East China Sea (skip the Yellow Sea north detour)
-  'KR|TAIWAN':    [WP.korea_str, WP.ecs],
-
-  // ── Taiwan ↔ Philippines (North/Manila) — direct via Luzon Strait (Bashi Channel).
-  // Direct great-circle stays offshore; Luzon Strait is open water between Taiwan and Luzon.
-  'PH_N|TAIWAN':  [],
-  // Central/South Philippines → Taiwan: direct across Philippine Sea (east of Luzon archipelago).
-  'PH_C|TAIWAN':  [],
-  'PH_S|TAIWAN':  [],
-
-  // ── Taiwan ↔ Vietnam — direct path across SCS avoiding full scs_north backbone detour.
-  // Stored TAIWAN→VN direction (T < V). Reversed automatically for VN→TAIWAN queries.
-  'TAIWAN|VN_N':  [WP.taiwan_s, WP.scs_north, WP.vn_n_off],
-  'TAIWAN|VN_C':  [WP.taiwan_s, WP.scs_paracel, WP.vn_c_off],
-  'TAIWAN|VN_S':  [WP.taiwan_s, WP.scs_central, WP.vn_s_off],
-
-  // ── Taiwan ↔ Gulf of Thailand (Bangkok, Laem Chabang) — mirror of GOT|KR but ending at taiwan_s.
-  // Without custom: GOT detours south to sg_strait(bi=15) then north through entire SCS — ratio ~2.1.
-  'GOT|TAIWAN':   [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s],
-
-  // ── Taiwan ↔ Malacca Strait (Penang, Port Klang, Belawan) — via SG Strait then up SCS.
-  // Without custom: backbone detours via malacca_n + entire SCS bottom — ratio ~1.6.
-  'MALACCA|TAIWAN': [WP.malacca_s, WP.sg_strait, WP.scs_central, WP.scs_north, WP.taiwan_s],
-
-  // ── Taiwan ↔ Sarawak — north through central SCS, skip scs_south back-step.
-  // Without custom: Sarawak branch pushes to scs_natuna then scs_south before going north — ratio ~1.6.
-  'SARAWAK|TAIWAN': [WP.scs_natuna, WP.scs_central, WP.scs_north, WP.taiwan_s],
-
-  // ── Taiwan ↔ Sabah — straight north through SCS via scs_north.
-  // Without custom: backbone hits scs_south(bi=16) then full SCS spine south-to-north — ratio ~2.1.
-  'SABAH|TAIWAN': [WP.scs_north, WP.taiwan_s],
-
-  // ── Taiwan ↔ Indonesia — all routes skip sg_strait dip and head directly up SCS.
-  // Without customs: branch logic forces detour to sg_strait(bi=15) — ratios 1.4–1.7.
-  'BORNEO_S|TAIWAN': [WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s],
-  'JAVA_W|TAIWAN':   [WP.java_sea_w, WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s],
-  'JAVA_E|TAIWAN':   [WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s],
-  'BORNEO_E|TAIWAN': [WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s],
-  'SULAWESI|TAIWAN': [WP.makassar_n, WP.sulu_sea, WP.scs_north, WP.taiwan_s],
-
-  // ── MAL_E (Kuantan / Kemaman) — east coast Peninsular Malaysia on the South China Sea.
-  // Anchored at scs_south (bi=16). Default backbone routing handles CN_*/KR fine
-  // (Kuantan → scs_south → SCS spine → northern destination). These customs cover
-  // pairs where the default would detour via Singapore Strait or up the Gulf of Thailand.
-  'MAL_E|SG':       [WP.sg_strait],                                  // Kuantan→Spore around southern Malay tip via Singapore Strait (direct line cut through land)
-  'MALACCA|MAL_E':  [WP.malacca_s, WP.sg_strait],                    // via Singapore Strait
-  'GOT|MAL_E':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait],   // exit gulf + round Malay tip via Singapore (was: direct cut through peninsula land)
-  'MAL_E|SARAWAK':  [WP.scs_natuna],                                 // across SCS to Natuna
-  'MAL_E|SABAH':    [WP.scs_natuna, WP.borneo_ne],
-  'BORNEO_S|MAL_E': [WP.karimata],                                   // direct via Karimata
-  'BORNEO_E|MAL_E': [WP.makassar_s, WP.karimata],                    // round Pulau Laut, then Java Sea + Karimata
-  'JAVA_W|MAL_E':   [WP.java_sea_w, WP.karimata],                    // safely west of Belitung, then up
-  'JAVA_E|MAL_E':   [WP.karimata],                                   // direct across Java Sea to Karimata
-  'MAL_E|SULAWESI': [WP.karimata, WP.makassar_s],                    // via Karimata + Makassar Strait south
-  // East Malaysia coast (Kuantan, Kemaman) → Vietnam: hug Vietnamese coast, no mid-SCS detour
-  'MAL_E|VN_S':     [WP.vn_tip, WP.vn_s_off],                                              // Kuantan→HCM via Ca Mau
-  'MAL_E|VN_C':     [WP.vn_tip, WP.vn_s_off, WP.vn_c_off],                                 // → Danang via SVN coast
-  'MAL_E|VN_N':     [WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],                    // → Haiphong via full coast (NOT scs_paracel)
-
-  // ── VN_N (Hai Phong / Cai Lan) to elsewhere — hugging Vietnam coast for short trips,
-  // direct across SCS to N. Asia destinations to avoid backbone over-counting.
-  // STORAGE DIRECTION matters: zone keys are alphabetical (CN_E|VN_N stored CN_E→VN_N).
-  // CN_E ↔ Vietnam — all three zones need explicit customs because backbone bi=24 (ecs, 28°N/122.5°E)
-  // overshoots east of every CN_E port (Lianyungang 119.5°E, Shanghai 121.5°E, Ningbo 121.6°E).
-  // VN_N ports (Haiphong, Nghi Son, Cam Pha) sit at 105–107°E — GC to ecs via vn_n_off cuts through
-  // Fujian/Zhejiang mainland.  Fix: route south of Hainan via hainan_e, up SCS, then Taiwan Strait.
-  // Stored CN_E→VN_* direction (C < V alphabetically); reversed automatically for VN→CN_E queries.
-  'CN_E|VN_N':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.hainan_e, WP.vn_n_off],         // Lianyungang/Shanghai↔Haiphong/Nghi Son: Gulf of Tonkin → east of Hainan → SCS → Taiwan Strait
-  'CN_E|VN_C':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.scs_paracel],                    // Shanghai↔Da Nang: via SCS spine + Taiwan Strait (skip ecs hook)
-  'CN_E|VN_S':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central],    // Shanghai↔HCM/Phu My: via full SCS + Taiwan Strait (skip ecs hook)
-  'KR|VN_N':        [WP.ecs, WP.vn_n_off],                        // Busan→Haiphong via ECS open water
-  'KR|VN_C':        [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.vn_c_off],               // Busan→Da Nang via ECS+SCS
-  'KR|VN_S':        [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.vn_s_off], // Busan/Gwangyang→HCM direct through ECS+SCS
-  'SULAWESI|VN_N':  [WP.makassar_s, WP.java_sea_c, WP.karimata, WP.scs_natuna, WP.vn_s_off, WP.vn_c_off, WP.vn_n_off],
-
-  // ── GOT (Bangkok / Laem Chabang) to Asia destinations — must exit Gulf first
-  'GOT|JAVA_W':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_natuna, WP.karimata, WP.java_sea_w],
-  'GOT|JAVA_E':     [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.scs_natuna, WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e],
-  'GOT|JAPAN':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.vn_tip, WP.vn_s_off, WP.vn_c_off, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.japan_s],
-
-  // ── Borneo & Sulawesi routes that need explicit customs
-  'BORNEO_S|SG':    [WP.karimata],                                                   // Banjarmasin→Spore direct via Karimata
-  'BORNEO_E|JAPAN': [WP.sulu_sea, WP.japan_s],                                        // Balikpapan→Japan via Sulu Sea (open Pacific E of Taiwan)
-  'CN_E|SULAWESI':  [WP.ecs, WP.visayas, WP.sulu_sea, WP.makassar_n],                 // Shanghai→Makassar via open ECS + Sulu Sea (stored CN_E→SULAWESI)
-
-  // ── CN_N|KR was using backbone — direct via korea_str is shorter
-  'CN_N|KR':        [WP.korea_str],                      // Tianjin/Qingdao ↔ Busan: direct, no Japan detour
-  'MAL_E|PH_N':     [WP.scs_central, WP.scs_paracel, WP.scs_north], // along SCS spine to Luzon
-  'MAL_E|PH_C':     [WP.scs_central, WP.visayas],
-  'MAL_E|PH_S':     [WP.scs_central, WP.sulu_sea, WP.mindanao_s],
-
-  // ── India West ↔ Persian Gulf — direct across Arabian Sea via Strait of Hormuz.
-  'INDIA_W|PG': [WP.hormuz],
-
-  // ── India West ↔ East/SE Asia — eastbound routes must round India's south tip via
-  // sri_lanka_s, NOT detour NW to indian_w[15,68] (which is the Arabian-Sea branch for
-  // westbound traffic).  Without customs the reversed branch sends ships 900nm the wrong way.
-  'INDIA_W|MALACCA':  [WP.sri_lanka_s, WP.malacca_n],   // dropped bengal_e (zigzag) AND indian_w (detour for south India ports — cochin/mangalore are south of indian_w[15,68])
-  'INDIA_W|SG':       [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait],
-  'INDIA_W|GOT':      [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.got_entrance, WP.got_mid, WP.got_north],
-  'INDIA_W|MAL_E':    [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south],
-  'INDIA_W|SARAWAK':  [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_natuna],
-  'INDIA_W|SABAH':    [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.borneo_ne],
-  'INDIA_W|JAVA_W':   [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_w],
-  'INDIA_W|JAVA_E':   [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_w, WP.java_sea_c, WP.java_sea_e],
-  'BORNEO_S|INDIA_W': [WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e, WP.sri_lanka_s],
-  'BORNEO_E|INDIA_W': [WP.makassar_n, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e, WP.sri_lanka_s],
-  'INDIA_W|SULAWESI': [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.karimata, WP.java_sea_c, WP.makassar_s],
-  'GOT|INDIA_W':      [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e, WP.sri_lanka_s],
-  'INDIA_W|VN_S':     [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central],
-  'INDIA_W|VN_C':     [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel],
-  'INDIA_W|VN_N':     [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.vn_n_off],
-  'INDIA_W|PH_N':     [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel],
-  'INDIA_W|PH_C':     [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.visayas],
-  'INDIA_W|PH_S':     [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.sulu_sea, WP.mindanao_s],
-  'CN_E|INDIA_W':     [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e, WP.sri_lanka_s],
-  'CN_N|INDIA_W':     [WP.bohai_e, WP.yellow_n, WP.yellow_s, WP.ecs_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n, WP.bengal_e, WP.sri_lanka_s],
-  'INDIA_W|KR':       [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.korea_str],
-  'INDIA_W|TAIWAN':   [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.taiwan_str],
-
-  // ── India West/East ↔ Sri Lanka — short hop, no detour via backbone.
-  'INDIA_W|SRI_LANKA': [],   // Cochin/Mangalore ↔ Colombo: direct across Laccadive Sea / Gulf of Mannar
-  'INDIA_E|SRI_LANKA': [],   // Tuticorin/Chennai ↔ Colombo: direct, open water
-  // ── India West ↔ India East — direct across Gulf of Mannar / Palk Strait
-  'INDIA_E|INDIA_W':   [],
-
-  // ── India West ↔ Arabian/African zones — backbone INDIA_W branch [indian_w] causes a
-  // NW detour into the Arabian Sea then loops back east to sri_lanka_s before heading west.
-  // For short routes (Salalah, Mombasa, Durban) the detour is catastrophic; fix with customs.
-
-  // India West ↔ Gulf of Aden (Salalah) — direct WNW across Arabian Sea (no Suez needed).
-  // Without custom: cochin→salalah = 4365nm (should be ~1350nm direct).
-  'ADEN|INDIA_W': [],
-
-  // India West ↔ East Africa (Mombasa / Dar es Salaam) — direct SW across Indian Ocean.
-  // Without custom: cochin→mombasa = 4715nm (should be ~2700nm direct).
-  'EAFRICA|INDIA_W': [],
-
-  // India West ↔ South Africa (Durban) — via Cape Agulhas, not via Suez/bab_mandeb.
-  // Without custom: cochin→durban = 7548nm (should be ~5000nm via Cape).
-  'INDIA_W|SAFRICA': [WP.cape_agulhas],
-
-  // India West ↔ Japan — eastbound via south India tip, not NW into Arabian Sea.
-  // Without custom: cochin→yokohama = 5973nm (should be ~4900nm via Malacca).
-  'INDIA_W|JAPAN': [WP.sri_lanka_s, WP.bengal_e, WP.malacca_n, WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.japan_s],
-
-  // India West ↔ Bangladesh (Chittagong) — eastbound via south India tip + Bay of Bengal.
-  // Without custom: cochin→chittagong = 3029nm (should be ~2050nm via sri_lanka_s+bengal).
-  // Stored BANGLADESH→INDIA_W so reversed for INDIA_W→BANGLADESH gives sri_lanka_s first.
-  'BANGLADESH|INDIA_W': [WP.bengal_ne, WP.bengal_e, WP.sri_lanka_s],
-
-  // ── Malacca Strait ↔ Philippines — via Singapore, no malacca_n NW detour
-  'MALACCA|PH_N': [WP.malacca_s, WP.sg_strait],
-  'MALACCA|PH_C': [WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.visayas],
-  'MALACCA|PH_S': [WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_paracel, WP.sulu_sea, WP.mindanao_s],
-
-  // ── Intra-Americas: fix same-backbone-index (bi=2) detour via Bay of Biscay ──────
-  // US_EAST / US_GULF / BRAZIL / MX_PAC_NW / MX_GULF_CAL all share bi=2 (biscay[46,-5]).
-  // Without custom routes, backbone logic routes every intra-Americas pair through
-  // backbone[2] = biscay (Bay of Biscay, Europe!) — producing ×10–36 ratios.
-
-  // US East coast ↔ US Gulf — south past Florida into Gulf of Mexico
-  'US_EAST|US_GULF':       [WP.florida, WP.gom],
-
-  // Brazil ↔ US East / Gulf — direct NW across Atlantic into Caribbean, then coast
-  // (sa_mid[-15,-25] is a mid-Atlantic waypoint that adds an unnecessary eastward detour
-  //  for these direct Brazil↔US lanes; go straight from Santos to Caribbean/Florida)
-  'BRAZIL|US_EAST':        [WP.carib, WP.florida, WP.us_east_app],
-  'BRAZIL|US_GULF':        [WP.carib, WP.florida, WP.gom],
-
-  // Mexico Pacific NW (Ensenada) ↔ Mexico Gulf of California (Guaymas / La Paz)
-  // — around the southern tip of the Baja Peninsula
-  'MX_GULF_CAL|MX_PAC_NW':  [WP.baja_tip, WP.baja_nw],
-
-  // Mexico Pacific ↔ US East / Gulf — south along Baja + Mexican coast, through Panama
-  'MX_PAC_NW|US_EAST':
-    [WP.baja_nw, WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.us_east_app],
-  'MX_PAC_NW|US_GULF':
-    [WP.baja_nw, WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.gom],
-  'MX_GULF_CAL|US_EAST':
-    [WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.us_east_app],
-  'MX_GULF_CAL|US_GULF':
-    [WP.baja_tip, WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib, WP.florida, WP.gom],
-
-  // Brazil ↔ Mexico Pacific — Caribbean then through Panama westward
-  'BRAZIL|MX_PAC_NW':
-    [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.baja_nw],
-  'BRAZIL|MX_GULF_CAL':
-    [WP.carib, WP.panama_atl, WP.panama_pac, WP.mx_pac_s, WP.baja_tip, WP.gulf_cal],
-};
-
-function haversineNm(p1, p2) {
-  const R = 3440.065;
-  const dLat = (p2[0]-p1[0])*Math.PI/180;
-  const dLon = (p2[1]-p1[1])*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(p1[0]*Math.PI/180)*Math.cos(p2[0]*Math.PI/180)*Math.sin(dLon/2)**2;
-  return 2*R*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function getSeaRoute(portA, portB) {
-  const zA = portZone[portA];
-  const zB = portZone[portB];
-
-  if (!zA || !zB) return [portCoords[portA], portCoords[portB]];
-
-  // Same zone: direct
-  if (zA === zB) return [portCoords[portA], portCoords[portB]];
-
-  // Custom route override (coastal cases where backbone detours are wrong)
-  const sortedZ = [zA, zB].sort();
-  const key = sortedZ[0] + '|' + sortedZ[1];
-  const customWps = customRoutes[key];
-  if (customWps) {
-    const wps = (zA === sortedZ[0]) ? customWps : [...customWps].reverse();
-    return [portCoords[portA], ...wps, portCoords[portB]];
-  }
-
-  const cfgA = zoneConfig[zA];
-  const cfgB = zoneConfig[zB];
-  if (!cfgA || !cfgB) return [portCoords[portA], portCoords[portB]];
-
-  const route = [portCoords[portA]];
-
-  // Branch from port A to backbone.
-  // Branches are stored in backbone→port order, so reverse for outbound.
-  [...cfgA.branch].reverse().forEach(wp => route.push(wp));
-
-  // Backbone segment
-  const biA = cfgA.bi;
-  const biB = cfgB.bi;
-  if (biA <= biB) {
-    for (let i = biA; i <= biB; i++) route.push(backbone[i]);
-  } else {
-    for (let i = biA; i >= biB; i--) route.push(backbone[i]);
-  }
-
-  // Branch from backbone to port B (stored backbone→port, use as-is)
-  cfgB.branch.forEach(wp => route.push(wp));
-
-  route.push(portCoords[portB]);
-  return route;
-}
-
-function routeDistanceNm(route) {
-  let d = 0;
-  for (let i = 0; i < route.length - 1; i++) {
-    d += haversineNm(route[i], route[i+1]);
-  }
-  // Routing overhead: real shipping lanes run ~5% longer than the great-circle
-  // waypoint sum due to coastal hugging, traffic separation schemes, weather
-  // routing, and avoidance of shoals/oil rigs. Calibrated against ~60 reference
-  // distances (sea-distances.org / searates.com).
-  return Math.round(d * 1.05);
-}
-
-// ─── ALTERNATIVE ROUTES (Panama / Cape) ───────────────────────────────────────
-const ASIA_ZONES = ['CN_N','CN_E','CN_S','KR','JAPAN','TAIWAN','VN_N','VN_C','VN_S','SG','GOT','MAL_E','MALACCA','SARAWAK','SABAH','PH_N','PH_C','PH_S','JAVA_W','JAVA_E','BORNEO_S','BORNEO_E','SULAWESI'];
-const AMERICAS_ATL_ZONES = ['US_EAST','US_GULF','BRAZIL'];
-const AMERICAS_PAC_ZONES = ['MX_PAC_NW','MX_GULF_CAL','NORTH_AM_W','S_AM_W'];
-const EUROPE_ZONES = ['NW_EU','MED','MED_E','MARMARA','BLACK_SEA'];
-const INDIAN_ZONES = ['INDIA_W','INDIA_E','SRI_LANKA','BANGLADESH','PG','ADEN','EAFRICA','RED_SEA','PAKISTAN'];
-const AUSTRALIA_ZONES = ['AUS_E','AUS_W','AUS_NW'];
-
-function isAustralia(z) { return AUSTRALIA_ZONES.includes(z); }
-
-function isAsia(z)    { return ASIA_ZONES.includes(z); }
-function isAmericasAtl(z) { return AMERICAS_ATL_ZONES.includes(z); }
-function isAmericasPac(z) { return AMERICAS_PAC_ZONES.includes(z); }
-function isAmericas(z)    { return isAmericasAtl(z) || isAmericasPac(z); }
-function isEurope(z)  { return EUROPE_ZONES.includes(z); }
-
-// Waypoints from an Asian-zone port to east-of-Japan (pac_japan_e) ready for trans-Pacific
-const asianToPacificGateway = {
-  CN_N:    [WP.bohai_e, WP.yellow_n, WP.ecs_n, WP.pac_japan_e],
-  CN_E:    [WP.ecs, WP.pac_japan_e],
-  CN_S:    [WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  KR:      [WP.korea_str, WP.pac_japan_e],
-  TAIWAN:  [WP.taiwan_e, WP.pac_japan_e],
-  VN_N:    [WP.vn_n_off, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  VN_C:    [WP.vn_c_off, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  VN_S:    [WP.vn_s_off, WP.scs_central, WP.scs_paracel, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  SG:      [WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  GOT:     [WP.got_north, WP.got_mid, WP.got_entrance, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  MAL_E:   [WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  MALACCA: [WP.malacca_s, WP.sg_strait, WP.scs_south, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  SARAWAK: [WP.scs_natuna, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  PH_N:    [WP.scs_north, WP.taiwan_s, WP.pac_japan_e],
-  PH_C:    [WP.visayas, WP.pac_japan_e],
-  PH_S:    [WP.mindanao_s, WP.pac_japan_e],
-  JAVA_W:  [WP.java_sea_w, WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  JAVA_E:  [WP.java_sea_e, WP.flores, WP.mindanao_s, WP.pac_japan_e],
-  BORNEO_S:[WP.karimata, WP.scs_central, WP.scs_north, WP.taiwan_s, WP.ecs, WP.pac_japan_e],
-  BORNEO_E:[WP.makassar_n, WP.sulu_sea, WP.mindanao_s, WP.pac_japan_e],
-  SULAWESI:[WP.makassar_s, WP.flores, WP.mindanao_s, WP.pac_japan_e],
-  JAPAN:   [WP.japan_s, WP.pac_japan_e],
-  SABAH:   [WP.borneo_ne, WP.sulu_sea, WP.mindanao_s, WP.pac_japan_e],
-  // Australia → trans-Pacific via mid-Pacific (E coast directly, NW/W up through Coral Sea or PNG)
-  AUS_E:   [WP.aus_e, WP.aus_ne, WP.pac_japan_e],
-  AUS_NW:  [WP.aus_nw, WP.arafura, WP.banda, WP.mindanao_s, WP.pac_japan_e],
-  AUS_W:   [WP.aus_w, WP.aus_nw, WP.arafura, WP.banda, WP.mindanao_s, WP.pac_japan_e],
-};
-
-// Trans-Pacific crossing (pac_japan_e → east Pacific)
-const pacificCrossing = [WP.pac_kuroshio, WP.pac_mid_n, WP.pac_ne_n, WP.pac_ne];
-
-// Panama transit (east Pacific → Panama → Caribbean)
-const panamaToAtl = [WP.mx_pac_s, WP.ca_pac, WP.panama_pac, WP.panama_atl, WP.carib];
-
-// From Caribbean to Atlantic Americas destination zones
-const atlanticBranchIn = {
-  US_EAST: [WP.florida, WP.us_east_app],
-  US_GULF: [WP.florida, WP.gom],
-  BRAZIL:  [WP.sa_mid],
-};
-
-// Waypoints from east Pacific to Mexican Pacific destinations (no Panama transit needed)
-const pacificBranchIn = {
-  MX_PAC_NW:   [WP.baja_nw],
-  MX_GULF_CAL: [WP.baja_tip, WP.gulf_cal],
-};
-
-// Build a Panama-via (trans-Pacific) route between Asia and Americas.
-// Returns null if not applicable.
-function buildPanamaRoute(portA, portB) {
-  const zA = portZone[portA], zB = portZone[portB];
-  if (!zA || !zB) return null;
-
-  // Identify asia side and americas side (either direction)
-  let asiaPort, asiaZ, amPort, amZ;
-  if (isAsia(zA) && isAmericas(zB)) { asiaPort=portA; asiaZ=zA; amPort=portB; amZ=zB; }
-  else if (isAsia(zB) && isAmericas(zA)) { asiaPort=portB; asiaZ=zB; amPort=portA; amZ=zA; }
-  else return null;
-
-  const asianWps = asianToPacificGateway[asiaZ];
-  if (!asianWps) return null;
-
-  let route;
-  if (isAmericasPac(amZ)) {
-    // Pacific destinations (Ensenada / Guaymas / La Paz) — no Panama transit
-    const branch = pacificBranchIn[amZ] || [];
-    route = [portCoords[asiaPort], ...asianWps, ...pacificCrossing, ...branch, portCoords[amPort]];
-  } else {
-    // Atlantic destinations — transit Panama
-    const branch = atlanticBranchIn[amZ] || [];
-    route = [portCoords[asiaPort], ...asianWps, ...pacificCrossing, ...panamaToAtl, ...branch, portCoords[amPort]];
-  }
-
-  // Reverse if we swapped (to keep portA→portB order)
-  if (asiaPort !== portA) route.reverse();
-  return route;
-}
-
-// Cape of Good Hope route: Asia → Malacca → S.Indian → Cape → S.Atlantic → dest
-function buildCapeRoute(portA, portB) {
-  const zA = portZone[portA], zB = portZone[portB];
-  if (!zA || !zB) return null;
-
-  // Most useful: Asia ↔ Atlantic Americas or Europe
-  let eastPort, eastZ, westPort, westZ;
-  if (isAsia(zA) && (isAmericasAtl(zB) || isEurope(zB))) { eastPort=portA; eastZ=zA; westPort=portB; westZ=zB; }
-  else if (isAsia(zB) && (isAmericasAtl(zA) || isEurope(zA))) { eastPort=portB; eastZ=zB; westPort=portA; westZ=zA; }
-  else return null;
-
-  // From Asian port south via Malacca to S.Indian
-  const asianToMalacca = {
-    CN_N: [WP.yellow_n, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    CN_E: [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    CN_S: [WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    KR:   [WP.korea_str, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    TAIWAN: [WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    VN_N: [WP.vn_n_off, WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    VN_C: [WP.vn_c_off, WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    VN_S: [WP.vn_s_off, WP.vn_tip, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    SG:   [WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    GOT:  [WP.got_north, WP.got_mid, WP.got_entrance, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    MAL_E:[WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    MALACCA: [WP.malacca_s, WP.malacca_n],
-    SARAWAK: [WP.scs_natuna, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    PH_N: [WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    PH_C: [WP.visayas, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    PH_S: [WP.sulu_sea, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    JAVA_W: [WP.java_sea_w, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    JAVA_E: [WP.java_sea_e, WP.java_sea_c, WP.java_sea_w, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    BORNEO_S: [WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    BORNEO_E: [WP.makassar_n, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    SULAWESI: [WP.makassar_s, WP.karimata, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-    JAPAN:    [WP.japan_s, WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_central, WP.scs_south, WP.sg_strait, WP.malacca_s, WP.malacca_n],
-  }[eastZ];
-  if (!asianToMalacca) return null;
-
-  const capePath = [WP.s_indian, WP.cape_agulhas, WP.s_atl_w];
-
-  let westBranch;
-  if (isEurope(westZ)) {
-    // After Cape → North up Atlantic → approach Europe via Biscay
-    westBranch = [WP.s_atl_nw, WP.wa_app, WP.biscay];
-    const cfg = zoneConfig[westZ];
-    if (cfg && cfg.branch) westBranch = [...westBranch, ...[...cfg.branch].reverse()];
-  } else if (westZ === 'BRAZIL') {
-    westBranch = [WP.sa_mid];
-  } else {
-    // US_EAST / US_GULF — go N up Atlantic through Caribbean
-    westBranch = [WP.s_atl_nw, WP.carib];
-    const inB = atlanticBranchIn[westZ] || [];
-    westBranch = [...westBranch, ...inB];
-  }
-
-  let route = [portCoords[eastPort], ...asianToMalacca, ...capePath, ...westBranch, portCoords[westPort]];
-  if (eastPort !== portA) route.reverse();
-  return route;
-}
-
-// Route selection entry point. `via` can be 'auto' (default), 'suez', 'panama', 'cape'.
-function getSeaRouteVia(portA, portB, via) {
-  via = via || 'auto';
-  const suezRoute = getSeaRoute(portA, portB); // existing backbone-based (Suez for trans-ocean)
-
-  if (via === 'suez')   return suezRoute;
-  if (via === 'panama') return buildPanamaRoute(portA, portB) || suezRoute;
-  if (via === 'cape')   return buildCapeRoute(portA, portB)   || suezRoute;
-
-  // auto: pick shortest of {suez, panama, cape} where applicable
-  const candidates = [{ name:'suez', route: suezRoute }];
-  const p = buildPanamaRoute(portA, portB);
-  if (p) candidates.push({ name:'panama', route: p });
-  const c = buildCapeRoute(portA, portB);
-  if (c) candidates.push({ name:'cape', route: c });
-
-  candidates.sort((x,y) => routeDistanceNm(x.route) - routeDistanceNm(y.route));
-  return candidates[0].route;
-}
-
-// Compute distance for all route options (used for the comparison hint)
-function getRouteOptions(portA, portB) {
-  if (!portA || !portB || portA === portB) return [];
-  const opts = [];
-  const suez = getSeaRoute(portA, portB);
-  opts.push({ via:'suez', name:'Suez', nm: routeDistanceNm(suez) });
-  const p = buildPanamaRoute(portA, portB);
-  if (p) opts.push({ via:'panama', name:'Panama', nm: routeDistanceNm(p) });
-  const c = buildCapeRoute(portA, portB);
-  if (c) opts.push({ via:'cape', name:'Cape', nm: routeDistanceNm(c) });
-  return opts;
-}
-
-function getDistance(a, b, via) {
-  if (a === b) return 0;
-  // If a specific via is requested, always use waypoint-based distance (not legacy table).
-  if (via && via !== 'auto') {
-    return routeDistanceNm(getSeaRouteVia(a, b, via));
-  }
-  // Auto: try legacy table first (fast, hand-curated), then waypoint routing.
-  const legacy = getDistanceFromTable(a, b);
-  if (legacy !== null) return legacy;
-  return routeDistanceNm(getSeaRouteVia(a, b, 'auto'));
-}
 
 // Update the route-comparison hint panel
 function updateRouteInfoHint(portA, portB, via) {
