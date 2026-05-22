@@ -2996,12 +2996,14 @@ const customRoutes = {
   // ── VN_N (Hai Phong / Cai Lan) to elsewhere — hugging Vietnam coast for short trips,
   // direct across SCS to N. Asia destinations to avoid backbone over-counting.
   // STORAGE DIRECTION matters: zone keys are alphabetical (CN_E|VN_N stored CN_E→VN_N).
-  'CN_E|VN_N':      [WP.vn_n_off],                                // Shanghai→Haiphong direct across SCS (no Hainan detour)
-  // CN_E ↔ VN_C / VN_S — backbone bi=24 (ecs, 28°N/122.5°E) overshoots east of Lianyungang (119.5°E)
-  // and all major CN_E ports (Shanghai ~121.5°E, Ningbo ~121.6°E). Stop at taiwan_str (119.5°E) instead.
-  // Stored CN_E→VN_* direction (C < V alphabetically); reversed for VN→CN_E queries.
-  'CN_E|VN_C':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.scs_paracel],                    // Shanghai↔Da Nang: via Taiwan Strait + SCS spine (skip ecs hook)
-  'CN_E|VN_S':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central],    // Shanghai↔HCM/Phu My: via Taiwan Strait + full SCS (skip ecs hook)
+  // CN_E ↔ Vietnam — all three zones need explicit customs because backbone bi=24 (ecs, 28°N/122.5°E)
+  // overshoots east of every CN_E port (Lianyungang 119.5°E, Shanghai 121.5°E, Ningbo 121.6°E).
+  // VN_N ports (Haiphong, Nghi Son, Cam Pha) sit at 105–107°E — GC to ecs via vn_n_off cuts through
+  // Fujian/Zhejiang mainland.  Fix: route south of Hainan via hainan_e, up SCS, then Taiwan Strait.
+  // Stored CN_E→VN_* direction (C < V alphabetically); reversed automatically for VN→CN_E queries.
+  'CN_E|VN_N':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.hainan_e, WP.vn_n_off],         // Lianyungang/Shanghai↔Haiphong/Nghi Son: Gulf of Tonkin → east of Hainan → SCS → Taiwan Strait
+  'CN_E|VN_C':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.scs_paracel],                    // Shanghai↔Da Nang: via SCS spine + Taiwan Strait (skip ecs hook)
+  'CN_E|VN_S':      [WP.taiwan_str, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central],    // Shanghai↔HCM/Phu My: via full SCS + Taiwan Strait (skip ecs hook)
   'KR|VN_N':        [WP.ecs, WP.vn_n_off],                        // Busan→Haiphong via ECS open water
   'KR|VN_C':        [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.vn_c_off],               // Busan→Da Nang via ECS+SCS
   'KR|VN_S':        [WP.ecs, WP.taiwan_s, WP.scs_north, WP.scs_paracel, WP.scs_central, WP.vn_s_off], // Busan/Gwangyang→HCM direct through ECS+SCS
