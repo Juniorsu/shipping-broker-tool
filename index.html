@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breakbulk & Drybulk Broker Dashboard</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="searoute-bundle.js"></script>
 <style>
   :root {
     --navy:   #f5f0e8;
@@ -225,7 +222,7 @@
   @media print {
     @page { margin: 18mm 14mm; }
     body { background: #fff !important; }
-    header, .news-col, .map-section, .tabs,
+    header, .news-col, .dist-panel, .tabs,
     form, #commodityList, .calc-btn, .copy-btn, .print-btn, .action-btn-row,
     .news-list, .news-feed, .news-sources, .news-filter,
     .quote-header { display: none !important; }
@@ -330,50 +327,33 @@
     line-height: 1.5; font-style: italic;
   }
 
-  /* MAP SECTION */
-  .map-section {
+  /* DISTANCE PANEL */
+  .dist-panel {
     max-width: 1400px; margin: 0 auto 24px; padding: 0 24px;
   }
-  .map-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
-  }
-  .map-header {
+  .dist-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 18px; background: var(--navy2); border-bottom: 1px solid var(--border);
-    flex-wrap: wrap; gap: 10px;
+    padding: 14px 22px; flex-wrap: wrap; gap: 14px;
   }
-  .map-header h3 { font-size: .85rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .map-info-bar {
-    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
-  }
-  .map-stat { text-align: center; }
-  .map-stat .ms-label { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-  .map-stat .ms-val { font-size: .9rem; font-weight: 700; color: var(--accent2); }
-  .speed-control {
-    display: flex; align-items: center; gap: 8px;
-  }
+  .dist-card h3 { font-size: .85rem; color: var(--text); margin: 0; }
+  .dist-stats { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .dist-stat { text-align: center; }
+  .dist-stat .ms-label { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .dist-stat .ms-val { font-size: 1rem; font-weight: 700; color: var(--accent2); }
+  .speed-control { display: flex; align-items: center; gap: 8px; }
   .speed-control label { font-size: .7rem; color: var(--accent2); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; margin: 0; }
-  .speed-control input {
-    width: 72px; padding: 5px 8px; font-size: .8rem;
-    background: #fff; border: 1px solid var(--border); border-radius: 5px;
-    color: var(--text); outline: none;
-  }
+  .speed-control input { width: 72px; padding: 5px 8px; font-size: .8rem; background: #fff; border: 1px solid var(--border); border-radius: 5px; color: var(--text); outline: none; }
   .speed-control input:focus { border-color: var(--accent); }
   .speed-unit { font-size: .72rem; color: var(--muted); }
-  #routeMap { height: 420px; width: 100%; background: var(--navy2); }
-  .map-placeholder {
-    height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: var(--muted); gap: 10px;
-  }
-  .map-placeholder .ph-icon { font-size: 3rem; opacity: .4; }
-  .map-placeholder p { font-size: .82rem; }
+  .dist-note { font-size: .75rem; color: var(--muted); padding: 0 22px 10px; }
 
   /* RESPONSIVE */
   @media (max-width: 900px) {
     .main { grid-template-columns: 1fr; }
     .news-sources { grid-template-columns: repeat(2, 1fr); }
     .quote-card { position: static; }
-    .map-header { flex-direction: column; align-items: flex-start; }
+    .dist-card { flex-direction: column; align-items: flex-start; }
   }
 </style>
 </head>
@@ -654,19 +634,13 @@
         <div class="form-row">
           <div class="form-group">
             <label>Route Via</label>
-            <select id="routeVia" onchange="updateMapRoute(); if(document.getElementById('results').classList.contains('show')) calculateFreight();">
+            <select id="routeVia" onchange="updateDistPanel(); if(document.getElementById('results').classList.contains('show')) calculateFreight();">
               <option value="auto">Auto (Shortest) &mdash; no canal toll</option>
               <option value="suez">Suez Canal &mdash; +$0.70/DWT toll</option>
               <option value="panama">Panama Canal &mdash; +$2.50/DWT toll</option>
               <option value="cape">Cape of Good Hope &mdash; no canal toll</option>
             </select>
             <div class="form-hint">Choose the actual route &mdash; Suez/Panama auto-charge canal toll.</div>
-          </div>
-          <div class="form-group">
-            <label>&nbsp;</label>
-            <div id="routeInfo" class="form-hint" style="padding:8px;background:rgba(184,98,10,.06);border:1px solid rgba(184,98,10,.2);border-radius:6px;color:#7a5020;min-height:36px">
-              Select ports to see route comparison &hellip;
-            </div>
           </div>
         </div>
 
@@ -1241,29 +1215,22 @@
   </div>
 </div>
 
-<!-- ROUTE MAP -->
-<div class="map-section">
-  <div class="map-card">
-    <div class="map-header">
-      <h3>&#128506;&#65039; Voyage Route Map</h3>
-      <div class="map-info-bar">
-        <div class="map-stat"><div class="ms-label">Distance</div><div class="ms-val" id="mapDist">&mdash;</div></div>
-        <div class="map-stat"><div class="ms-label">Sea Days</div><div class="ms-val" id="mapDays">&mdash;</div></div>
-        <div class="map-stat"><div class="ms-label">ETA (from now)</div><div class="ms-val" id="mapEta">&mdash;</div></div>
-        <div class="speed-control">
-          <label>Speed</label>
-          <input type="number" id="mapSpeed" value="11.5" min="6" max="16" step="0.5" oninput="syncSpeed(this);updateMapRoute()">
-          <span class="speed-unit">knots</span>
-        </div>
-      </div>
-    </div>
-    <div id="routeMap">
-      <div class="map-placeholder">
-        <div class="ph-icon">&#128506;&#65039;</div>
-        <p>Select loading &amp; discharging ports above to display the voyage route</p>
+<!-- DISTANCE PANEL -->
+<div class="dist-panel">
+  <div class="dist-card">
+    <h3>&#128205; Voyage Distance</h3>
+    <div class="dist-stats">
+      <div class="dist-stat"><div class="ms-label">Distance</div><div class="ms-val" id="mapDist">&mdash;</div></div>
+      <div class="dist-stat"><div class="ms-label">Sea Days</div><div class="ms-val" id="mapDays">&mdash;</div></div>
+      <div class="dist-stat"><div class="ms-label">ETA (from now)</div><div class="ms-val" id="mapEta">&mdash;</div></div>
+      <div class="speed-control">
+        <label>Speed</label>
+        <input type="number" id="mapSpeed" value="11.5" min="6" max="16" step="0.5" oninput="syncSpeed(this)">
+        <span class="speed-unit">knots</span>
       </div>
     </div>
   </div>
+  <div class="dist-note" id="distNote"></div>
 </div>
 
 <!-- NEWS MODAL -->
@@ -2122,74 +2089,9 @@ function getDistanceFromTable(a, b) {
   return null;
 }
 
-// ─── SEAROUTE-JS ENGINE ───────────────────────────────────────────────────────
-// Loaded asynchronously from Skypack CDN. Until loaded, distances fall back to
-// haversine × 1.15. After loading, all routes use the marnet shortest-path graph.
-
-let _sr = null;                  // searoute function (set after async load)
-const _srCache = new Map();      // LRU-ish cache: "lon,lat|lon,lat" → GeoJSON result
-
-// Forced waypoints [longitude, latitude] that ensure a specific canal is used.
-// These are used when the user explicitly selects Suez / Panama / Cape.
-const CANAL_WP = {
-  suez:   [38.50, 20.00],   // mid Red Sea  — forces route through Suez
-  panama: [-79.55, 8.90],   // Panama Canal Pacific entrance
-  cape:   [18.50, -34.50],  // Cape Agulhas — forces rounding South Africa
-};
-
-// searoute-bundle.js loaded via <script> tag above — available synchronously
-_sr = (typeof window !== 'undefined' && typeof window.searoute === 'function')
-      ? window.searoute
-      : null;
-if (!_sr) console.warn('searoute bundle not found — distance will use haversine fallback');
-
-// Raw searoute call with caching; returns GeoJSON Feature or null
-function _callSr(lonlatA, lonlatB) {
-  if (!_sr) return null;
-  const key = lonlatA[0].toFixed(3)+','+lonlatA[1].toFixed(3)+'|'+
-              lonlatB[0].toFixed(3)+','+lonlatB[1].toFixed(3);
-  if (_srCache.has(key)) return _srCache.get(key);
-  try { const r = _sr(lonlatA, lonlatB, 'nm'); _srCache.set(key, r); return r; }
-  catch(e) { return null; }
-}
-
-// Compose a route, optionally via a forced canal waypoint [lon,lat].
-// Returns [[lat,lon],...] for Leaflet.
-function _srRoute(portA, portB, viaLonLat) {
-  const cA = portCoords[portA], cB = portCoords[portB];
-  if (!cA || !cB) return [cA||[0,0], cB||[0,0]];
-  const llA = [cA[1], cA[0]], llB = [cB[1], cB[0]];
-  const toLatLon = r => r.geometry.coordinates.map(([ln,lt]) => [lt, ln]);
-
-  if (viaLonLat && _sr) {
-    const r1 = _callSr(llA, viaLonLat), r2 = _callSr(viaLonLat, llB);
-    if (r1 && r2) {
-      const pts = [...toLatLon(r1), ...toLatLon(r2).slice(1)];
-      return pts;
-    }
-  }
-  const r = _callSr(llA, llB);
-  return r ? toLatLon(r) : [cA, cB];
-}
-
-// Compute maritime distance (nm). Uses searoute's own length property — more
-// accurate than re-summing haversines on the GeoJSON coordinates.
-function _srDistance(portA, portB, viaLonLat) {
-  const cA = portCoords[portA], cB = portCoords[portB];
-  if (!cA || !cB) return 0;
-  const llA = [cA[1], cA[0]], llB = [cB[1], cB[0]];
-
-  if (viaLonLat && _sr) {
-    const r1 = _callSr(llA, viaLonLat), r2 = _callSr(viaLonLat, llB);
-    if (r1 && r2) return Math.round((r1.properties.length||0)+(r2.properties.length||0));
-  }
-  const r = _callSr(llA, llB);
-  if (r) return Math.round(r.properties.length || 0);
-  // Fallback: haversine × 1.15 (rough sea-distance estimate when not yet loaded)
-  return Math.round(haversineNm(cA, cB) * 1.15);
-}
-
-// ─── PUBLIC ROUTING API (same signatures as old system) ─────────────────────
+// ─── DISTANCE ENGINE ─────────────────────────────────────────────────────────
+// Pure table-lookup. Add port pairs to distTable above for NETPAS accuracy.
+// Unknown pairs fall back to haversine × 1.15 (straight-line sea estimate).
 
 function haversineNm(p1, p2) {
   const R = 3440.065;
@@ -2199,42 +2101,11 @@ function haversineNm(p1, p2) {
   return 2*R*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function getSeaRoute(portA, portB) {
-  return _srRoute(portA, portB, null);
-}
-
-function routeDistanceNm(route) {
-  // Sum haversines along dense searoute output — no 1.05× needed, route is already maritime path
-  let d = 0;
-  for (let i = 0; i < route.length - 1; i++) d += haversineNm(route[i], route[i+1]);
-  return Math.round(d);
-}
-
-function getSeaRouteVia(portA, portB, via) {
-  via = via || 'auto';
-  return _srRoute(portA, portB, CANAL_WP[via] || null);
-}
-
-function getRouteOptions(portA, portB) {
-  if (!portA || !portB || portA === portB || !_sr) return [];
-  const auto   = _srDistance(portA, portB, null);
-  const suezNm = _srDistance(portA, portB, CANAL_WP.suez);
-  const panNm  = _srDistance(portA, portB, CANAL_WP.panama);
-  const capeNm = _srDistance(portA, portB, CANAL_WP.cape);
-  const opts = [{ via:'auto', name:'Shortest', nm: auto }];
-  if (Math.abs(suezNm - auto) > 100) opts.push({ via:'suez',   name:'Suez',   nm: suezNm });
-  if (Math.abs(panNm  - auto) > 100) opts.push({ via:'panama', name:'Panama',  nm: panNm  });
-  if (Math.abs(capeNm - auto) > 100) opts.push({ via:'cape',   name:'Cape',    nm: capeNm });
-  return opts;
-}
-
 function getDistance(a, b, via) {
-  if (a === b) return 0;
-  const wp = (via && via !== 'auto') ? (CANAL_WP[via] || null) : null;
-  if (_sr) return _srDistance(a, b, wp);
-  // Fallback while searoute loads: legacy table then haversine estimate
-  const legacy = getDistanceFromTable(a, b);
-  if (legacy !== null) return legacy;
+  if (!a || !b || a === b) return 0;
+  const leg = getDistanceFromTable(a, b);
+  if (leg !== null) return leg;
+  if (!portCoords[a] || !portCoords[b]) return 0;
   return Math.round(haversineNm(portCoords[a], portCoords[b]) * 1.15);
 }
 
@@ -2343,29 +2214,6 @@ const portZone = {
 };
 
 // Update the route-comparison hint panel
-function updateRouteInfoHint(portA, portB, via) {
-  const el = document.getElementById('routeInfo');
-  if (!el) return;
-  const opts = getRouteOptions(portA, portB);
-  if (opts.length === 0) {
-    el.innerHTML = 'Select both ports to compare routes &hellip;';
-    return;
-  }
-  opts.sort((a,b) => a.nm - b.nm);
-  const shortest = opts[0];
-  const current = opts.find(o => o.via === via) || shortest;
-  const spd = parseFloat(document.getElementById('mapSpeed').value) || 11.5;
-  const days = (current.nm / (spd * 24)).toFixed(1);
-
-  const lines = opts.map(o => {
-    const mark = (o.via === current.via) ? '<b>&#9679; ' + o.name + '</b>' : o.name;
-    const d = (o.nm / (spd * 24)).toFixed(1);
-    const extra = (o.nm - shortest.nm);
-    const delta = extra === 0 ? '<span style="color:#26a65b">shortest</span>' : `+${extra.toLocaleString()} nm`;
-    return `<div>${mark}: ${o.nm.toLocaleString()} nm &mdash; ${d} d &mdash; <span style="opacity:.7">${delta}</span></div>`;
-  });
-  el.innerHTML = lines.join('');
-}
 
 // ─── FREIGHT CALCULATOR ───────────────────────────────────────────────────────
 function calculateFreight() {
@@ -2658,7 +2506,7 @@ function calculateFreight() {
     bunkerCost, hireCost, hireRate, portCosts, canalToll, stevCost, totalCost,
   };
 
-  updateMapRoute();
+  updateDistPanel();
 }
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
@@ -3680,164 +3528,45 @@ ${legsList}
   });
 }
 
-// ─── MAP ──────────────────────────────────────────────────────────────────────
-let leafletMap = null;
-let routeLayer = null;
-let markersLayer = null;
-let bgMarkersLayer = null;
-
-function initMap() {
-  if (leafletMap) return;
-  document.getElementById('routeMap').innerHTML = '';
-  leafletMap = L.map('routeMap', { zoomControl: true, scrollWheelZoom: true })
-    .setView([20, 80], 3);
-  // Ocean base layer — shows bathymetry (depth) in blue/teal shades
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; GEBCO, NOAA, CHS, OSU, UNH, CSUMB, Nat.Geographic, DeLorme, NAVTEQ',
-    maxZoom: 13
-  }).addTo(leafletMap);
-  // Reference overlay — coastlines, labels, borders on top
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
-    attribution: '',
-    maxZoom: 13,
-    opacity: 0.85
-  }).addTo(leafletMap);
-}
-
-// Great-circle interpolation between two points
-function gcInterpolate(p1, p2, steps) {
-  const pts = [];
-  const lat1 = p1[0]*Math.PI/180, lon1 = p1[1]*Math.PI/180;
-  const lat2 = p2[0]*Math.PI/180, lon2 = p2[1]*Math.PI/180;
-  const d = 2*Math.asin(Math.sqrt(
-    Math.pow(Math.sin((lat2-lat1)/2),2) +
-    Math.cos(lat1)*Math.cos(lat2)*Math.pow(Math.sin((lon2-lon1)/2),2)
-  ));
-  for (let i=0; i<=steps; i++) {
-    const f = i/steps;
-    if (d < 0.0001) { pts.push([p1[0], p1[1]]); continue; }
-    const A = Math.sin((1-f)*d)/Math.sin(d);
-    const B = Math.sin(f*d)/Math.sin(d);
-    const x = A*Math.cos(lat1)*Math.cos(lon1) + B*Math.cos(lat2)*Math.cos(lon2);
-    const y = A*Math.cos(lat1)*Math.sin(lon1) + B*Math.cos(lat2)*Math.sin(lon2);
-    const z = A*Math.sin(lat1)                + B*Math.sin(lat2);
-    const lat = Math.atan2(z, Math.sqrt(x*x+y*y))*180/Math.PI;
-    const lon = Math.atan2(y,x)*180/Math.PI;
-    pts.push([lat, lon]);
-  }
-  return pts;
-}
-
-// Build smooth polyline from waypoint array
-function buildSmoothRoute(waypoints) {
-  const allPts = [];
-  for (let i = 0; i < waypoints.length - 1; i++) {
-    const subPts = gcInterpolate(waypoints[i], waypoints[i+1], 12);
-    // Avoid duplicate junction points
-    if (i > 0) subPts.shift();
-    allPts.push(...subPts);
-  }
-  return allPts;
-}
-
-// Unwrap polyline longitudes so the path is continuous across the antimeridian.
-// Each point's longitude is adjusted to be within ±180° of the previous one,
-// allowing Leaflet to draw the full great-circle arc as a single unbroken line
-// (Leaflet supports longitudes outside [−180, 180] on tiled world-wrap maps).
-function unwrapLongitudes(pts) {
-  if (!pts.length) return pts;
-  const out = [[pts[0][0], pts[0][1]]];
-  for (let i = 1; i < pts.length; i++) {
-    let lon = pts[i][1];
-    const prev = out[i - 1][1];
-    while (lon - prev >  180) lon -= 360;
-    while (lon - prev < -180) lon += 360;
-    out.push([pts[i][0], lon]);
-  }
-  return out;
-}
-
-function updateMapRoute() {
+// ─── DISTANCE PANEL ───────────────────────────────────────────────────────────
+function updateDistPanel() {
   const lp  = readPort('loadPort');
   const dp  = readPort('dischargePort');
   const spd = parseFloat(document.getElementById('mapSpeed').value) || 11.5;
-
   document.getElementById('vesselSpeed').value = spd;
 
-  if (!lp || !dp || !portCoords[lp] || !portCoords[dp]) return;
+  const distEl = document.getElementById('mapDist');
+  const daysEl = document.getElementById('mapDays');
+  const etaEl  = document.getElementById('mapEta');
+  const noteEl = document.getElementById('distNote');
 
-  initMap();
+  if (!lp || !dp || !portCoords[lp] || !portCoords[dp]) {
+    if (distEl) distEl.textContent = '—';
+    if (daysEl) daysEl.textContent = '—';
+    if (etaEl)  etaEl.textContent  = '—';
+    if (noteEl) noteEl.textContent = '';
+    return;
+  }
 
-  // Clear old layers
-  if (routeLayer)   { routeLayer.forEach(l=>leafletMap.removeLayer(l));   routeLayer=null; }
-  if (markersLayer) { markersLayer.forEach(l=>leafletMap.removeLayer(l)); markersLayer=null; }
-  if (bgMarkersLayer) { bgMarkersLayer.forEach(l=>leafletMap.removeLayer(l)); bgMarkersLayer=null; }
+  const routeVia = (document.getElementById('routeVia') || {}).value || 'auto';
+  const dist     = getDistance(lp, dp, routeVia);
+  const seaDays  = dist / (spd * 24);
+  const inTable  = getDistanceFromTable(lp, dp) !== null;
 
-  const c1 = portCoords[lp], c2 = portCoords[dp];
-  const routeViaEl = document.getElementById('routeVia');
-  const routeVia = routeViaEl ? routeViaEl.value || 'auto' : 'auto';
-  const dist = getDistance(lp, dp, routeVia);
-  const seaDays = dist / (spd * 24);
-
-  // Update route comparison hint
-  updateRouteInfoHint(lp, dp, routeVia);
-
-  // Get sea route waypoints from marnet graph (already water-only, no smoothing needed)
-  const waypoints = getSeaRouteVia(lp, dp, routeVia);
-  // Unwrap longitudes so trans-Pacific/antimeridian routes draw as one continuous line
-  const unwrapped = unwrapLongitudes(waypoints);
-
-  const routeLine = L.polyline(unwrapped, { color:'#ff5500', weight:3, opacity:.95, dashArray:'10,6' })
-    .addTo(leafletMap);
-  const routeLines = [routeLine];
-
-  // Midpoint marker (use unwrapped coords so it lands on the visible line)
-  const midPt = unwrapped[Math.floor(unwrapped.length/2)];
-  const midIcon = L.divIcon({ className:'', html:'<div style="width:12px;height:12px;background:#fff;border-radius:50%;border:3px solid #ff5500;box-shadow:0 0 10px rgba(255,85,0,.7)"></div>', iconSize:[12,12], iconAnchor:[6,6] });
-  const midMarker = L.marker(midPt, { icon:midIcon }).addTo(leafletMap);
-
-  // Port markers for selected route
-  const loadIcon = L.divIcon({ className:'', html:`<div style="background:#26a65b;color:#fff;padding:3px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5)">\u2B06 ${portNames[lp]}</div>`, iconAnchor:[0,20] });
-  const dischIcon = L.divIcon({ className:'', html:`<div style="background:#e74c3c;color:#fff;padding:3px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5)">\u2B07 ${portNames[dp]}</div>`, iconAnchor:[0,20] });
-
-  const m1 = L.marker(c1, { icon:loadIcon }).addTo(leafletMap);
-  const m2 = L.marker(c2, { icon:dischIcon }).addTo(leafletMap);
-
-  const dot1 = L.circleMarker(c1, { radius:7, color:'#26a65b', fillColor:'#26a65b', fillOpacity:1, weight:2 }).addTo(leafletMap);
-  const dot2 = L.circleMarker(c2, { radius:7, color:'#e74c3c', fillColor:'#e74c3c', fillOpacity:1, weight:2 }).addTo(leafletMap);
-
-  routeLayer   = [...routeLines, midMarker];
-  markersLayer = [m1, m2, dot1, dot2];
-
-  // Background port dots
-  bgMarkersLayer = [];
-  Object.keys(portCoords).forEach(pKey => {
-    if (pKey === lp || pKey === dp) return;
-    const pc = portCoords[pKey];
-    const cm = L.circleMarker(pc, {
-      radius: 3, color:'#4a5568', fillColor:'#4a5568', fillOpacity:0.6, weight:1
-    }).bindTooltip(portNames[pKey] || pKey, {
-      className: '', direction: 'top', offset: [0, -5],
-      opacity: 0.9
-    }).addTo(leafletMap);
-    bgMarkersLayer.push(cm);
-  });
-
-  // Fit map to route — use unwrapped coords so trans-Pacific routes centre correctly
-  const allLatLngs = unwrapped.map(p => L.latLng(p[0], p[1]));
-  const bounds = L.latLngBounds(allLatLngs);
-  leafletMap.fitBounds(bounds, { padding:[50,50] });
-
-  // Update stats
-  document.getElementById('mapDist').textContent = dist.toLocaleString() + ' nm';
-  document.getElementById('mapDays').textContent = seaDays.toFixed(1) + ' d';
+  if (distEl) distEl.textContent = dist.toLocaleString() + ' nm';
+  if (daysEl) daysEl.textContent = seaDays.toFixed(1) + ' d';
   const eta = new Date(); eta.setDate(eta.getDate() + Math.ceil(seaDays));
-  document.getElementById('mapEta').textContent = eta.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+  if (etaEl) etaEl.textContent = eta.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+  if (noteEl) noteEl.textContent = inTable
+    ? '✓ NETPAS-verified distance'
+    : '⚠ Estimated (haversine) — add this pair to the distance table for accuracy';
 }
 
 function syncSpeed(el) {
   document.getElementById('vesselSpeed').value = el.value;
+  updateDistPanel();
 }
+
 
 // ── Port autocomplete ──────────────────────────────────────────────────────
 (function() {
@@ -3983,10 +3712,10 @@ function syncSpeed(el) {
 })();
 
 // Live update map when freight-tab ports change
-document.getElementById('loadPort').addEventListener('change', updateMapRoute);
-document.getElementById('dischargePort').addEventListener('change', updateMapRoute);
-document.getElementById('loadPort').addEventListener('input', updateMapRoute);
-document.getElementById('dischargePort').addEventListener('input', updateMapRoute);
+document.getElementById('loadPort').addEventListener('change', updateDistPanel);
+document.getElementById('dischargePort').addEventListener('change', updateDistPanel);
+document.getElementById('loadPort').addEventListener('input', updateDistPanel);
+document.getElementById('dischargePort').addEventListener('input', updateDistPanel);
 
 // Enter key in a port field blurs it so the 'change' event fires immediately.
 ['loadPort','dischargePort','tceLoadPort','tceDischargePort'].forEach(id => {
@@ -3996,7 +3725,7 @@ document.getElementById('dischargePort').addEventListener('input', updateMapRout
     if (e.key === 'Enter') {
       e.preventDefault();
       el.blur();
-      if (!id.startsWith('tce')) updateMapRoute();
+      if (!id.startsWith('tce')) updateDistPanel();
     }
   });
 });
