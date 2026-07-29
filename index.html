@@ -383,47 +383,30 @@
 
     <div class="section-title">Live Market Intelligence</div>
 
-    <!-- Quick-link news sources -->
+    <!-- Live feed sources — kept in sync with the `feeds` array in fetchLiveNews().
+         Every badge here must correspond to an actual feed pulled below; don't add
+         a badge for a source that isn't live-fetched (that's what caused the mismatch
+         this replaced — 8 badges shown, only 2 of them actually live). -->
     <div class="news-sources">
-      <a href="https://www.tradewindsnews.com" target="_blank" class="news-source">
-        <div class="src-icon">&#128240;</div>
-        <div class="src-name">TradeWinds</div>
-        <div class="src-desc">Shipping news leader</div>
-      </a>
       <a href="https://splash247.com" target="_blank" class="news-source">
         <div class="src-icon">&#127754;</div>
         <div class="src-name">Splash247</div>
         <div class="src-desc">Global maritime</div>
+      </a>
+      <a href="https://gcaptain.com" target="_blank" class="news-source">
+        <div class="src-icon">&#9875;</div>
+        <div class="src-name">gCaptain</div>
+        <div class="src-desc">Maritime news &amp; ops</div>
       </a>
       <a href="https://www.hellenicshippingnews.com" target="_blank" class="news-source">
         <div class="src-icon">&#127963;&#65039;</div>
         <div class="src-name">Hellenic Shipping</div>
         <div class="src-desc">Bulk &amp; market data</div>
       </a>
-      <a href="https://www.maritime-executive.com" target="_blank" class="news-source">
-        <div class="src-icon">&#128478;&#65039;</div>
-        <div class="src-name">Maritime Exec</div>
-        <div class="src-desc">Industry analysis</div>
-      </a>
-      <a href="https://www.lloydslist.com" target="_blank" class="news-source">
-        <div class="src-icon">&#9875;</div>
-        <div class="src-name">Lloyd's List</div>
-        <div class="src-desc">Premium intel</div>
-      </a>
-      <a href="https://www.breakbulk.com" target="_blank" class="news-source">
-        <div class="src-icon">&#128230;</div>
-        <div class="src-name">Breakbulk</div>
-        <div class="src-desc">Project cargo focus</div>
-      </a>
-      <a href="https://www.balticexchange.com" target="_blank" class="news-source">
-        <div class="src-icon">&#128202;</div>
-        <div class="src-name">Baltic Exchange</div>
-        <div class="src-desc">Freight indices</div>
-      </a>
-      <a href="https://www.portnews.ru/en/" target="_blank" class="news-source">
+      <a href="https://www.porttechnology.org" target="_blank" class="news-source">
         <div class="src-icon">&#128674;</div>
-        <div class="src-name">PortNews</div>
-        <div class="src-desc">Port intelligence</div>
+        <div class="src-name">Port Technology</div>
+        <div class="src-desc">Port &amp; terminal news</div>
       </a>
     </div>
 
@@ -1251,135 +1234,15 @@ document.getElementById('curDate').textContent =
 
 
 // ─── NEWS DATA ───────────────────────────────────────────────────────────────
-const newsItems = [
-  {
-    type:'bb', hot:false, alert:false, live:false,
-    headline:'Steel coil exports from SE Asia surge as infrastructure demand spikes in East Africa corridor',
-    source:'TradeWinds', time:'2h ago',
-    body:`Breakbulk operators report a significant uptick in steel coil bookings from Malaysian and Thai mills destined for Mombasa, Dar es Salaam, and Beira. Infrastructure projects funded by Chinese and Gulf capital are driving the demand, with charterers reporting difficulty sourcing geared vessels in the 5,000\u201310,000 DWT range. Freight ideas for this route have firmed by approximately 8\u201312% over Q4 levels.\n\nVessel owners are increasingly selective, preferring longer-term period charters over spot fixtures amid the positive rate environment.`
-  },
-  {
-    type:'db', hot:true, alert:false, live:false,
-    headline:'Grain volumes from Black Sea ports up 18% YTD \u2014 small bulk carriers in high demand',
-    source:'Hellenic Shipping News', time:'3h ago',
-    body:`Ukrainian and Romanian grain exports through Constanta and Odessa have rebounded strongly, with handysize and small supramax vessels particularly in demand. Charterers are facing a tight prompt tonnage position in the 10,000\u201325,000 DWT segment throughout April and May.\n\nFertilizer and bagged grain movements to North Africa and the Eastern Mediterranean are contributing to the squeeze. Freight for grain Constanta/Egypt has firmed to around USD 18\u201322/MT for prompt loading.`
-  },
-  {
-    type:'mkt', hot:false, alert:false, live:false,
-    headline:'BSI touches 1,024 points \u2014 analysts flag seasonal demand as key driver for Q2 outlook',
-    source:'Baltic Exchange', time:'4h ago',
-    body:`The Baltic Supramax Index (BSI-58) has reached its highest level since November 2024, supported by strong demand across multiple commodity segments. Agricultural shipments, Indian sub-continent coal imports, and Indonesian clinker/cement exports are cited as primary drivers.\n\nAnalysts at Braemar and Clarksons note that vessel supply growth remains subdued, with limited newbuilding deliveries in the small bulk segment expected through 2026. This supports a constructive outlook for freight rates in the 3,000\u201330,000 DWT space.`
-  },
-  {
-    type:'port', hot:false, alert:true, live:false,
-    headline:'Port congestion worsens at Nhava Sheva \u2014 waiting times exceed 6 days for bulk vessels',
-    source:'Maritime Executive', time:'5h ago',
-    body:`Congestion at Jawaharlal Nehru Port (Nhava Sheva / JNPT) has intensified due to a combination of increased steel imports, fertilizer arrivals ahead of kharif season, and ongoing berth maintenance. Vessels under 15,000 DWT are reportedly waiting 5\u20137 days for berth.\n\nBrokers advise charterers to factor additional waiting time into laytime calculations and to discuss despatch/demurrage clauses carefully. Colombo and Mundra are being considered as alternative discharge hubs for some cargoes.`
-  },
-  {
-    type:'reg', hot:false, alert:false, live:false,
-    headline:'IMO 2025 MARPOL amendments: CII rating impact on small bulk carrier chartering decisions',
-    source:'Lloyd\'s List', time:'6h ago',
-    body:`The Carbon Intensity Indicator (CII) framework introduced under IMO 2025 amendments is increasingly influencing chartering decisions in the small to mid-size bulk segment. Vessels with D or E ratings are finding it harder to secure charters, with some charterers imposing CII warranties in standard charter parties.\n\nOwners of older handysize and small supramax tonnage are evaluating speed reduction and fuel optimization strategies. Brokers report that vessels with verified B or C ratings command a premium of USD 500\u20131,500/day in the current market.`
-  },
-  {
-    type:'bb', hot:false, alert:false, live:false,
-    headline:'Project cargo market: Renewable energy equipment drives breakbulk demand across Southeast Asia',
-    source:'Breakbulk Magazine', time:'7h ago',
-    body:`Wind turbine components, solar panel manufacturing equipment, and grid infrastructure hardware are fueling a sustained breakbulk market across the ASEAN region. Vietnam, Indonesia, and the Philippines are primary destinations, with European manufacturers (Germany, Denmark, Spain) dominating the cargo flow.\n\nGeared vessels with heavy-lift capability in the 7,000\u201315,000 DWT range are particularly sought after. Charterers note that scheduling flexibility is limited due to complex port logistics and crane availability issues.`
-  },
-  {
-    type:'db', hot:false, alert:false, live:false,
-    headline:'Indonesian coal exports to South Asia rise \u2014 handysize preferred for river-accessible terminals',
-    source:'Splash247', time:'8h ago',
-    body:`South Kalimantan coal shipments to Bangladesh, Sri Lanka, and southern Indian coastal ports have increased, with charterers specifically seeking geared handysize vessels capable of self-discharge at shallow-draft river terminals. The 5,000\u201312,000 DWT segment is particularly active.\n\nFreight on Muara Satui/Chittagong has been quoted at USD 12\u201316/MT basis 7,000 DWT geared vessel for prompt April lifting. Owners are pushing for higher rates given limited prompt tonnage availability.`
-  },
-  {
-    type:'port', hot:false, alert:false, live:false,
-    headline:'Jebel Ali introduces new berth allocation system to reduce vessel waiting times',
-    source:'PortNews', time:'9h ago',
-    body:`DP World has implemented a revised pre-arrival notification and berth reservation system at Jebel Ali Port (JEBEL ALI, UAE) to streamline bulk cargo handling. The new system requires 72-hour pre-arrival notice and advance cargo documentation submission.\n\nThe measure is expected to reduce average waiting times from 3.5 to under 1.5 days for bulk vessels under 30,000 DWT. Brokers operating Middle East routes are advised to update standard fixture clauses accordingly.`
-  },
-  {
-    type:'mkt', hot:false, alert:false, live:false,
-    headline:'Bunker prices ease slightly as crude softens \u2014 VLSFO at Singapore drops to $498/MT',
-    source:'Hellenic Shipping News', time:'10h ago',
-    body:`VLSFO prices at the Singapore hub have declined to USD 498/MT as of mid-week, tracking a modest retreat in crude oil benchmarks. MGO remains elevated at USD 685/MT, a gap of USD 187/MT that continues to incentivize VLSFO compliance.\n\nFor voyage calculations on typical SE Asia routes, the bunker cost component for a 10,000 DWT vessel over a 15-day round voyage is estimated at USD 70,000\u201390,000 at current prices. Brokers should ensure freight quotations reflect current bunker actuals.`
-  },
-  {
-    type:'reg', hot:false, alert:false, live:false,
-    headline:'Bangladesh introduces new port state control campaign targeting small bulk carriers',
-    source:'Maritime Executive', time:'12h ago',
-    body:`The Department of Shipping of Bangladesh has launched an enhanced Port State Control inspection campaign at Chittagong targeting vessels in the 3,000\u201320,000 DWT range. Focus areas include fire safety equipment, life-saving appliances, cargo hold conditions, and structural integrity documentation.\n\nOwners trading to Chittagong are advised to ensure pre-arrival inspections are complete and all certificates are current. Vessels with outstanding deficiencies risk detention, with significant commercial implications for time-sensitive charters.`
-  },
-  // ─── ADDITIONAL NEWS ITEMS ─────────────────────────────────────────
-  {
-    type:'port', hot:true, alert:true, live:false,
-    headline:'Tianjin / Xingang congestion intensifies \u2014 coal import surge clogs berths for 8+ days',
-    source:'Splash247', time:'1h ago',
-    body:`A record influx of thermal coal imports at Tianjin/Xingang has led to severe congestion, with bulk carriers waiting 8\u201310 days for berth. Chinese utilities are restocking ahead of summer peak demand, and vessels in the 10,000\u201325,000 DWT range are most affected.\n\nBrokers report demurrage claims mounting rapidly. Some charterers are diverting cargoes to Dalian and Qingdao, but those ports are also experiencing increased waiting times of 3\u20135 days.`
-  },
-  {
-    type:'db', hot:true, alert:false, live:false,
-    headline:'Vietnam clinker and cement exports boom \u2014 Hai Phong and Ho Chi Minh terminals at capacity',
-    source:'TradeWinds', time:'2h ago',
-    body:`Vietnamese clinker exports have surged 25% YoY, driven by strong demand from the Philippines, Bangladesh, and East Africa. Hai Phong and Ho Chi Minh City terminals are operating at near-full capacity, with loading delays of 2\u20134 days common.\n\nFreight rates for clinker Hai Phong/Manila on 10,000 DWT geared vessels have firmed to USD 14\u201318/MT. Vung Tau and Quy Nhon are emerging as alternative loading points for southern Vietnamese mills.`
-  },
-  {
-    type:'bb', hot:false, alert:false, live:false,
-    headline:'Philippines infrastructure push drives steel rebar and HRC imports through Manila and Batangas',
-    source:'Hellenic Shipping News', time:'3h ago',
-    body:`The Philippine government\'s Build Build Build program continues to fuel strong steel import demand. Manila and Batangas are the primary discharge ports, with Cebu and Davao also seeing increased breakbulk steel volumes. Geared vessels of 7,500\u201315,000 DWT are preferred.\n\nFreight ideas from Guangzhou and Shenzhen to Manila have been assessed at USD 12\u201316/MT basis 10,000 DWT geared. Iloilo and General Santos are developing as secondary discharge points for Visayas and Mindanao projects.`
-  },
-  {
-    type:'db', hot:false, alert:false, live:false,
-    headline:'Indonesia nickel ore shipments from Sulawesi rise \u2014 Makassar and Balikpapan loading active',
-    source:'Lloyd\'s List', time:'4h ago',
-    body:`Nickel ore exports from eastern Indonesia have increased as Chinese smelters rebuild inventories. Makassar and Balikpapan are the main loading ports, with cargoes typically shipped on 7,500\u201320,000 DWT geared vessels to Chinese discharge ports including Lianyungang, Ningbo, and Zhanjiang.\n\nThe Indonesian government\'s ore export quota system continues to create periodic supply disruptions, adding volatility to the freight market. Brokers advise securing tonnage early for confirmed quotas.`
-  },
-  {
-    type:'mkt', hot:false, alert:false, live:false,
-    headline:'Malaysia palm oil shipments firm \u2014 Pasir Gudang and Kuantan loading berths tight',
-    source:'PortNews', time:'5h ago',
-    body:`Palm oil export volumes from Malaysia have strengthened with seasonal harvest peaks. Pasir Gudang (Johor) and Kuantan are the busiest loading terminals, with vessels waiting 1\u20133 days. Bintulu handles palm kernel cargoes alongside its LNG traffic.\n\nTimber and plywood exports from Tanjung Manis and Bintulu (Sarawak) continue at steady volumes, mostly bound for South Asian and Middle Eastern markets. Freight rates for timber Tanjung Manis/Dubai assessed around USD 22\u201328/MT on 5,000 DWT geared.`
-  },
-  {
-    type:'port', hot:false, alert:false, live:false,
-    headline:'Malacca Strait traffic reaches record levels \u2014 VTS advisories issued for small bulk carriers',
-    source:'Maritime Executive', time:'6h ago',
-    body:`Vessel Traffic Service (VTS) authorities in the Malacca Strait have issued advisories as daily transit volumes hit new records. Small bulk carriers in the 3,000\u201315,000 DWT range are advised to maintain enhanced lookout and AIS reporting.\n\nThe congestion is concentrated around the Singapore Strait eastern approach, where anchorages at both Singapore and Pasir Gudang are near capacity. Penang and Belawan transits are reported as normal.`
-  },
-  {
-    type:'mkt', hot:false, alert:false, live:false,
-    headline:'Bunker update: VLSFO spread narrows between Singapore and Zhoushan \u2014 Chinese bunkers gain share',
-    source:'Hellenic Shipping News', time:'7h ago',
-    body:`VLSFO prices at Zhoushan (Ningbo) have moved to within USD 8/MT of Singapore levels, at USD 490/MT. Chinese bunker suppliers are aggressively competing for market share in the East Asian small bulk segment.\n\nVessels trading China-SE Asia routes are increasingly bunkering at Zhoushan or Guangzhou rather than Singapore, saving both time and cost. MGO availability at Philippine ports remains limited, with Cebu and Manila the only reliable supply points.`
-  },
-  {
-    type:'db', hot:false, alert:false, live:false,
-    headline:'Small bulk freight rates for coal S.Kalimantan/China firm on strong demand',
-    source:'Baltic Exchange', time:'8h ago',
-    body:`Freight rates for thermal coal from South Kalimantan (Banjarmasin / Samarinda loading) to Chinese discharge ports have firmed to USD 10\u201314/MT on 10,000\u201315,000 DWT geared vessels. Demand from smaller Chinese coastal power plants unable to accommodate capesize vessels is driving the mini-bulk segment.\n\nThe Banjarmasin-Ningbo route is particularly active, with multiple fixtures reported in the past week at rates 8\u201312% above March levels.`
-  },
-  {
-    type:'bb', hot:false, alert:false, live:false,
-    headline:'Breakbulk cement demand spikes in Mindanao \u2014 Davao and General Santos discharge volumes up 30%',
-    source:'Breakbulk Magazine', time:'9h ago',
-    body:`Cement and clinker imports into Mindanao have surged as construction activity accelerates in Davao, General Santos, and Cagayan de Oro. Vietnamese and Chinese mills are the primary origins, with 7,500\u201312,500 DWT geared vessels preferred for the trade.\n\nPort infrastructure in CDO and GenSan is being upgraded, but current berth capacity is strained. Brokers report 2\u20134 day waiting times at both ports during peak periods.`
-  },
-  {
-    type:'mkt', hot:false, alert:false, live:false,
-    headline:'Handysize period rates for SE Asia trading firm to $5,500\u2013$6,500/day on 12-month TC',
-    source:'Clarksons Research', time:'11h ago',
-    body:`Period rates for handysize (8,000\u201315,000 DWT) geared bulk carriers trading within Southeast Asia have firmed to USD 5,500\u20136,500/day on 12-month time charter. This represents a 15% increase over the same period last year.\n\nThe premium is driven by strong regional cargo flows in coal, clinker, cement, and agricultural products. Owners with modern, well-maintained tonnage are in a strong negotiating position, particularly for vessels with CII ratings of B or better.`
-  },
-  {
-    type:'port', hot:false, alert:false, live:false,
-    headline:'Semarang port expansion nears completion \u2014 new bulk berth to double capacity',
-    source:'PortNews', time:'13h ago',
-    body:`Tanjung Emas port in Semarang (Central Java) is completing a new deep-water bulk berth expected to double the port\'s dry bulk handling capacity. The facility will accommodate vessels up to 20,000 DWT.\n\nThis expansion is expected to relieve pressure on Surabaya and Jakarta for Java-bound bulk cargoes, particularly coal and cement. Commercial operations are expected to begin in Q3 2026.`
-  },
-];
+const newsItems = [];
+// All items are populated live from real RSS feeds by fetchLiveNews() below.
+// Previously this array held ~20 hand-written headlines (fake BSI/VLSFO figures,
+// fake port congestion reports) attributed to real outlets like TradeWinds and
+// Baltic Exchange. They were visually indistinguishable from real reporting, and
+// scanRssForBunkerPrices() (below) was reading fabricated "$498/MT" style figures
+// out of them and writing them into the freight calculator's bunker price fields.
+// Do not add hand-written headlines back here — if a source has no live feed,
+// leave it out rather than fabricate its content.
 
 let activeFilter = 'all';
 function filterNews(type, btn) {
@@ -1421,15 +1284,33 @@ function renderNews() {
         </div>
       </div>
     `;
-  }).join('') || '<div style="padding:20px;color:var(--muted);text-align:center">No items for this filter.</div>';
+  }).join('') || `<div style="padding:20px;color:var(--muted);text-align:center">${
+    newsItems.length === 0
+      ? '&#8987; Loading live market news&hellip;'
+      : 'No items for this filter.'
+  }</div>`;
 }
 renderNews();
 
 // ─── LIVE RSS FEED ───────────────────────────────────────────────────────────
+// Best-effort keyword classifier so live RSS items land in the right filter tab
+// (Breakbulk / Drybulk / Ports & Routes / Market / Regulation) instead of every
+// item defaulting to "Market". Order matters — first match wins.
+function classifyNewsType(headline, body) {
+  const text = (headline + ' ' + (body || '')).toLowerCase();
+  if (/\bimo\b|marpol|sanction|port state control|\bpsc\b|\bcii\b|\beexi\b|regulat|compliance|flag state/.test(text)) return 'reg';
+  if (/breakbulk|project cargo|heavy.?lift|steel (coil|rebar|plate|billet)|wind turbine|out.?of.?gauge|\boog\b/.test(text)) return 'bb';
+  if (/dry bulk|bulk carrier|\bgrain\b|\bcoal\b|iron ore|nickel ore|bauxite|clinker|\bcement\b|fertilizer|supramax|handysize|panamax|capesize|kamsarmax|ultramax/.test(text)) return 'db';
+  if (/\bport\b|berth|terminal|congestion|anchorage|\bcanal\b|\bstrait\b|pilotage|stevedor|waiting time/.test(text)) return 'port';
+  return 'mkt';
+}
+
 async function fetchLiveNews() {
   const feeds = [
     'https://api.rss2json.com/v1/api.json?rss_url=https://splash247.com/feed/',
     'https://api.rss2json.com/v1/api.json?rss_url=https://gcaptain.com/feed/',
+    'https://api.rss2json.com/v1/api.json?rss_url=https://www.hellenicshippingnews.com/feed/',
+    'https://api.rss2json.com/v1/api.json?rss_url=https://www.porttechnology.org/feed/',
   ];
   try {
     const results = await Promise.allSettled(feeds.map(url => fetch(url).then(r => r.json())));
@@ -1443,21 +1324,27 @@ async function fetchLiveNews() {
             const hoursAgo = Math.round((Date.now() - pubDate.getTime()) / 3600000);
             if (hoursAgo > 48) return; // skip items older than 2 days
             const timeStr = hoursAgo < 1 ? 'Just now' : hoursAgo + 'h ago';
-            newsItems.unshift({
-              type: 'mkt', hot: false, alert: false, live: true,
+            const bodyText = (item.description || item.content || 'No additional details available.').replace(/<[^>]+>/g, '');
+            newsItems.push({
+              type: classifyNewsType(item.title, bodyText), hot: false, alert: false, live: true,
               headline: item.title,
               source: result.value.feed ? result.value.feed.title : 'RSS Feed',
               time: timeStr,
-              body: (item.description || item.content || 'No additional details available.').replace(/<[^>]+>/g, '')
+              _hoursAgo: hoursAgo,
+              body: bodyText
             });
             liveCount++;
           }
         });
       }
     });
-    if (liveCount > 0) renderNews();
+    if (liveCount > 0) {
+      newsItems.sort((a, b) => (a._hoursAgo ?? 0) - (b._hoursAgo ?? 0));
+      renderNews();
+    }
   } catch (e) {
-    // Silently fall back to static items
+    // Feeds unreachable (offline / all proxies down) — the panel just stays empty
+    // rather than showing anything fabricated. renderNews()'s "no items" message covers this.
   }
 }
 fetchLiveNews();
@@ -2341,6 +2228,44 @@ const portZone = {
 
 // Update the route-comparison hint panel
 
+// ─── MARKET HIRE-RATE BENCHMARK (single source of truth) ─────────────────────
+// The Baltic Exchange doesn't publish a free public API/RSS, so this is a manually
+// maintained snapshot, not a live feed — it WILL drift from the real market over
+// time. Update the $/day figures below (and HIRE_RATE_ASOF) whenever you check them
+// against current BSI / BPI5TC / BHSI assessments. Every tab that shows a market
+// hire rate reads this one table via getMarketHireGeared() and displays its age via
+// hireRateAgeLabel(), so staleness is visible in the UI instead of silent.
+const HIRE_RATE_ASOF = '2026-05-15'; // YYYY-MM-DD — last checked against Baltic Exchange assessments
+const HIRE_RATE_TABLE = [
+  { max: 3800,     rate: 2888  },  // 2,750 x 1.05
+  { max: 5500,     rate: 3150  },  // 3,000 x 1.05
+  { max: 7800,     rate: 3675  },  // 3,500 x 1.05
+  { max: 9500,     rate: 4463  },  // 4,250 x 1.05
+  { max: 13000,    rate: 5460  },  // 5,200 x 1.05
+  { max: 15500,    rate: 6563  },  // 6,250 x 1.05
+  { max: 17500,    rate: 7875  },  // 7,500 x 1.05
+  { max: 19500,    rate: 9188  },  // 8,750 x 1.05
+  { max: 25500,    rate: 10763 },  // 10,250 x 1.05
+  { max: 30000,    rate: 12600 },  // 12,000 x 1.05  handysize
+  { max: 40000,    rate: 14175 },  // 13,500 x 1.05  handymax
+  { max: 55000,    rate: 15750 },  // 15,000 x 1.05  supramax
+  { max: 70000,    rate: 18900 },  // 18,000 x 1.05  ultramax     (BSI ~$17,500–19,000/d)
+  { max: 78000,    rate: 19950 },  // 19,000 x 1.05  panamax      (BPI5TC ~$18,500–20,000/d)
+  { max: Infinity, rate: 21000 },  // 20,000 x 1.05  kamsarmax    (~108% BPI → ~$20,000–22,000/d)
+];
+function getMarketHireGeared(dwt) {
+  return HIRE_RATE_TABLE.find(b => dwt <= b.max).rate;
+}
+function hireRateAgeDays() {
+  return Math.round((Date.now() - new Date(HIRE_RATE_ASOF + 'T00:00:00Z').getTime()) / 86400000);
+}
+function hireRateAgeLabel() {
+  const days = hireRateAgeDays();
+  const color = days > 120 ? '#e74c3c' : days > 60 ? '#f5a623' : '#7a6a55';
+  const warn = days > 120 ? ' — overdue for a check against current Baltic Exchange levels' : '';
+  return `<span style="color:${color}" title="Hand-calibrated against Baltic Exchange assessments — not a live feed">\u{1F4C5} Rate benchmark as of ${HIRE_RATE_ASOF} (${days}d old)${warn}</span>`;
+}
+
 // ─── FREIGHT CALCULATOR ───────────────────────────────────────────────────────
 function calculateFreight() {
   const commodity = document.getElementById('commodity').value;
@@ -2447,23 +2372,8 @@ function calculateFreight() {
   const totalVlsfoMt   = seaVlsfoMt + portVlsfoMt;
 
   // Vessel hire (TCE-equivalent owner's earnings target — 1.05x overhead on base market rate)
-  // Rates calibrated to May 2026 Baltic Exchange: BPI5TC ~$18,500–20,000/d, BSI ultramax ~$18,000/d
-  let hireRateGeared;
-  if      (dwt <= 3800)  hireRateGeared = 2888;     // 2,750 x 1.05
-  else if (dwt <= 5500)  hireRateGeared = 3150;     // 3,000 x 1.05
-  else if (dwt <= 7800)  hireRateGeared = 3675;     // 3,500 x 1.05
-  else if (dwt <= 9500)  hireRateGeared = 4463;     // 4,250 x 1.05
-  else if (dwt <= 13000) hireRateGeared = 5460;     // 5,200 x 1.05
-  else if (dwt <= 15500) hireRateGeared = 6563;     // 6,250 x 1.05
-  else if (dwt <= 17500) hireRateGeared = 7875;     // 7,500 x 1.05
-  else if (dwt <= 19500) hireRateGeared = 9188;     // 8,750 x 1.05
-  else if (dwt <= 25500) hireRateGeared = 10763;    // 10,250 x 1.05
-  else if (dwt <= 30000) hireRateGeared = 12600;    // 12,000 x 1.05  handysize
-  else if (dwt <= 40000) hireRateGeared = 14175;    // 13,500 x 1.05  handymax
-  else if (dwt <= 55000) hireRateGeared = 15750;    // 15,000 x 1.05  supramax
-  else if (dwt <= 70000) hireRateGeared = 18900;    // 18,000 x 1.05  ultramax     (BSI ~$17,500–19,000/d May 2026)
-  else if (dwt <= 78000) hireRateGeared = 19950;    // 19,000 x 1.05  panamax      (BPI5TC ~$18,500–20,000/d May 2026)
-  else                   hireRateGeared = 21000;    // 20,000 x 1.05  kamsarmax    (~108% BPI → ~$20,000–22,000/d May 2026)
+  // See HIRE_RATE_TABLE / getMarketHireGeared() above — single shared benchmark, not a live feed.
+  const hireRateGeared = getMarketHireGeared(dwt);
 
   const hireRate = vesselType === 'gearless'
     ? Math.round(hireRateGeared * 0.88)
@@ -2610,6 +2520,7 @@ function calculateFreight() {
     ${portVlsfo > 0 ? `<div class="breakdown-row"><span class="b-label">Port VLSFO 380cst (working) @ $${vlsfoPrice}/MT &mdash; ${portVlsfo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portVlsfoMt.toFixed(1)} MT / $${portVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b> (${totalVlsfoMt.toFixed(1)} MT VLSFO + ${totalMgoMt.toFixed(1)} MT MGO)</span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire equiv. ($${hireRate.toLocaleString()}/day \u00D7 ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${hireRateAgeLabel()}</span><span class="b-val"></span></div>
     <div class="breakdown-row"><span class="b-label">Port costs (load $${loadPortRate.toFixed(2)} + disch $${dischPortRate.toFixed(2)} \u00D7 ${dwt.toLocaleString()} DWT)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${canalLines.map(c => `<div class="breakdown-row"><span class="b-label">${c.label}</span><span class="b-val">$${c.amt.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`).join('')}
     ${(vesselType === 'gearless' || vesselType === 'either') ? `<div class="breakdown-row"><span class="b-label">Shore crane \u2014 ${craneAccount === 'owner' ? 'Owner\u2019s account' : 'Charterer\u2019s account'}</span><span class="b-val">${includeCrane ? '$'+gearlessSurcharge.toLocaleString('en',{maximumFractionDigits:0}) : 'Excluded (chrtrs acct)'}</span></div>` : ''}
@@ -2783,23 +2694,8 @@ function calculateTCE() {
   const netToVessel = netRevenue - totalVoyageOpex;
   const tceDay = netToVessel / totalDays;
 
-  // Market hire rate for comparison (kept in sync with calculateFreight's hireRateGeared)
-  let marketHireGeared;
-  if      (dwt <= 3800)  marketHireGeared = 2888;
-  else if (dwt <= 5500)  marketHireGeared = 3150;
-  else if (dwt <= 7800)  marketHireGeared = 3675;
-  else if (dwt <= 9500)  marketHireGeared = 4463;
-  else if (dwt <= 13000) marketHireGeared = 5460;
-  else if (dwt <= 15500) marketHireGeared = 6563;
-  else if (dwt <= 17500) marketHireGeared = 7875;
-  else if (dwt <= 19500) marketHireGeared = 9188;
-  else if (dwt <= 25500) marketHireGeared = 10763;
-  else if (dwt <= 30000) marketHireGeared = 12600;
-  else if (dwt <= 40000) marketHireGeared = 14175;
-  else if (dwt <= 55000) marketHireGeared = 15750;
-  else if (dwt <= 70000) marketHireGeared = 18900;    // ultramax     (BSI ~$17,500–19,000/d May 2026)
-  else if (dwt <= 78000) marketHireGeared = 19950;    // panamax      (BPI5TC ~$18,500–20,000/d May 2026)
-  else                   marketHireGeared = 21000;    // kamsarmax    (~108% BPI → ~$20,000–22,000/d May 2026)
+  // Market hire rate for comparison — shared HIRE_RATE_TABLE, see getMarketHireGeared() above.
+  const marketHireGeared = getMarketHireGeared(dwt);
   const marketHire = vesselType === 'gearless' ? Math.round(marketHireGeared * 0.88) : marketHireGeared;
 
   // Display
@@ -2811,7 +2707,7 @@ function calculateTCE() {
   if (Math.abs(diffPct) < 5)        { vsClass='par';   vsText=`At market (~$${marketHire.toLocaleString()}/d)`; }
   else if (diff > 0)                { vsClass='above'; vsText=`▲ $${Math.round(diff).toLocaleString()}/d above market ($${marketHire.toLocaleString()}/d) — owner-friendly`; }
   else                              { vsClass='below'; vsText=`▼ $${Math.abs(Math.round(diff)).toLocaleString()}/d below market ($${marketHire.toLocaleString()}/d) — charterer-friendly`; }
-  document.getElementById('tceVsMarket').innerHTML = `<div class="tce-vs-market ${vsClass}">${vsText}</div>`;
+  document.getElementById('tceVsMarket').innerHTML = `<div class="tce-vs-market ${vsClass}">${vsText}</div><div style="font-size:.68rem;margin-top:4px">${hireRateAgeLabel()}</div>`;
 
   document.getElementById('tceVoyageTags').innerHTML = `
     <div class="vtag">⚓ ${portNames[loadPort]||loadPort} → ${portNames[dischPort]||dischPort}</div>
@@ -3003,22 +2899,10 @@ function calculateMulti() {
 
   const bunkerCost = (seaIfo*seaDays + portIfo*portDays)*vlsfoPrice + (seaMgo*seaDays + portMgo*portDays)*mgoPrice;
 
-  // Hire
-  let h;
-  if      (dwt <= 3800) h = 2888;
-  else if (dwt <= 5500) h = 3150;
-  else if (dwt <= 7800) h = 3675;
-  else if (dwt <= 9500) h = 4463;
-  else if (dwt <= 13000) h = 5460;
-  else if (dwt <= 15500) h = 6563;
-  else if (dwt <= 17500) h = 7875;
-  else if (dwt <= 19500) h = 9188;
-  else if (dwt <= 25500) h = 10763;
-  else if (dwt <= 30000) h = 12600;
-  else if (dwt <= 40000) h = 14175;
-  else if (dwt <= 55000) h = 15750;
-  else if (dwt <= 70000) h = 17325;
-  else                   h = 18900;
+  // Hire — shared HIRE_RATE_TABLE, see getMarketHireGeared() above.
+  // (This bracket previously had its own copy that disagreed with the Freight/TCE
+  // tabs above 55,000 DWT — 17,325/18,900 here vs. 18,900/19,950/21,000 there.)
+  let h = getMarketHireGeared(dwt);
   if (vesselType === 'gearless') h = Math.round(h * 0.88);
   const hireRate = h;
   const hireCost = h * totalDays;
@@ -3121,6 +3005,7 @@ function calculateMulti() {
     <div class="breakdown-row"><span class="b-label">Port bunker (${portDays.toFixed(1)} port days)</span><span class="b-val">$${(portIfo*portDays*vlsfoPrice + portMgo*portDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b></span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire ($${hireRate.toLocaleString()}/d × ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${hireRateAgeLabel()}</span><span class="b-val"></span></div>
     <div class="breakdown-row" style="background:rgba(184,98,10,.06);font-weight:700"><span class="b-label">📍 Port costs (${stops.length} ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${portCostsHtml}
     ${canalLines.map(c => `<div class="breakdown-row"><span class="b-label">${c.label}</span><span class="b-val">$${c.amt.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`).join('')}
