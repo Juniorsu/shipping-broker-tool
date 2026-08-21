@@ -591,6 +591,17 @@
         </div>
 
         <div class="form-group">
+          <label>Ballast Leg (days to load port)</label>
+          <select id="ballastDays">
+            <option value="0">0 days &mdash; vessel already at load port / open there</option>
+            <option value="1">1 day &mdash; vessel very close (same range)</option>
+            <option value="2" selected>2 days &mdash; typical (nearby open position)</option>
+            <option value="3">3 days &mdash; maximum acceptable steaming to load port</option>
+          </select>
+          <div class="form-hint">Positioning voyage the owner must steam to reach the load port &mdash; burns hire + bunkers with no cargo earning. Capped at 3 days: beyond that the vessel is not a realistic candidate. Applies to all tabs.</div>
+        </div>
+
+        <div class="form-group">
           <label>Voyage Buffer (extra days)</label>
           <select id="bufferDays">
             <option value="0">0 days &mdash; tight (no allowance)</option>
@@ -2235,24 +2246,36 @@ const portZone = {
 // against current BSI / BPI5TC / BHSI assessments. Every tab that shows a market
 // hire rate reads this one table via getMarketHireGeared() and displays its age via
 // hireRateAgeLabel(), so staleness is visible in the UI instead of silent.
-const HIRE_RATE_ASOF = '2026-05-15'; // YYYY-MM-DD — last checked against Baltic Exchange assessments
+const HIRE_RATE_ASOF = '2026-08-19'; // YYYY-MM-DD — last checked against Baltic Exchange assessments
+// Anchors (Baltic, 19-Aug-2026): BHSI 38K = $15,605/d · BSI 58K = $20,651/d · BPI 82K = $18,964/d.
+// Bands at/above 30,000 DWT are index-backed. Bands BELOW 30,000 DWT are INTERPOLATED
+// ESTIMATES — the Baltic publishes nothing under Handysize, so correct these against
+// real intra-Asia fixtures as you see them.
 const HIRE_RATE_TABLE = [
-  { max: 3800,     rate: 2888  },  // 2,750 x 1.05
-  { max: 5500,     rate: 3150  },  // 3,000 x 1.05
-  { max: 7800,     rate: 3675  },  // 3,500 x 1.05
-  { max: 9500,     rate: 4463  },  // 4,250 x 1.05
-  { max: 13000,    rate: 5460  },  // 5,200 x 1.05
-  { max: 15500,    rate: 6563  },  // 6,250 x 1.05
-  { max: 17500,    rate: 7875  },  // 7,500 x 1.05
-  { max: 19500,    rate: 9188  },  // 8,750 x 1.05
-  { max: 25500,    rate: 10763 },  // 10,250 x 1.05
-  { max: 30000,    rate: 12600 },  // 12,000 x 1.05  handysize
-  { max: 40000,    rate: 14175 },  // 13,500 x 1.05  handymax
-  { max: 55000,    rate: 15750 },  // 15,000 x 1.05  supramax
-  { max: 70000,    rate: 18900 },  // 18,000 x 1.05  ultramax     (BSI ~$17,500–19,000/d)
-  { max: 78000,    rate: 19950 },  // 19,000 x 1.05  panamax      (BPI5TC ~$18,500–20,000/d)
-  { max: Infinity, rate: 21000 },  // 20,000 x 1.05  kamsarmax    (~108% BPI → ~$20,000–22,000/d)
+  { max: 3800,     rate: 4200  },  // estimate — no index coverage
+  { max: 5500,     rate: 4800  },  // estimate — no index coverage
+  { max: 7800,     rate: 6000  },  // estimate — no index coverage
+  { max: 9500,     rate: 6900  },  // estimate — no index coverage
+  { max: 13000,    rate: 8200  },  // estimate — no index coverage
+  { max: 15500,    rate: 9500  },  // estimate — no index coverage
+  { max: 17500,    rate: 10600 },  // estimate — no index coverage
+  { max: 19500,    rate: 11600 },  // estimate — no index coverage
+  { max: 25500,    rate: 13300 },  // estimate — no index coverage
+  { max: 30000,    rate: 14400 },  // estimate, interpolated toward BHSI
+  { max: 40000,    rate: 15600 },  // handymax     (BHSI 38K ~$15,605/d)
+  { max: 55000,    rate: 18500 },  // supramax     (between BHSI and BSI)
+  { max: 70000,    rate: 20700 },  // ultramax     (BSI 58K ~$20,651/d)
+  { max: 78000,    rate: 19500 },  // panamax      (BPI ~$18,964/d — was over-quoting)
+  { max: Infinity, rate: 20000 },  // kamsarmax    (BPI 82K ~$18,964/d — was over-quoting)
 ];
+// Ballast leg (shared across Freight / TCE / Multi-port tabs).
+// Owners only quote vessels already near the load port, so this is deliberately
+// capped at 3 days — a longer positioning leg means the vessel is not a candidate.
+function getBallastDays() {
+  const el = document.getElementById('ballastDays');
+  const v = el ? parseFloat(el.value) : NaN;
+  return isNaN(v) ? 2 : Math.min(Math.max(v, 0), 3);
+}
 function getMarketHireGeared(dwt) {
   return HIRE_RATE_TABLE.find(b => dwt <= b.max).rate;
 }
@@ -2261,8 +2284,8 @@ function hireRateAgeDays() {
 }
 function hireRateAgeLabel() {
   const days = hireRateAgeDays();
-  const color = days > 120 ? '#e74c3c' : days > 60 ? '#f5a623' : '#7a6a55';
-  const warn = days > 120 ? ' — overdue for a check against current Baltic Exchange levels' : '';
+  const color = days > 60 ? '#e74c3c' : days > 30 ? '#f5a623' : '#7a6a55';
+  const warn = days > 60 ? ' — overdue for a check against current Baltic Exchange levels' : '';
   return `<span style="color:${color}" title="Hand-calibrated against Baltic Exchange assessments — not a live feed">\u{1F4C5} Rate benchmark as of ${HIRE_RATE_ASOF} (${days}d old)${warn}</span>`;
 }
 
@@ -2309,7 +2332,9 @@ function calculateFreight() {
   const distance = getDistance(loadPort, dischPort, routeVia);
   const speed    = parseFloat(document.getElementById('vesselSpeed').value) || 11.5;
   document.getElementById('mapSpeed').value = speed;
-  const seaDays  = distance / (speed * 24);
+  const ladenSeaDays = distance / (speed * 24);
+  const ballastDays  = getBallastDays();          // positioning leg to load port (0-3 d)
+  const seaDays  = ladenSeaDays + ballastDays;    // owner burns hire + bunkers on both
 
   // Port days
   const loadDays  = quantity / loadRate;
@@ -2514,8 +2539,8 @@ function calculateFreight() {
   `;
 
   document.getElementById('breakdown').innerHTML = `
-    <div class="breakdown-row"><span class="b-label">Sea VLSFO (main) @ $${vlsfoPrice}/MT &mdash; ${seaVlsfo} MT/d \u00D7 ${seaDays.toFixed(1)} d</span><span class="b-val">${seaVlsfoMt.toFixed(1)} MT / $${seaVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
-    <div class="breakdown-row"><span class="b-label">Sea MGO (aux) @ $${mgoPrice}/MT &mdash; ${seaMgo} MT/d \u00D7 ${seaDays.toFixed(1)} d</span><span class="b-val">${seaMgoMt.toFixed(1)} MT / $${seaMgoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Sea VLSFO (main) @ $${vlsfoPrice}/MT &mdash; ${seaVlsfo} MT/d \u00D7 ${seaDays.toFixed(1)} d (${ladenSeaDays.toFixed(1)} laden + ${ballastDays.toFixed(1)} ballast)</span><span class="b-val">${seaVlsfoMt.toFixed(1)} MT / $${seaVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Sea MGO (aux) @ $${mgoPrice}/MT &mdash; ${seaMgo} MT/d \u00D7 ${seaDays.toFixed(1)} d (${ladenSeaDays.toFixed(1)} laden + ${ballastDays.toFixed(1)} ballast)</span><span class="b-val">${seaMgoMt.toFixed(1)} MT / $${seaMgoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label">Port MGO (aux) @ $${mgoPrice}/MT &mdash; ${portMgo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portMgoMt.toFixed(1)} MT / $${portMgoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${portVlsfo > 0 ? `<div class="breakdown-row"><span class="b-label">Port VLSFO 380cst (working) @ $${vlsfoPrice}/MT &mdash; ${portVlsfo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portVlsfoMt.toFixed(1)} MT / $${portVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b> (${totalVlsfoMt.toFixed(1)} MT VLSFO + ${totalMgoMt.toFixed(1)} MT MGO)</span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
@@ -2538,7 +2563,7 @@ function calculateFreight() {
   window._lastFreightQuote = {
     loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
     quantity, commodity: commodityKey || 'general', basis, totalDays,
-    seaDays, portDays, bufferDays: bufferDaysSafe,
+    seaDays, ladenSeaDays, ballastDays, portDays, bufferDays: bufferDaysSafe,
     freightRate, freightLow, freightHigh,
     bunkerCost, hireCost, hireRate, portCosts, canalToll, stevCost, totalCost,
   };
@@ -2592,7 +2617,9 @@ function calculateTCE() {
 
   // Compute voyage costs (same logic as freight calc, EXCLUDING hire — TCE backs out the hire-equivalent)
   const distance = getDistance(loadPort, dischPort, routeVia);
-  const seaDays  = distance / (speed * 24);
+  const ladenSeaDays = distance / (speed * 24);
+  const ballastDays  = getBallastDays();
+  const seaDays  = ladenSeaDays + ballastDays;
   const portDays = quantity / loadRate + quantity / dischRate;
   // Voyage buffer (shared from Freight tab)
   const bufferDaysRaw = parseFloat(document.getElementById('bufferDays').value);
@@ -2738,7 +2765,7 @@ function calculateTCE() {
   window._lastTceQuote = {
     loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
     quantity, commodity: commodityKey || 'general', basis, totalDays,
-    seaDays, portDays, bufferDays,
+    seaDays, ladenSeaDays, ballastDays, portDays, bufferDays,
     freightOffered, tceDay, marketHire,
     bunkerCost, portCosts, canalToll, stevCost, craneCost,
     grossRevenue, netRevenue, netToVessel, commissionPct,
@@ -2889,7 +2916,9 @@ function calculateMulti() {
   const sf = Math.pow(speed / 11.5, 1.5);
   seaIfo *= sf; seaMgo *= sf;
 
-  const seaDays = totalDistance / (speed * 24);
+  const ladenSeaDays = totalDistance / (speed * 24);
+  const ballastDays  = getBallastDays();
+  const seaDays = ladenSeaDays + ballastDays;
   // Port days = sum of (qty / rate) for each stop
   const portDays = stops.reduce((acc, s) => acc + s.qty / (s.type === 'load' ? loadRate : dischRate), 0);
   // Voyage buffer (shared from Freight tab)
@@ -3001,7 +3030,7 @@ function calculateMulti() {
   document.getElementById('multiBreakdown').innerHTML = `
     <div class="breakdown-row" style="background:rgba(184,98,10,.06);font-weight:700"><span class="b-label">📍 Voyage legs</span><span class="b-val">Total ${totalDistance.toLocaleString()} nm</span></div>
     ${legsHtml}
-    <div class="breakdown-row"><span class="b-label">Sea bunker (${seaDays.toFixed(1)} sea days @ ${(seaIfo+seaMgo).toFixed(1)} MT/d)</span><span class="b-val">$${(seaIfo*seaDays*vlsfoPrice + seaMgo*seaDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row"><span class="b-label">Sea bunker (${seaDays.toFixed(1)} sea days incl. ${ballastDays.toFixed(1)} d ballast @ ${(seaIfo+seaMgo).toFixed(1)} MT/d)</span><span class="b-val">$${(seaIfo*seaDays*vlsfoPrice + seaMgo*seaDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label">Port bunker (${portDays.toFixed(1)} port days)</span><span class="b-val">$${(portIfo*portDays*vlsfoPrice + portMgo*portDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b></span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire ($${hireRate.toLocaleString()}/d × ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
@@ -3022,7 +3051,7 @@ function calculateMulti() {
   window._lastMultiQuote = {
     stops, legs, totalDistance, viaLabel, dwt, speed, vesselType,
     totalLoad, commodity: commodityKey || 'general', basis, totalDays,
-    seaDays, portDays, bufferDays,
+    seaDays, ladenSeaDays, ballastDays, portDays, bufferDays,
     freightRate, freightLow, freightHigh,
     bunkerCost, hireCost, hireRate, portCosts, canalToll, stevCost, totalCost,
   };
@@ -3484,7 +3513,7 @@ ${stopsList}
 📦 Total cargo: ${q.totalLoad.toLocaleString()} MT ${q.commodity} | ${q.basis.toUpperCase()}
 🚢 ${q.dwt.toLocaleString()} DWT | ${q.vesselType} | ${q.speed} kts
 🛳 via ${q.viaLabel} | ${q.totalDistance.toLocaleString()} nm | ${q.totalDays.toFixed(1)} days
-   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + ${(q.bufferDays ?? 1).toFixed(1)} d buffer)
+   (${(q.ladenSeaDays ?? q.seaDays).toFixed(1)} d laden + ${(q.ballastDays ?? 0).toFixed(1)} d ballast + ${q.portDays.toFixed(1)} d port + ${(q.bufferDays ?? 1).toFixed(1)} d buffer)
 
 📏 Voyage legs:
 ${legsList}
@@ -3509,7 +3538,7 @@ ${legsList}
 📦 ${q.quantity.toLocaleString()} MT ${q.commodity} | ${q.basis.toUpperCase()}
 🚢 ${q.dwt.toLocaleString()} DWT | ${q.vesselType} | ${q.speed} kts
 📏 ${q.distance.toLocaleString()} nm via ${q.viaLabel} | ${q.totalDays.toFixed(1)} days
-   (${q.seaDays.toFixed(1)} d sea + ${q.portDays.toFixed(1)} d port + ${(q.bufferDays ?? 1).toFixed(1)} d buffer)
+   (${(q.ladenSeaDays ?? q.seaDays).toFixed(1)} d laden + ${(q.ballastDays ?? 0).toFixed(1)} d ballast + ${q.portDays.toFixed(1)} d port + ${(q.bufferDays ?? 1).toFixed(1)} d buffer)
 
 💵 Bunker:    $${Math.round(q.bunkerCost).toLocaleString()}
    Hire eq:   $${Math.round(q.hireCost).toLocaleString()} ($${q.hireRate.toLocaleString()}/d)
