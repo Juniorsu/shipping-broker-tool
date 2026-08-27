@@ -20,13 +20,17 @@
     --blue:   #e2dace;
     --accent: #b8620a;
     --accent2:#9a5210;
-    --gold:   #a86c10;
+    --gold:   #8a5808;
     --green:  #1a7a48;
     --red:    #c0392b;
     --text:   #2a1e0e;
-    --muted:  #7a6a55;
+    --muted:  #63533e;
     --border: #c8b89a;
     --card:   #faf6ef;
+    /* Status colours for badges/hints. Chosen to clear 4.5:1 on --card, unlike the
+       var(--warn) / var(--ok) pair inherited from the original dark theme. */
+    --warn:   #8a5408;
+    --ok:     #1a7a48;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--navy); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
@@ -78,7 +82,7 @@
   .news-source:hover { border-color: var(--accent); background: var(--blue); transform: translateY(-2px); }
   .news-source .src-icon { font-size: 1.4rem; margin-bottom: 4px; }
   .news-source .src-name { font-size: .72rem; font-weight: 600; color: var(--accent2); }
-  .news-source .src-desc { font-size: .65rem; color: var(--muted); margin-top: 2px; }
+  .news-source .src-desc { font-size: .7rem; color: var(--muted); margin-top: 2px; }
 
   .news-feed { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .news-filter {
@@ -86,10 +90,11 @@
     border-bottom: 1px solid var(--border);
   }
   .filter-btn {
-    padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
+    display: inline-flex; align-items: center; min-height: 32px;
+    padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border);
     background: transparent; color: var(--muted); font-size: .72rem; cursor: pointer; transition: all .2s;
   }
-  .filter-btn.active, .filter-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-btn.active, .filter-btn:hover { background: #9a5210; border-color: #9a5210; color: #fff; }
 
   .news-list { max-height: 460px; overflow-y: auto; }
   .news-list::-webkit-scrollbar { width: 4px; }
@@ -105,21 +110,21 @@
   .news-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
   .news-dot.hot { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
   .news-dot.alert { background: var(--red); }
-  .news-dot.live { background: #00e676; box-shadow: 0 0 8px #00e676; animation: livePulse 1.5s infinite; }
+  .news-dot.live { background: var(--green); box-shadow: 0 0 8px rgba(26,122,72,.5); animation: livePulse 1.5s infinite; }
   @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.5} }
   .news-content {}
   .news-headline { font-size: .83rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
-  .news-meta { display: flex; gap: 10px; font-size: .68rem; color: var(--muted); align-items: center; flex-wrap: wrap; }
+  .news-meta { display: flex; gap: 10px; font-size: .7rem; color: var(--muted); align-items: center; flex-wrap: wrap; }
   .news-tag {
-    display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: .62rem;
+    display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: .7rem;
     font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
   }
   .tag-bb { background: rgba(245,166,35,.15); color: var(--gold); }
-  .tag-db { background: rgba(184,98,10,.12); color: var(--accent); }
-  .tag-port { background: rgba(38,166,91,.15); color: var(--green); }
+  .tag-db { background: rgba(143,75,8,.12); color: #8f4b08; }
+  .tag-port { background: rgba(20,97,57,.15); color: #146139; }
   .tag-mkt { background: rgba(240,176,64,.15); color: var(--accent2); }
   .tag-reg { background: rgba(231,76,60,.15); color: var(--red); }
-  .tag-live { background: rgba(0,230,118,.2); color: #00e676; }
+  .tag-live { background: rgba(20,97,57,.15); color: #146139; }
 
   /* NEWS MODAL */
   .modal-overlay {
@@ -190,7 +195,7 @@
     flex: 1; padding: 9px; border: none; background: var(--navy); color: var(--muted);
     cursor: pointer; font-size: .8rem; transition: all .2s;
   }
-  .vessel-toggle button.active { background: var(--accent); color: #fff; }
+  .vessel-toggle button.active { background: #9a5210; color: #fff; }
 
   .calc-btn {
     width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #7a3a05);
@@ -357,6 +362,26 @@
   .speed-unit { font-size: .72rem; color: var(--muted); }
   .dist-note { font-size: .75rem; color: var(--muted); padding: 0 22px 10px; }
 
+  /* KEYBOARD FOCUS — only a border-colour change existed, and it did not cover
+     buttons, tabs or links at all, so tabbing through the tool was invisible.
+     :focus-visible keeps mouse clicks from showing a ring. */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect users who ask the OS to reduce motion — the LIVE dot pulses forever. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* RECENT QUOTES */
   .hist-panel {
     max-width: 1400px; margin: 0 auto 22px; padding: 0 22px;
@@ -364,8 +389,9 @@
   .hist-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
   .hist-head h3 { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.3px; }
   .hist-clear {
+    display:inline-flex; align-items:center; min-height:32px;
     background:transparent; border:1px solid var(--border); border-radius:6px;
-    padding:3px 10px; font-size:.68rem; color:var(--muted); cursor:pointer;
+    padding:3px 12px; font-size:.72rem; color:var(--muted); cursor:pointer;
   }
   .hist-clear:hover { border-color:var(--red); color:var(--red); }
   #quoteHistory {
@@ -384,6 +410,18 @@
   .hist-meta { font-size:.65rem; color:var(--muted); margin-top:2px; }
   .hist-val { font-size:.82rem; font-weight:700; white-space:nowrap; }
   .hist-foot { font-size:.62rem; color:var(--muted); margin-top:6px; text-align:right; }
+
+  /* Comfortable touch targets on phones — the multi-port stop rows and the small
+     inline controls were 24-29px, below the ~32px minimum for reliable tapping. */
+  @media (max-width: 768px) {
+    .multi-stop-row input,
+    .multi-stop-row select,
+    .speed-control input,
+    .stop-remove {
+      min-height: 36px;
+    }
+    .stop-remove { min-width: 36px; }
+  }
 
   /* RESPONSIVE */
   @media (max-width: 900px) {
@@ -690,16 +728,16 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:-4px;margin-bottom:10px;flex-wrap:wrap">
           <button type="button" onclick="fetchCPCPrices(true)"
-             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(38,166,91,0.15);border:1px solid rgba(38,166,91,0.4);border-radius:6px;color:#26a65b;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s"
+             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(38,166,91,0.15);border:1px solid rgba(38,166,91,0.4);border-radius:6px;color:#146139;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s"
              onmouseover="this.style.background='rgba(38,166,91,0.3)'" onmouseout="this.style.background='rgba(38,166,91,0.15)'">
             &#8635; Refresh Live CPC Prices
           </button>
           <a href="https://www.cpc.com.tw/en/News_Content.aspx?n=2671&s=3104" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(184,98,10,0.1);border:1px solid rgba(184,98,10,0.35);border-radius:6px;color:#b8620a;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
+             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(184,98,10,0.1);border:1px solid rgba(184,98,10,0.35);border-radius:6px;color:#8f4b08;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
              onmouseover="this.style.background='rgba(184,98,10,0.2)'" onmouseout="this.style.background='rgba(184,98,10,0.1)'">
             &#9981; Open CPC Page
           </a>
-          <div id="bunkerPriceHint" class="form-hint" style="margin:0;font-size:11px;color:#f5a623">&#9203; Preparing to fetch CPC bunker prices&hellip;</div>
+          <div id="bunkerPriceHint" class="form-hint" style="margin:0;font-size:11px;color:var(--warn)">&#9203; Preparing to fetch CPC bunker prices&hellip;</div>
         </div>
 
         <div class="form-group">
@@ -1461,15 +1499,15 @@ function bunkerAgeDays(iso) {
 // a hand-typed override, or the stale built-in seed.
 function bunkerPriceNote() {
   if (bunkerPriceSource === 'manual') {
-    return '<span style="color:#7a6a55" title="You typed these prices in by hand.">✎ manually entered</span>';
+    return '<span style="color:var(--muted)" title="You typed these prices in by hand.">✎ manually entered</span>';
   }
   if (bunkerPriceSource === 'cpc' && bunkerPriceStamp) {
     const d = bunkerAgeDays(bunkerPriceStamp);
-    const col = d > 7 ? '#f5a623' : '#26a65b';
+    const col = d > 7 ? 'var(--warn)' : 'var(--ok)';
     return `<span style="color:${col}" title="Fetched from CPC Taiwan. Note this is a Taiwan retail schedule, not the Singapore benchmark most fixtures are quoted against.">⛽ CPC Taiwan reading, ${d === 0 ? 'today' : d + 'd old'}</span>`;
   }
   const d = bunkerAgeDays(BUNKER_SEED_ASOF + 'T00:00:00Z');
-  const col = d > 60 ? '#e74c3c' : d > 30 ? '#f5a623' : '#7a6a55';
+  const col = d > 60 ? 'var(--red)' : d > 30 ? 'var(--warn)' : 'var(--muted)';
   const warn = d > 60 ? ' — refresh before quoting' : '';
   return `<span style="color:${col}" title="No live price was fetched, so these are the built-in seed values from ${BUNKER_SEED_ASOF}. Click Refresh Live CPC Prices, or type current figures in.">⚠ built-in default from ${BUNKER_SEED_ASOF} (${d}d old)${warn}</span>`;
 }
@@ -1480,7 +1518,7 @@ const CPC_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 function setBunkerHint(msg, color) {
   const hint = document.getElementById('bunkerPriceHint');
   if (!hint) return;
-  hint.style.color = color || '#f5a623';
+  hint.style.color = color || 'var(--warn)';
   hint.innerHTML = msg;
   hint.style.display = '';
 }
@@ -1567,7 +1605,7 @@ async function fetchCPCPrices(forceRefresh) {
     const cached = JSON.parse(localStorage.getItem(CPC_CACHE_KEY) || 'null');
     if (cached && !forceRefresh && (Date.now() - cached.ts) < CPC_CACHE_TTL_MS) {
       applyCpcPrices(cached);
-      setBunkerHint(`\u26FD CPC prices (cached ${new Date(cached.ts).toLocaleString()}) &mdash; VLSFO $${cached.vlsfoUsd}/MT, MGO $${cached.mgoUsd}/MT. Click Refresh for latest.`, '#26a65b');
+      setBunkerHint(`\u26FD CPC prices (cached ${new Date(cached.ts).toLocaleString()}) &mdash; VLSFO $${cached.vlsfoUsd}/MT, MGO $${cached.mgoUsd}/MT. Click Refresh for latest.`, 'var(--ok)');
       return;
     }
   } catch(e) {}
@@ -1580,13 +1618,13 @@ async function fetchCPCPrices(forceRefresh) {
     setBunkerHint(rssFound
       ? '\u26A0 CPC fetch blocked (CORS). Fell back to RSS scan &mdash; verify via CPC link.'
       : '\u26A0 Could not fetch CPC prices (CORS/network). Edit prices manually or open CPC page.',
-      '#e74c3c');
+      'var(--red)');
     return;
   }
 
   let { vlsfoUsd, mgoUsd } = parseCpcPrices(html);
   if (!vlsfoUsd && !mgoUsd) {
-    setBunkerHint('\u26A0 Fetched CPC page but could not find prices in markup. Check CPC page &mdash; structure may have changed.', '#e74c3c');
+    setBunkerHint('\u26A0 Fetched CPC page but could not find prices in markup. Check CPC page &mdash; structure may have changed.', 'var(--red)');
     return;
   }
 
@@ -1595,7 +1633,7 @@ async function fetchCPCPrices(forceRefresh) {
   if (mgoUsd   != null && (mgoUsd   < 300 || mgoUsd   > 2000)) mgoUsd   = null;
 
   if (!vlsfoUsd && !mgoUsd) {
-    setBunkerHint('\u26A0 Parsed numbers from CPC page but they fell outside plausible range &mdash; check manually.', '#e74c3c');
+    setBunkerHint('\u26A0 Parsed numbers from CPC page but they fell outside plausible range &mdash; check manually.', 'var(--red)');
     return;
   }
 
@@ -1609,7 +1647,7 @@ async function fetchCPCPrices(forceRefresh) {
   const parts = [];
   if (vlsfoUsd) parts.push(`VLSFO $${vlsfoUsd}/MT`);
   if (mgoUsd)   parts.push(`MGO $${mgoUsd}/MT`);
-  setBunkerHint(`\u26FD CPC live (${new Date().toLocaleString()}) &mdash; ${parts.join(' &middot; ')}`, '#26a65b');
+  setBunkerHint(`\u26FD CPC live (${new Date().toLocaleString()}) &mdash; ${parts.join(' &middot; ')}`, 'var(--ok)');
 }
 
 function applyCpcPrices(p) {
@@ -2258,8 +2296,8 @@ function getDistance(a, b, via) {
 // Small inline badge for the results header.
 function distanceNote(exact) {
   return exact
-    ? '<span style="color:#26a65b" title="From the curated port-pair distance table (charted sea route).">✓ charted</span>'
-    : '<span style="color:#f5a623" title="No table entry for this pair — great-circle estimate × 1.15. Cuts across land, so it can understate routes that must go around a coastline. Treat as indicative and verify before fixing.">≈ estimated</span>';
+    ? '<span style="color:var(--ok)" title="From the curated port-pair distance table (charted sea route).">✓ charted</span>'
+    : '<span style="color:var(--warn)" title="No table entry for this pair — great-circle estimate × 1.15. Cuts across land, so it can understate routes that must go around a coastline. Treat as indicative and verify before fixing.">≈ estimated</span>';
 }
 
 // ── DEAD CODE REMOVED: WP, backbone, zoneConfig, customRoutes, asianToPacificGateway,
@@ -2420,7 +2458,7 @@ function hireRateAgeDays() {
 }
 function hireRateAgeLabel() {
   const days = hireRateAgeDays();
-  const color = days > 60 ? '#e74c3c' : days > 30 ? '#f5a623' : '#7a6a55';
+  const color = days > 60 ? 'var(--red)' : days > 30 ? 'var(--warn)' : 'var(--muted)';
   const warn = days > 60 ? ' — overdue for a check against current Baltic Exchange levels' : '';
   return `<span style="color:${color}" title="Hand-calibrated against Baltic Exchange assessments — not a live feed">\u{1F4C5} Rate benchmark as of ${HIRE_RATE_ASOF} (${days}d old)${warn}</span>`;
 }
