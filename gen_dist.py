@@ -66,7 +66,7 @@ EAST_ASIA = {
   'manila','subic','batangas','limay','sual','cebu','iloilo','cdo','davao','gensan','zamboanga',
   'bangkok','laem_chabang','map_ta_phut','songkhla','sihanoukville',
   'ho_chi_minh','vung_tau','phu_my','danang','quynhon','dung_quat',
-  'nghi_son','cailan','cam_pha','haiphong','yangon',
+  'nghi_son','cailan','cam_pha','haiphong',
   'spore','port_klang','penang','kuantan','kemaman','pasir_gudang',
   'tanjung_manis','bintulu','miri','kuching','labuan','kota_kinabalu',
   'sandakan','lahad_datu','tawau',
@@ -252,7 +252,8 @@ _col = { # colombo distances to W destinations
   'tema':5600,'abidjan':5500,'dakar':6300,
 }
 for port,delta in [('chennai',300),('tuticorin',200),('kakinada',350),
-                    ('vizag',400),('paradip',500),('haldia',650)]:
+                    ('vizag',400),('paradip',500),('haldia',650),
+                    ('yangon',800)]:
   for dest,base in _col.items():
     add(port,dest,base+delta)
 # India East coast intra
@@ -263,6 +264,47 @@ add('chennai','vizag',350); add('chennai','kakinada',380); add('chennai','paradi
 add('chennai','haldia',600); add('chittagong','haldia',300); add('chittagong','paradip',350)
 add('vizag','kakinada',50); add('vizag','paradip',160); add('vizag','haldia',310)
 add('paradip','haldia',160); add('kakinada','paradip',130)
+
+# ── Yangon / Bay of Bengal ───────────────────────────────────────────────────
+# Yangon is an Andaman Sea port WEST of Malacca, so its Indian-Ocean neighbours are
+# short coastal hops. It used to be listed in EAST_ASIA, which sent every one of these
+# pairs through the cross-Malacca formula (Yangon->Chittagong came out at 3,220 nm via
+# Singapore instead of ~700 nm across the Bay). Yangon->East Asia is now correctly
+# handled BY that formula, since those voyages really do transit Malacca.
+add('yangon','chittagong',700); add('yangon','haldia',780)
+add('yangon','paradip',800);    add('yangon','vizag',850)
+add('yangon','kakinada',830);   add('yangon','chennai',1100)
+add('yangon','tuticorin',1200); add('yangon','colombo',1250)
+# India west coast / Pakistan — not covered by _col; anchored on Colombo
+# (yangon->colombo 1250 + colombo->dest, less the overlap south of Sri Lanka).
+add('yangon','nhava_sheva',2100); add('yangon','cochin',1650)
+add('yangon','mangalore',1900);   add('yangon','mormugao',1950)
+add('yangon','mundra',2350);      add('yangon','kandla',2300)
+add('yangon','pipavav',2250);     add('yangon','hazira',2200)
+add('yangon','okha',2400);        add('yangon','karachi',2400)
+add('yangon','port_qasim',2400)
+
+# Yangon eastbound (Pacific / Australia) — these voyages DO transit Malacca, so the old
+# cross-Malacca figures were already right; kept verbatim now that the formula no longer
+# fires for Yangon.
+add('yangon','long_beach',9720);  add('yangon','oakland',9720)
+add('yangon','seattle',9520);     add('yangon','vancouver',9520)
+add('yangon','ensenada',9620);    add('yangon','guaymas',10220)
+add('yangon','la_paz',10120);     add('yangon','callao',14520)
+add('yangon','iquique',14820);    add('yangon','san_antonio',15220)
+add('yangon','fremantle',2820);   add('yangon','port_hedland',2620)
+add('yangon','dampier',2620);     add('yangon','brisbane',4420)
+add('yangon','gladstone',4220);   add('yangon','newcastle_au',4520)
+
+# Yangon westbound (Med / Black Sea / East Africa / Gulf) — these route via Suez or across
+# the Indian Ocean, NOT via Singapore, so the old figures were inflated by 1,500-4,000 nm.
+# Derived Colombo-anchored, consistent with the _col table above.
+add('yangon','algeciras',6600);   add('yangon','valencia',7000)
+add('yangon','marseille',7800);   add('yangon','istanbul_marm',7500)
+add('yangon','constanta',7800);   add('yangon','novorossiysk',8000)
+add('yangon','beira',3800);       add('yangon','maputo',4000)
+add('yangon','nacala',3500);      add('yangon','bandar_abbas',2510)
+add('yangon','jubail',2640)
 
 # India West coast (closer to Suez, distances to Europe shorter than Colombo)
 _nh = { # nhava_sheva distances
@@ -293,12 +335,19 @@ add('karachi','dubai',400); add('karachi','dammam',600)
 add('karachi','sohar',300); add('karachi','salalah',800); add('karachi','bandar_abbas',350)
 
 # Gulf extras
-add('bandar_abbas','dubai',50); add('bandar_abbas','dammam',200)
-add('bandar_abbas','sohar',130); add('bandar_abbas','jubail',300)
-add('jubail','dammam',80); add('jubail','sohar',700); add('jubail','dubai',500)
+# ORDER MATTERS: add() overwrites, so the broad "nhava_sheva + offset" formula must run
+# FIRST and the hand-set intra-Gulf values AFTER it. (They used to be the other way round,
+# which silently turned Jubail->Dammam into 1,980 nm instead of ~80 nm — the formula is
+# only meaningful for far destinations, not for neighbours inside the Gulf.)
 for dest,base in _nh.items():
   add('bandar_abbas',dest,base+750)
   add('jubail',dest,base+900)
+add('bandar_abbas','dubai',50); add('bandar_abbas','dammam',200)
+add('bandar_abbas','sohar',130); add('bandar_abbas','jubail',300)
+add('jubail','dammam',80); add('jubail','sohar',700); add('jubail','dubai',500)
+# Salalah (Oman, just outside the Gulf) hits the same bug class — the +750/+900 formula
+# put it at 1,980/2,130 nm when it is a coastal hop from Hormuz.
+add('bandar_abbas','salalah',950); add('jubail','salalah',1100)
 
 # Red Sea / Gulf of Aden
 add('djibouti','jeddah',750); add('djibouti','salalah',500)
