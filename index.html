@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breakbulk & Drybulk Broker Dashboard</title>
+<meta name="description" content="Freight, TCE and multi-port voyage calculator for breakbulk and drybulk fixtures, 3,000-82,000 DWT.">
+<!-- Inline SVG favicon (anchor) — no external file, works on GitHub Pages. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%93%3C/text%3E%3C/svg%3E">
+<!-- Link preview for Slack / WhatsApp / email -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Breakbulk &amp; Drybulk Broker Dashboard">
+<meta property="og:description" content="Freight, TCE and multi-port voyage calculator for breakbulk and drybulk fixtures, 3,000-82,000 DWT.">
+<meta property="og:url" content="https://juniorsu.github.io/shipping-broker-tool/">
+<meta name="twitter:card" content="summary">
 <style>
   :root {
     --navy:   #f5f0e8;
@@ -224,7 +233,7 @@
     body { background: #fff !important; }
     header, .news-col, .dist-panel, .tabs,
     form, #commodityList, .calc-btn, .copy-btn, .print-btn, .action-btn-row,
-    .news-list, .news-feed, .news-sources, .news-filter,
+    .news-list, .news-feed, .news-sources, .news-filter, .hist-panel,
     .quote-header { display: none !important; }
     .main { display: block !important; padding: 0 !important; max-width: 100% !important; }
     .quote-card { border: none !important; box-shadow: none !important; position: static !important; }
@@ -347,6 +356,34 @@
   .speed-control input:focus { border-color: var(--accent); }
   .speed-unit { font-size: .72rem; color: var(--muted); }
   .dist-note { font-size: .75rem; color: var(--muted); padding: 0 22px 10px; }
+
+  /* RECENT QUOTES */
+  .hist-panel {
+    max-width: 1400px; margin: 0 auto 22px; padding: 0 22px;
+  }
+  .hist-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .hist-head h3 { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.3px; }
+  .hist-clear {
+    background:transparent; border:1px solid var(--border); border-radius:6px;
+    padding:3px 10px; font-size:.68rem; color:var(--muted); cursor:pointer;
+  }
+  .hist-clear:hover { border-color:var(--red); color:var(--red); }
+  #quoteHistory {
+    background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden;
+  }
+  .hist-row {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:9px 14px; border-bottom:1px solid var(--border);
+  }
+  .hist-row:last-child { border-bottom:none; }
+  .hist-main { min-width:0; }
+  .hist-route {
+    font-size:.76rem; font-weight:600; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+  }
+  .hist-meta { font-size:.65rem; color:var(--muted); margin-top:2px; }
+  .hist-val { font-size:.82rem; font-weight:700; white-space:nowrap; }
+  .hist-foot { font-size:.62rem; color:var(--muted); margin-top:6px; text-align:right; }
 
   /* RESPONSIVE */
   @media (max-width: 900px) {
@@ -642,12 +679,12 @@
         <div class="form-row">
           <div class="form-group">
             <label>VLSFO Price (USD/MT)</label>
-            <input type="number" id="vlsfoPrice" value="510" min="200" max="1500" step="1">
+            <input type="number" id="vlsfoPrice" value="510" min="200" max="1500" step="1" oninput="bunkerPriceSource='manual'">
             <div class="form-hint">Main engine &mdash; sea</div>
           </div>
           <div class="form-group">
             <label>MGO Price (USD/MT)</label>
-            <input type="number" id="mgoPrice" value="720" min="300" max="2000" step="1">
+            <input type="number" id="mgoPrice" value="720" min="300" max="2000" step="1" oninput="bunkerPriceSource='manual'">
             <div class="form-hint">Auxiliary engines &mdash; sea + port</div>
           </div>
         </div>
@@ -830,7 +867,7 @@
             </div>
             <div class="form-group">
               <label>Vessel Type</label>
-              <select id="tceVesselType">
+              <select id="tceVesselType" onchange="onTabVesselTypeChange(this.value)">
                 <option value="geared" selected>Geared</option>
                 <option value="gearless">Gearless</option>
               </select>
@@ -933,10 +970,23 @@
             </div>
             <div class="form-group">
               <label>Vessel Type</label>
-              <select id="multiVesselType">
+              <select id="multiVesselType" onchange="onTabVesselTypeChange(this.value)">
                 <option value="geared" selected>Geared</option>
                 <option value="gearless">Gearless</option>
               </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Loading Rate (MT/day)</label>
+              <input type="number" id="multiLoadRate" value="1500" min="50" step="50">
+              <div class="form-hint">Applied at every load stop.</div>
+            </div>
+            <div class="form-group">
+              <label>Discharging Rate (MT/day)</label>
+              <input type="number" id="multiDischRate" value="1000" min="50" step="50">
+              <div class="form-hint">Applied at every discharge stop.</div>
             </div>
           </div>
 
@@ -1227,6 +1277,16 @@
   <div class="dist-note" id="distNote"></div>
 </div>
 
+<!-- RECENT QUOTES -->
+<div class="hist-panel">
+  <div class="hist-head">
+    <h3>&#128203; Recent Quotes</h3>
+    <button type="button" class="hist-clear" onclick="clearHistory()">Clear</button>
+  </div>
+  <div id="quoteHistory"></div>
+  <div class="hist-foot">Saved in this browser only &mdash; never uploaded. Last 15 kept.</div>
+</div>
+
 <!-- NEWS MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal">
@@ -1385,6 +1445,35 @@ const CPC_PROXIES = [
   { build: u => 'https://cors.eu.org/' + u,
     unwrap: b => b },
 ];
+// Where the numbers currently in the VLSFO/MGO boxes came from. The seed values below
+// are a hardcoded snapshot, NOT a live price — if the CPC fetch is blocked (it often is,
+// via CORS) the tool would otherwise quote on them with nothing on screen saying so.
+// Mirrors the HIRE_RATE_ASOF treatment.
+const BUNKER_SEED_ASOF = '2026-05-15';
+const BUNKER_SEED = { vlsfo: 510, mgo: 720 };
+let bunkerPriceSource = 'seed';   // 'seed' | 'cpc' | 'manual'
+let bunkerPriceStamp  = null;     // Date of the CPC reading, when live
+
+function bunkerAgeDays(iso) {
+  return Math.round((Date.now() - new Date(iso).getTime()) / 86400000);
+}
+// Badge for the results breakdown — says whether the quote used a live reading,
+// a hand-typed override, or the stale built-in seed.
+function bunkerPriceNote() {
+  if (bunkerPriceSource === 'manual') {
+    return '<span style="color:#7a6a55" title="You typed these prices in by hand.">✎ manually entered</span>';
+  }
+  if (bunkerPriceSource === 'cpc' && bunkerPriceStamp) {
+    const d = bunkerAgeDays(bunkerPriceStamp);
+    const col = d > 7 ? '#f5a623' : '#26a65b';
+    return `<span style="color:${col}" title="Fetched from CPC Taiwan. Note this is a Taiwan retail schedule, not the Singapore benchmark most fixtures are quoted against.">⛽ CPC Taiwan reading, ${d === 0 ? 'today' : d + 'd old'}</span>`;
+  }
+  const d = bunkerAgeDays(BUNKER_SEED_ASOF + 'T00:00:00Z');
+  const col = d > 60 ? '#e74c3c' : d > 30 ? '#f5a623' : '#7a6a55';
+  const warn = d > 60 ? ' — refresh before quoting' : '';
+  return `<span style="color:${col}" title="No live price was fetched, so these are the built-in seed values from ${BUNKER_SEED_ASOF}. Click Refresh Live CPC Prices, or type current figures in.">⚠ built-in default from ${BUNKER_SEED_ASOF} (${d}d old)${warn}</span>`;
+}
+
 const CPC_CACHE_KEY = 'cpcBunkerCache_v2';
 const CPC_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -1526,6 +1615,10 @@ async function fetchCPCPrices(forceRefresh) {
 function applyCpcPrices(p) {
   if (p.vlsfoUsd) document.getElementById('vlsfoPrice').value = p.vlsfoUsd;
   if (p.mgoUsd)   document.getElementById('mgoPrice').value   = p.mgoUsd;
+  if (p.vlsfoUsd || p.mgoUsd) {
+    bunkerPriceSource = 'cpc';
+    bunkerPriceStamp  = p.ts ? new Date(p.ts).toISOString() : new Date().toISOString();
+  }
 }
 
 // Auto-run on page load
@@ -1556,6 +1649,25 @@ function setVesselType(t) {
   // Show crane-account chooser only for gearless (and "either" since it could be gearless)
   const showCrane = (t === 'gearless' || t === 'either');
   document.getElementById('craneAccountGroup').style.display = showCrane ? '' : 'none';
+  syncVesselTypeToTabs(t);
+}
+
+// The three tabs each had their own vessel-type control, so setting it on one left the
+// others on their previous value — easy to quote gearless on Freight and geared on TCE
+// without noticing. They now follow each other.
+// "Either" has no dropdown equivalent; it maps to geared, matching how the Freight tab
+// prices it (geared hire, but the crane chooser stays available).
+function syncVesselTypeToTabs(t) {
+  const mapped = (t === 'gearless') ? 'gearless' : 'geared';
+  ['tceVesselType','multiVesselType'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value !== mapped) el.value = mapped;
+  });
+}
+
+// Reverse direction: changing a tab dropdown updates the shared toggle.
+function onTabVesselTypeChange(val) {
+  if (val !== vesselType) setVesselType(val);
 }
 
 // ─── PORT COORDINATES (lat, lng) ─────────────────────────────────────────────
@@ -2293,6 +2405,13 @@ function getBallastDays() {
   const v = el ? parseFloat(el.value) : NaN;
   return isNaN(v) ? 2 : Math.min(Math.max(v, 0), 3);
 }
+// Gearless vessels earn less than geared ones on the same route because the charterer
+// must supply shore cranes. Single constant — this factor used to be written out at three
+// separate call sites, the same duplication that let the hire table itself drift.
+const GEARLESS_HIRE_FACTOR = 0.88;
+function applyGearlessFactor(rate, vType) {
+  return vType === 'gearless' ? Math.round(rate * GEARLESS_HIRE_FACTOR) : rate;
+}
 function getMarketHireGeared(dwt) {
   return HIRE_RATE_TABLE.find(b => dwt <= b.max).rate;
 }
@@ -2364,10 +2483,10 @@ function calculateFreight() {
   const totalDays = seaDays + portDays + bufferDaysSafe;
 
   // Bunker consumption — calibrated against owner's vessel database (n=126 vessels with disclosed speed/cons)
-  // Values are MEDIAN at 11.5 kts baseline. Speed scaling applied below (cons ≈ baseline × (speed/11.5)^2).
+  // Values are MEDIAN at 11.5 kts baseline. Speed scaling applied below (see SPD_BASELINE — exponent 1.5, not 2).
   // Small vessels (<25K DWT): port runs MGO-only. Larger vessels (≥25K): port runs IFO + small MGO.
   // Database source: 1船東資料 VSL'S PARTICULAR (cleaned v5).xlsx — extracted via regex parser.
-  let seaVlsfo, seaMgo, portMgo, portVlsfo = 0;
+  let seaVlsfo = 0, seaMgo = 0, portMgo = 0, portVlsfo = 0;
   if      (dwt <= 5500)  { seaVlsfo = 7.0;  seaMgo = 0.5; portMgo = 1.5; }  // 1-5K   (DB n=1, svc 11kt:7.7)
   else if (dwt <= 7800)  { seaVlsfo = 7.5;  seaMgo = 0.6; portMgo = 1.7; }  // 6-7K   (DB n=1, svc 10kt:7.0)
   else if (dwt <= 9500)  { seaVlsfo = 9.5;  seaMgo = 0.8; portMgo = 1.8; }  // 8-9K   (interpolated, no DB)
@@ -2418,9 +2537,7 @@ function calculateFreight() {
   // See HIRE_RATE_TABLE / getMarketHireGeared() above — single shared benchmark, not a live feed.
   const hireRateGeared = getMarketHireGeared(dwt);
 
-  const hireRate = vesselType === 'gearless'
-    ? Math.round(hireRateGeared * 0.88)
-    : hireRateGeared;
+  const hireRate = applyGearlessFactor(hireRateGeared, vesselType);
 
   const hireCost = hireRate * totalDays;
 
@@ -2562,6 +2679,7 @@ function calculateFreight() {
     <div class="breakdown-row"><span class="b-label">Port MGO (aux) @ $${mgoPrice}/MT &mdash; ${portMgo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portMgoMt.toFixed(1)} MT / $${portMgoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${portVlsfo > 0 ? `<div class="breakdown-row"><span class="b-label">Port VLSFO 380cst (working) @ $${vlsfoPrice}/MT &mdash; ${portVlsfo} MT/d \u00D7 ${portDays.toFixed(1)} d</span><span class="b-val">${portVlsfoMt.toFixed(1)} MT / $${portVlsfoCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b> (${totalVlsfoMt.toFixed(1)} MT VLSFO + ${totalMgoMt.toFixed(1)} MT MGO)</span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
+    <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${bunkerPriceNote()}</span><span class="b-val"></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire equiv. ($${hireRate.toLocaleString()}/day \u00D7 ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${hireRateAgeLabel()}</span><span class="b-val"></span></div>
     <div class="breakdown-row"><span class="b-label">Port costs (load $${loadPortRate.toFixed(2)} + disch $${dischPortRate.toFixed(2)} \u00D7 ${dwt.toLocaleString()} DWT)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
@@ -2576,6 +2694,11 @@ function calculateFreight() {
 
   document.getElementById('results').classList.add('show');
   document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  saveFormState();
+  pushHistory(historyEntry('Freight',
+    `${portNames[loadPort]||loadPort} → ${portNames[dischPort]||dischPort}`,
+    `$${freightRate.toFixed(2)}/MT`));
 
   // Stash data for the Copy Quote button
   window._lastFreightQuote = {
@@ -2742,7 +2865,7 @@ function calculateTCE() {
 
   // Market hire rate for comparison — shared HIRE_RATE_TABLE, see getMarketHireGeared() above.
   const marketHireGeared = getMarketHireGeared(dwt);
-  const marketHire = vesselType === 'gearless' ? Math.round(marketHireGeared * 0.88) : marketHireGeared;
+  const marketHire = applyGearlessFactor(marketHireGeared, vesselType);
 
   // Display
   document.getElementById('tceValue').textContent = '$' + Math.round(tceDay).toLocaleString();
@@ -2769,6 +2892,7 @@ function calculateTCE() {
     <div class="breakdown-row"><span class="b-label">Less: address + broker commission (${commissionPct.toFixed(2)}%)</span><span class="b-val" style="color:var(--red)">−$${(grossRevenue*commissionRate).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label"><b>Net revenue</b></span><span class="b-val"><b>$${netRevenue.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
     <div class="breakdown-row"><span class="b-label">Less: bunker cost (${totalDays.toFixed(1)}d voyage)</span><span class="b-val" style="color:var(--red)">−$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${bunkerPriceNote()}</span><span class="b-val"></span></div>
     <div class="breakdown-row"><span class="b-label">Less: port costs ($${lr.toFixed(2)}+$${dr.toFixed(2)} × ${dwt.toLocaleString()} DWT)</span><span class="b-val" style="color:var(--red)">−$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${tceCanalLines.map(c => `<div class="breakdown-row"><span class="b-label">Less: ${c.label}</span><span class="b-val" style="color:var(--red)">−$${c.amt.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`).join('')}
     ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">Less: stevedoring (${basis.toUpperCase()}, ${commodityKey||'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% owner share)</span><span class="b-val" style="color:var(--red)">−$${stevCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
@@ -2781,6 +2905,11 @@ function calculateTCE() {
   document.getElementById('tceResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   // Stash for copy
+  saveFormState();
+  pushHistory(historyEntry('TCE',
+    `${portNames[loadPort]||loadPort} → ${portNames[dischPort]||dischPort}`,
+    `$${Math.round(tceDay).toLocaleString()}/day`));
+
   window._lastTceQuote = {
     loadPort, dischPort, distance, viaLabel, dwt, speed, vesselType,
     quantity, commodity: commodityKey || 'general', basis, totalDays,
@@ -2904,9 +3033,12 @@ function calculateMulti() {
   const vlsfoPrice = !isNaN(mVlsfoIn) ? mVlsfoIn : (parseFloat(document.getElementById('vlsfoPrice').value) || 510);
   const mgoPrice   = !isNaN(mMgoIn)   ? mMgoIn   : (parseFloat(document.getElementById('mgoPrice').value)   || 720);
 
-  // Loading/discharging rates — use sensible defaults (no per-stop input here)
-  const loadRate = 3000;   // MT/day average
-  const dischRate = 2500;  // MT/day average
+  // Loading/discharging rates — read from the tab's own inputs so a multi-port quote
+  // uses the SAME port-day assumptions as the Freight and TCE tabs. (These used to be
+  // hardcoded at 3000/2500 MT/day, which silently cut ~7 days off a typical 8,000 MT
+  // handysize voyage versus the Freight tab and understated the quote by ~15%.)
+  const loadRate  = parseFloat(document.getElementById('multiLoadRate').value)  || 1500;
+  const dischRate = parseFloat(document.getElementById('multiDischRate').value) || 1000;
 
   // Compute leg distances
   const legs = [];
@@ -2919,7 +3051,7 @@ function calculateMulti() {
   }
 
   // Bunker (same table)
-  let seaIfo, seaMgo, portMgo = 0, portIfo = 0;
+  let seaIfo = 0, seaMgo = 0, portMgo = 0, portIfo = 0;
   if      (dwt <= 5500)  { seaIfo = 7.0;  seaMgo = 0.5; portMgo = 1.5; }
   else if (dwt <= 7800)  { seaIfo = 7.5;  seaMgo = 0.6; portMgo = 1.7; }
   else if (dwt <= 9500)  { seaIfo = 9.5;  seaMgo = 0.8; portMgo = 1.8; }
@@ -2952,7 +3084,7 @@ function calculateMulti() {
   // (This bracket previously had its own copy that disagreed with the Freight/TCE
   // tabs above 55,000 DWT — 17,325/18,900 here vs. 18,900/19,950/21,000 there.)
   let h = getMarketHireGeared(dwt);
-  if (vesselType === 'gearless') h = Math.round(h * 0.88);
+  h = applyGearlessFactor(h, vesselType);
   const hireRate = h;
   const hireCost = h * totalDays;
 
@@ -3011,7 +3143,14 @@ function calculateMulti() {
   const totalMarkupPct = commissionPct + ownerMarginPct;
   const marginFactor = 1 + totalMarkupPct / 100;
 
-  const voyageBaseCost = bunkerCost + hireCost + portCosts + canalToll + stevCost;
+  // Shore crane — gearless vessels need one, and this tab was applying the gearless HIRE
+  // discount (h x 0.88 above) without ever charging the crane, biasing multi-port quotes
+  // low twice over. Reuses the Freight tab's shared craneAccount radio, same as the TCE tab.
+  const mCraneAccountEl = document.querySelector('input[name="craneAccount"]:checked');
+  const mCraneAccount   = mCraneAccountEl ? mCraneAccountEl.value : 'charterer';
+  const craneCost = (vesselType === 'gearless' && mCraneAccount === 'owner') ? 800 * portDays : 0;
+
+  const voyageBaseCost = bunkerCost + hireCost + portCosts + canalToll + stevCost + craneCost;
   const totalCost = voyageBaseCost * marginFactor;
   const freightRate = totalCost / totalLoad;
   const freightLow  = (freightRate * 0.90).toFixed(1);
@@ -3053,12 +3192,14 @@ function calculateMulti() {
     <div class="breakdown-row"><span class="b-label">Sea bunker (${seaDays.toFixed(1)} sea days incl. ${ballastDays.toFixed(1)} d ballast @ ${(seaIfo+seaMgo).toFixed(1)} MT/d)</span><span class="b-val">$${(seaIfo*seaDays*vlsfoPrice + seaMgo*seaDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label">Port bunker (${portDays.toFixed(1)} port days)</span><span class="b-val">$${(portIfo*portDays*vlsfoPrice + portMgo*portDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label"><b>Total bunker cost</b></span><span class="b-val"><b>$${bunkerCost.toLocaleString('en',{maximumFractionDigits:0})}</b></span></div>
+    <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${bunkerPriceNote()}</span><span class="b-val"></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire ($${hireRate.toLocaleString()}/d × ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${hireRateAgeLabel()}</span><span class="b-val"></span></div>
     <div class="breakdown-row" style="background:rgba(184,98,10,.06);font-weight:700"><span class="b-label">📍 Port costs (${stops.length} ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${portCostsHtml}
     ${canalLines.map(c => `<div class="breakdown-row"><span class="b-label">${c.label}</span><span class="b-val">$${c.amt.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`).join('')}
     ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">Stevedoring (${basis.toUpperCase()}, ${commodityKey||'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% × ${totalLoad.toLocaleString()} MT)</span><span class="b-val">$${stevCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
+    ${vesselType === 'gearless' ? `<div class="breakdown-row"><span class="b-label">Shore crane — ${mCraneAccount === 'owner' ? 'Owner’s account ($800/day × '+portDays.toFixed(1)+' d at berth)' : 'Charterer’s account'}</span><span class="b-val">${craneCost > 0 ? '$'+craneCost.toLocaleString('en',{maximumFractionDigits:0}) : 'Excluded (chrtrs acct)'}</span></div>` : ''}
     <div class="breakdown-row"><span class="b-label">Mark-up (${commissionPct.toFixed(2)}% commission + ${ownerMarginPct}% margin)</span><span class="b-val">+${totalMarkupPct.toFixed(2)}%</span></div>
     <div class="breakdown-row total"><span class="b-label">TOTAL VOYAGE COST</span><span class="b-val">$${totalCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row total"><span class="b-label">FREIGHT RATE (÷ ${totalLoad.toLocaleString()} MT)</span><span class="b-val">$${freightRate.toFixed(2)}/MT</span></div>
@@ -3068,6 +3209,11 @@ function calculateMulti() {
   document.getElementById('multiResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   // Stash for copy
+  saveFormState();
+  pushHistory(historyEntry('Multi-Port',
+    stops.map(s => portNames[s.port]||s.port).join(' → '),
+    `$${freightRate.toFixed(2)}/MT`));
+
   window._lastMultiQuote = {
     stops, legs, totalDistance, viaLabel, dwt, speed, vesselType,
     totalLoad, commodity: commodityKey || 'general', basis, totalDays,
@@ -3079,7 +3225,102 @@ function calculateMulti() {
 
 // Auto-init multi-port stops when tab is first opened
 const _origSwitchTab = (typeof switchTab === 'function') ? switchTab : null;
-window.addEventListener('DOMContentLoaded', () => { setTimeout(initMultiStops, 100); });
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initMultiStops, 100);
+  // Restore after initMultiStops so the multi-port inputs exist to be filled.
+  setTimeout(() => { restoreFormState(); renderHistory(); }, 150);
+});
+
+// ─── FORM PERSISTENCE + QUOTE HISTORY ───────────────────────────────────────
+// Everything here is per-browser localStorage. Nothing leaves the machine.
+
+const FORM_LS_KEY = 'brokerToolForm_v1';
+// Inputs worth remembering between sessions. Deliberately excludes laycan dates and
+// anything quote-specific that should be re-entered deliberately each time.
+const PERSIST_IDS = [
+  'vesselSize','vesselSpeed','freightBasis','ballastDays','bufferDays','commissionPct',
+  'routeVia','vlsfoPrice','mgoPrice','loadRate','dischRate',
+  'multiVesselSize','multiVesselType','multiSpeed','multiBasis','multiRouteVia',
+  'multiLoadRate','multiDischRate',
+  'tceVesselSize','tceLoadRate','tceDischRate','tceSpeed','tceBasis','tceVesselType',
+];
+
+function saveFormState() {
+  try {
+    const s = {};
+    PERSIST_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.value !== '') s[id] = el.value;
+    });
+    s._vesselType = vesselType;
+    localStorage.setItem(FORM_LS_KEY, JSON.stringify(s));
+  } catch(e) { /* private mode / quota — not worth interrupting the user */ }
+}
+
+function restoreFormState() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(FORM_LS_KEY) || 'null'); } catch(e) {}
+  if (!s) return;
+  PERSIST_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && s[id] !== undefined) el.value = s[id];
+  });
+  // A restored bunker price is still whatever it was when saved, not a fresh reading.
+  if (s.vlsfoPrice || s.mgoPrice) {
+    const seed = String(BUNKER_SEED.vlsfo) === s.vlsfoPrice && String(BUNKER_SEED.mgo) === s.mgoPrice;
+    bunkerPriceSource = seed ? 'seed' : 'manual';
+  }
+  if (s._vesselType && typeof setVesselType === 'function') setVesselType(s._vesselType);
+}
+
+// ─── QUOTE HISTORY ───────────────────────────────────────────────────────────
+const HIST_LS_KEY = 'brokerToolHistory_v1';
+const HIST_MAX = 15;
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_LS_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function pushHistory(entry) {
+  try {
+    const h = loadHistory();
+    h.unshift(entry);
+    localStorage.setItem(HIST_LS_KEY, JSON.stringify(h.slice(0, HIST_MAX)));
+    renderHistory();
+  } catch(e) {}
+}
+
+function clearHistory() {
+  if (!confirm('Clear all saved quotes? This cannot be undone.')) return;
+  try { localStorage.removeItem(HIST_LS_KEY); } catch(e) {}
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('quoteHistory');
+  if (!el) return;
+  const h = loadHistory();
+  if (!h.length) {
+    el.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:.72rem;text-align:center">'
+      + 'No saved quotes yet — they appear here after you calculate.</div>';
+    return;
+  }
+  el.innerHTML = h.map(q => `
+    <div class="hist-row">
+      <div class="hist-main">
+        <div class="hist-route">${q.route}</div>
+        <div class="hist-meta">${q.tag} &middot; ${q.when}</div>
+      </div>
+      <div class="hist-val">${q.headline}</div>
+    </div>`).join('');
+}
+
+function historyEntry(tag, route, headline) {
+  const now = new Date();
+  return { tag, route, headline,
+    when: now.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + ' ' +
+          now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) };
+}
 
 // ─── PARTY DATABASE (charterers + owners with addresses) ─────────────────────
 // Extracted via _extract_parties.py from \\nasc20023\Chartering\VOYAGE DATA:
