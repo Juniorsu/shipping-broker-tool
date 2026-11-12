@@ -418,6 +418,12 @@ add('gladstone','rotterdam',12800)
 # distance references. The network derives shortest paths from the Global
 # Shipping Lane Network (World 2000); estimates are not vessel navigation.
 # See https://github.com/eurostat/searoute and https://stowlines.com/port-distances.
+# Lhokseumawe-Bangkok uses the Singapore junction: 110 nm Lhokseumawe-Sabang
+# (UN Logistics Cluster), 620 nm Singapore-Sabang (UIM established sailing route),
+# and 831 nm Bangkok-Singapore (JCtrans) -> about 1,340 nm. The JRC graph snaps
+# Lhokseumawe over 200 km offshore for this pair, so its 1,602 nm is less useful.
+# Sources: logcluster.org/en/documents/ports-3 ; uim.sport/Documents/Document/2025
+# Pleasure Navigation and Radio-Controlled Rulebook ; jctrans.com/en/ports/Thailand/Bangkok/
 _ROUTE_NETWORK_OVERRIDES = {
   ('abidjan','apia'):10430,
   ('abidjan','chennai'):7650,
@@ -666,6 +672,7 @@ _ROUTE_NETWORK_OVERRIDES = {
   ('bangkok','istanbul'):6710,
   ('bangkok','istanbul_marm'):6700,
   ('bangkok','jakarta'):1340,
+  ('bangkok','lhokseumawe'):1340,
   ('bangkok','marseille'):7450,
   ('bangkok','novorossiysk'):7160,
   ('bangkok','piraeus'):6530,
