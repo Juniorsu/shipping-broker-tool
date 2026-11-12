@@ -281,7 +281,7 @@
   .learning-wrap { padding: 20px; }
   .learning-intro { margin: 8px 0 16px; color: var(--muted); font-size: .82rem; line-height: 1.6; }
   .learning-notice { margin-bottom: 16px; padding: 12px 14px; border: 1px solid #dfca9d; border-left: 4px solid var(--gold); border-radius: 8px; background: #fffaf0; font-size: .76rem; line-height: 1.55; }
-  .learning-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 12px; align-items: start; }
+  .learning-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
   .learning-card { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: var(--shadow-sm); }
   .learning-card.learning-wide { grid-column: 1 / -1; }
   .learning-card h4 { margin: 0 0 9px; color: var(--accent2); font-size: .9rem; line-height: 1.4; }
@@ -293,6 +293,7 @@
   .learning-types dt, .learning-types dd { padding: 8px 0; border-bottom: 1px solid #eee6d8; line-height: 1.5; }
   .learning-types dt { color: var(--accent2); font-weight: 700; }
   .learning-types dd { margin: 0; color: var(--text); }
+  @media (max-width: 680px) { .learning-grid { grid-template-columns: minmax(0, 1fr); } .learning-card.learning-wide { grid-column: auto; } }
   .voyage-map { position: relative; display: grid; gap: 12px; margin-top: 16px; }
   .voyage-map::before { content: ''; position: absolute; top: 20px; bottom: 24px; left: 19px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), #d9c6a5 90%); }
   .voyage-stage { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; align-items: start; }
