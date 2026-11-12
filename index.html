@@ -58,7 +58,7 @@
   .dn { color: var(--red); }
 
   /* LAYOUT */
-  .main { display: grid; grid-template-columns: minmax(560px, 1.2fr) 1fr; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  .main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 22vw); gap: 16px; padding: 16px clamp(12px, 1.5vw, 24px); max-width: 1920px; margin: 0 auto; }
 
   /* SECTIONS */
   .section-title {
@@ -72,11 +72,11 @@
   .quote-col { order: 1; }
 
   .news-sources {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
   }
   .news-source {
     background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px; text-align: center; cursor: pointer; transition: all .2s;
+    padding: 10px 8px; text-align: center; cursor: pointer; transition: all .2s;
     text-decoration: none; color: var(--text);
   }
   .news-source:hover { border-color: var(--accent); background: var(--blue); transform: translateY(-2px); }
@@ -207,9 +207,9 @@
   .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(184,98,10,.35); }
 
   /* Tool navigation: persistent left rail on desktop, scrollable strip on phones. */
-  .quote-workspace { display: grid; grid-template-columns: 178px minmax(0, 1fr); align-items: stretch; min-width: 0; }
+  .quote-workspace { display: grid; grid-template-columns: 158px minmax(0, 1fr); align-items: stretch; min-width: 0; }
   .tabs {
-    display: flex; flex-direction: column; gap: 5px; padding: 14px 9px;
+    display: flex; flex-direction: column; gap: 5px; padding: 14px 8px;
     background: var(--navy2); border-right: 1px solid var(--border); min-width: 0;
   }
   .tab-btn {
@@ -509,9 +509,8 @@
   }
 
   /* RESPONSIVE */
-  @media (max-width: 900px) {
+  @media (max-width: 1200px) {
     .main { grid-template-columns: 1fr; }
-    .news-sources { grid-template-columns: repeat(2, 1fr); }
     .quote-card { position: static; }
     .dist-card { flex-direction: column; align-items: flex-start; }
   }
@@ -595,7 +594,7 @@
 
   </div>
 
-  <!-- RIGHT: QUOTE FORM -->
+  <!-- PRIMARY BOARD: TOOLS AND QUOTATION FORM -->
   <div class="quote-col">
     <div class="quote-card">
       <div class="quote-header">
@@ -9109,6 +9108,8 @@ const SHIPPING_GLOSSARY = [
   {term:'APS — Arrival Pilot Station',category:'Chartering',meaning:'A stated delivery or timing point near the port where the vessel reaches the pilot station. Use the exact point and time basis written in the charterparty.',aliases:'APS delivery'},
   {term:'Address commission',category:'Chartering',meaning:'A commission allowance paid or credited to the charterer, usually expressed as a percentage of freight or hire. Confirm the basis in the recap.'},
   {term:'Bareboat charter',category:'Chartering',meaning:'A charter in which the charterer takes possession and operational control of the vessel and generally bears running costs, crew and maintenance responsibilities.'},
+  {term:'BOD — Board of Directors approval',category:'Chartering',meaning:'An internal company approval still required before a fixture or transaction is confirmed. State whose approval is outstanding and the deadline; treat it as a subject until lifted.'},
+  {term:'Chopt — Charterer’s option',category:'Chartering',meaning:'A contractual option reserved to the charterer, such as a choice of port, quantity or timing. Check the exact scope, notice deadline and limits in the recap/charterparty.'},
   {term:'Brokerage commission',category:'Chartering',meaning:'The agreed percentage or amount payable to the named broker or brokers, usually calculated on freight or hire as stated in the fixture terms.'},
   {term:'COA — Contract of Affreightment',category:'Chartering',meaning:'An agreement to carry a stated quantity of cargo over a period or across multiple shipments. It commits cargo liftings, not necessarily one named vessel.'},
   {term:'CP — Charterparty',category:'Chartering',meaning:'The contract governing the charter of a vessel. The recap records negotiated terms; the signed charterparty and any incorporated clauses set the full contractual wording.'},
@@ -9116,9 +9117,12 @@ const SHIPPING_GLOSSARY = [
   {term:'Deadfreight',category:'Chartering',meaning:'Compensation that may be due when the charterer provides less cargo than the agreed minimum quantity, subject to the charterparty wording.'},
   {term:'Firm offer',category:'Chartering',meaning:'An offer open for acceptance on stated terms until a stated expiry time. Whether it is binding depends on the wording and applicable law.'},
   {term:'Freight',category:'Chartering',meaning:'The payment for carrying cargo under a voyage charter. It may be quoted per metric tonne or as a lump sum, with the calculation basis stated.'},
+  {term:'Full cargo / sole cargo',category:'Chartering',meaning:'A fixture in which one shipment occupies or books the vessel’s cargo capacity and the vessel proceeds between the agreed ports for that shipment. Confirm whether other cargo or intermediate calls are permitted.'},
   {term:'Laycan — Laydays and Cancelling',category:'Chartering',meaning:'The agreed arrival/readiness window. The cancelling date is the date after which the charterer may have a cancellation right if the vessel is not ready, as set out in the charterparty.'},
   {term:'Lumpsum',category:'Chartering',meaning:'A fixed total freight amount for the shipment rather than a rate multiplied by cargo tonnes. Check quantity tolerances and payment basis.'},
   {term:'MOLCO / MOLOO',category:'Chartering',meaning:'More or Less at Charterer’s / Owner’s Option. Identifies which party controls an agreed cargo-quantity tolerance; confirm the percentage and freight basis.'},
+  {term:'MOLCHOPT — More or Less at Charterer’s Option',category:'Chartering',meaning:'A cargo-quantity tolerance exercisable by the charterer. Confirm the permitted percentage, measuring basis, loading capability and freight calculation in the fixture.'},
+  {term:'Part cargo',category:'Chartering',meaning:'Only part of the vessel’s available cargo space is booked for a shipment. Confirm cargo compatibility, segregation, loading sequence and whether other cargo or port calls are allowed.'},
   {term:'Recap — recapitulatory message',category:'Chartering',meaning:'A written summary of the main agreed commercial terms exchanged after negotiations. It records the fixture basis while the long-form charterparty is prepared.'},
   {term:'Spot fixture',category:'Chartering',meaning:'A vessel or cargo fixed for a prompt, near-term voyage or trip at current market terms, rather than under a long-term contract.'},
   {term:'Subjects',category:'Chartering',meaning:'Conditions or approvals still outstanding before a fixture is firm, such as owner, charterer, management or stem approval. List each subject and its deadline.'},
@@ -9129,24 +9133,41 @@ const SHIPPING_GLOSSARY = [
   {term:'DWT — Deadweight Tonnage',category:'Vessel & cargo',meaning:'The vessel’s carrying capacity by weight, including cargo, fuel, fresh water, stores, crew and other deadweight items. It is not the same as cargo capacity.'},
   {term:'DWCC — Deadweight Cargo Capacity',category:'Vessel & cargo',meaning:'The estimated weight capacity available for cargo after allowing for bunkers, water, stores, constants and the vessel’s expected loading condition.'},
   {term:'Draft',category:'Vessel & cargo',meaning:'The vertical distance from the waterline to the vessel’s lowest point. Port, berth, tide and channel limits can restrict the vessel’s permissible draft.'},
+  {term:'B/B — Breakbulk cargo',category:'Vessel & cargo',meaning:'General cargo shipped as separate pieces, units or packages rather than loose bulk or inside a container. Cargo dimensions, lifting points, stowage and securing need individual planning.'},
   {term:'FILO / LIFO',category:'Vessel & cargo',meaning:'FILO means Free In, Liner Out; LIFO means Liner In, Free Out. These terms allocate loading and discharge costs differently; spell out exactly what “liner” covers.'},
+  {term:'Free out',category:'Vessel & cargo',meaning:'Discharge costs are excluded from the freight rate and allocated as stated in the fixture, commonly to the charterer/receiver. Confirm the responsible party and exact scope.'},
+  {term:'FOT — Free on Truck',category:'Vessel & cargo',meaning:'A cargo-handling term concerning transfer to or from a truck. It does not define every shore-side cost consistently; specify which loading, unloading and terminal operations are included in the contract.'},
+  {term:'Liner terms / hook-to-hook',category:'Vessel & cargo',meaning:'A freight basis where cargo-handling costs are included to the extent expressly agreed, often describing handling from vessel hook at loading through vessel hook at discharge. It does not automatically include every lashing, terminal or landside charge; define the scope in the fixture.'},
   {term:'FIO / FIOS / FIOST',category:'Vessel & cargo',meaning:'Free In and Out excludes loading and discharge costs from freight under the agreed terms. FIOS adds stowage; FIOST also adds trimming. Confirm the precise scope in the charterparty.'},
   {term:'Geared / gearless',category:'Vessel & cargo',meaning:'A geared vessel carries its own cargo cranes; a gearless vessel relies on shore or floating cranes. Confirm crane count, capacity and availability against the cargo and berth.'},
   {term:'Grain capacity',category:'Vessel & cargo',meaning:'The total hold volume measured to the internal hold boundaries, commonly used for bulk grain cargo. It is usually larger than bale capacity.'},
   {term:'GT / NT — Gross / Net Tonnage',category:'Vessel & cargo',meaning:'International tonnage measures based on enclosed volume and earning capacity. They are not vessel weight or cargo capacity.'},
   {term:'LOA — Length Overall',category:'Vessel & cargo',meaning:'The vessel’s maximum end-to-end length. Check it against berth, turning basin, lock and port restrictions.'},
   {term:'Bale capacity',category:'Vessel & cargo',meaning:'The usable hold volume measured around structural obstructions. It is commonly lower than grain capacity and useful for packaged cargo.'},
+  {term:'Broken stowage',category:'Vessel & cargo',meaning:'Hold space that cannot be used because of cargo shape, packing, stowage pattern or structural gaps. Allow for it when estimating how much cargo will fit by volume.'},
   {term:'ROB — Remaining On Board',category:'Vessel & cargo',meaning:'Stores, bunkers, water or cargo remaining aboard at a stated time. For bunkers, record each fuel grade and quantity.'},
   {term:'Stowage factor',category:'Vessel & cargo',meaning:'The volume occupied by a unit weight of cargo, often expressed in cubic metres per metric tonne. It helps determine whether a vessel is weight- or volume-limited.'},
   {term:'SWL — Safe Working Load',category:'Vessel & cargo',meaning:'The maximum load a crane, wire or lifting appliance is rated to handle under its stated conditions. Compare it with each cargo unit’s lift weight.'},
   {term:'Laydays vs. laytime',category:'Laytime & port',meaning:'Laydays are the dates in the laycan window. Laytime is the agreed time allowed for loading or discharging cargo; the terms are not interchangeable.'},
+  {term:'Agw / WP / WOG',category:'Laytime & port',meaning:'All Going Well / Weather Permitting / Without Guarantee. These qualify an estimate or statement; they do not replace firm charterparty obligations or agreed weather clauses.'},
   {term:'ATDNSHINC',category:'Laytime & port',meaning:'At Any Time, Day or Night, Sundays and Holidays Included. A shorthand for when laytime may count; confirm exceptions and commencement wording.'},
+  {term:'Basis 1/1',category:'Chartering',meaning:'A freight or fixture basis of one loading port and one discharging port. Confirm whether shifting, extra ports or multiple berths are excluded or separately paid.'},
+  {term:'Bends — Both ends',category:'Chartering',meaning:'Applies to both the loading and discharging ends of a voyage. Check the clause to see which rate, operation or obligation is intended at each end.'},
+  {term:'BBB — Before Breaking Bulk',category:'Voyage & costs',meaning:'A freight-payment condition requiring the specified amount to be paid before discharge begins. Check the exact fixture wording, amount, evidence of payment and any exceptions.'},
+  {term:'Congestion',category:'Laytime & port',meaning:'Port or berth demand exceeds available capacity, causing vessels or cargo operations to wait. Record the cause and times; the charterparty determines how resulting delay counts.'},
   {term:'CQD — Customary Quick Despatch',category:'Laytime & port',meaning:'Cargo is to be worked as quickly as customary at the port, without a fixed laytime allowance in the usual form. The charterparty and local practice determine the effect.'},
   {term:'Demurrage',category:'Laytime & port',meaning:'The agreed payment for time used beyond allowed laytime, usually stated per day or pro rata. Check when it starts, whether it is reversible and any exceptions.'},
   {term:'DHD — Despatch Half Demurrage',category:'Laytime & port',meaning:'Despatch is payable at half the agreed demurrage rate. Confirm whether it applies to all time saved or working time saved.'},
   {term:'Despatch',category:'Laytime & port',meaning:'A payment that may be due to the charterer for time saved, if agreed. Check whether it is paid on all time saved or working time saved.'},
   {term:'Detention',category:'Laytime & port',meaning:'A contractual payment or claim for delay that falls outside the agreed demurrage regime. The term and calculation are charterparty-specific.'},
   {term:'Free pratique',category:'Laytime & port',meaning:'Health clearance allowing a vessel to enter port and begin activities subject to local requirements. Some clauses address whether laytime can start before it is granted.'},
+  {term:'FHINC — Fridays and Holidays Included',category:'Laytime & port',meaning:'A laytime/calendar qualification sometimes used in ports where Friday is a normal weekly rest day. Apply the local calendar and the exact charterparty wording.'},
+  {term:'Grace period',category:'Laytime & port',meaning:'Agreed free time before a specified charge or contractual consequence starts. Confirm the trigger, duration, calendar basis and whether weekends or holidays count.'},
+  {term:'GSBAAA — One Good and Safe Berth, Always Afloat, Always Accessible',category:'Laytime & port',meaning:'A berth-nomination description requiring the berth to meet the agreed safety/access conditions. It does not remove the need to assess vessel-specific draft, tide, approach and departure risks.'},
+  {term:'Hot-work permit',category:'Laytime & port',meaning:'Authorization required before welding, cutting or other spark-producing work. Follow vessel, terminal and port safety procedures; do not start until permits and controls are in place.'},
+  {term:'L/S/D/W — Lashing, Securing, Dunnage, Welding',category:'Laytime & port',meaning:'A shorthand for cargo services or cost items. Confirm which activities are required, who arranges them and who pays; the abbreviation alone does not allocate responsibility.'},
+  {term:'Minimum inducement',category:'Voyage & costs',meaning:'A minimum freight amount or charge intended to cover the agreed voyage and cargo-operation basis. Confirm its trigger, scope and whether it replaces or supplements a per-ton freight rate.'},
+  {term:'Non-reversible laytime',category:'Laytime & port',meaning:'Load-port and discharge-port laytime allowances are calculated separately; time saved at one port does not offset excess time at the other, unless the contract states otherwise.'},
   {term:'NOR — Notice of Readiness',category:'Laytime & port',meaning:'The vessel’s notice that it is ready to load or discharge. Validity depends on the charterparty’s requirements for arrival, readiness, notice time and port formalities.'},
   {term:'Reversible laytime',category:'Laytime & port',meaning:'Load-port and discharge-port laytime are combined into one allowance, so saved time at one end can offset used time at the other, if agreed.'},
   {term:'SHEX',category:'Laytime & port',meaning:'Sundays and Holidays Excluded from laytime, subject to the charterparty’s definition of holidays and any “unless used” wording.'},
@@ -9160,8 +9181,13 @@ const SHIPPING_GLOSSARY = [
   {term:'WIPON — Whether In Port or Not',category:'Laytime & port',meaning:'A clause addressing whether laytime may start before the vessel is physically within port limits, subject to the agreed conditions.'},
   {term:'WWD — Weather Working Day',category:'Laytime & port',meaning:'A working day or part of a day when weather permits cargo operations. The charterparty defines how interruptions and non-working periods count.'},
   {term:'WWDSHEX',category:'Laytime & port',meaning:'Weather Working Days, Sundays and Holidays Excluded. Confirm local holiday definitions and whether unused or worked periods are treated differently.'},
+  {term:'POL / POD — Port of Loading / Port of Discharge',category:'Laytime & port',meaning:'The named loading and discharging ports for a shipment. Use the precise port/berth range in the fixture and verify it matches the bill and operating instructions.'},
+  {term:'RO/RO — Roll-on / Roll-off',category:'Vessel & cargo',meaning:'A vessel or handling method using ramps for wheeled cargo to roll aboard or ashore. Check ramp limits, deck strength, dimensions, securing and terminal capability.'},
+  {term:'Static cargo',category:'Vessel & cargo',meaning:'Cargo without its own wheels or propulsion that must be lifted, moved on skids, or carried on roll trailers/mafi trailers. Confirm lifting points, dimensions, weight and handling plan.'},
+  {term:'TBN — To Be Named / Nominated',category:'Chartering',meaning:'A vessel, port or other detail is still to be named or nominated. Check who must nominate it, the deadline and the contractual requirements for acceptance.'},
   {term:'Ballast leg',category:'Voyage & costs',meaning:'A voyage leg sailed without cargo, commonly to position the vessel for its next loading port. It affects voyage time, fuel and TCE.'},
   {term:'BAF — Bunker Adjustment Factor',category:'Voyage & costs',meaning:'A surcharge or adjustment linked to fuel costs, most commonly used in liner shipping. Do not assume it applies to a tramp fixture unless agreed.'},
+  {term:'CAF — Currency Adjustment Factor',category:'Voyage & costs',meaning:'A surcharge or adjustment intended to account for exchange-rate movements, most often in liner tariffs. Check the rate, currency, calculation period and whether it applies to this fixture.'},
   {term:'Bunkers',category:'Voyage & costs',meaning:'Marine fuel carried and consumed by the vessel. Record fuel grades, prices, consumption assumptions and who pays under the charterparty.'},
   {term:'Canal dues',category:'Voyage & costs',meaning:'Charges for transiting a canal, such as Suez or Panama. The amount depends on vessel particulars, transit rules and current tariffs.'},
   {term:'DOP — Dropping Outward Pilot',category:'Voyage & costs',meaning:'A stated delivery or redelivery point when the vessel drops the outward pilot. Confirm the port, time zone and exact charterparty wording.'},
@@ -9171,6 +9197,8 @@ const SHIPPING_GLOSSARY = [
   {term:'OPEX — Operating Expenses',category:'Voyage & costs',meaning:'The vessel’s recurring running costs, such as crew, maintenance and insurance. It is usually treated separately from voyage costs like bunkers and port charges.'},
   {term:'PDA — Pro Forma Disbursement Account',category:'Voyage & costs',meaning:'The agent’s preliminary estimate of port-call expenses, such as pilotage, towage, dues and agency fees. The final account may differ.'},
   {term:'PDPR — Per Day Pro Rata',category:'Voyage & costs',meaning:'A daily amount is prorated for part of a day. Check the agreed rate, time basis and rounding method.'},
+  {term:'PSS — Peak Season Surcharge',category:'Voyage & costs',meaning:'A seasonal surcharge used in some liner tariffs when demand rises. Confirm whether it applies to the trade, how it is calculated and whether it is included in the quoted freight.'},
+  {term:'W/M / RT / FR — Weight or Measure / Revenue Ton / Freight Ton',category:'Voyage & costs',meaning:'A freight-rating basis that charges by weight or volume, as stated in the tariff or contract. Confirm the unit, conversion, rounding and whether weight or measurement governs; do not assume one universal conversion.'},
   {term:'TCE — Time Charter Equivalent',category:'Voyage & costs',meaning:'A daily earnings comparison: voyage revenue less voyage expenses, divided by the relevant voyage duration. Results depend on the cost and time assumptions used.'},
   {term:'THC — Terminal Handling Charge',category:'Voyage & costs',meaning:'A terminal charge for handling cargo through a facility, most common in liner/container trades. Confirm whether it applies and which party pays in the quoted terms.'},
   {term:'VLSFO — Very Low Sulphur Fuel Oil',category:'Voyage & costs',meaning:'Residual marine fuel with sulphur content at or below 0.50% by mass under the relevant IMO global limit, subject to approved compliance alternatives.'},
