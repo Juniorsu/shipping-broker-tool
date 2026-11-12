@@ -808,6 +808,29 @@
   }
 }
 </style>
+
+/* iPhone / mobile ergonomics */
+@media (max-width: 680px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body { min-width: 320px; }
+  input, select, textarea { font-size: 16px; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  .form-group { min-width: 0; }
+  .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .form-group select, .form-group textarea { width: 100%; min-height: 44px; padding: 10px 12px; }
+  .bunker-price-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .bunker-price-row .form-group { margin-bottom: 4px; }
+  .bunker-price-row .form-hint { line-height: 1.45; }
+  .bunker-price-actions { display: grid !important; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: stretch !important; gap: 8px !important; margin: 8px 0 14px !important; }
+  .bunker-price-actions button, .bunker-price-actions a { min-height: 44px; justify-content: center; text-align: center; white-space: normal; line-height: 1.25; padding: 9px 10px !important; font-size: 12px !important; }
+  #bunkerPriceHint { grid-column: 1 / -1; display: block; line-height: 1.45; overflow-wrap: anywhere; }
+  .form-hint { overflow-wrap: anywhere; }
+}
+@media (max-width: 390px) {
+  .bunker-price-actions { grid-template-columns: minmax(0,1fr); }
+  .bunker-price-actions button, .bunker-price-actions a { width: 100%; }
+}
+
 </head>
 <body>
 <section aria-labelledby="loginTitle" class="login-screen" id="loginScreen">
@@ -1108,7 +1131,7 @@
 <div class="form-hint">Explicit routes use waypoint estimates. Canal charges are indicative; verify current tolls before fixing.</div>
 </div>
 </div>
-<div class="form-row">
+<div class="form-row bunker-price-row">
 <div class="form-group">
 <label>VLSFO Price (USD/MT)</label>
 <input id="vlsfoPrice" max="1500" min="200" oninput="markBunkerManual(this)" placeholder="Enter current price" step="1" type="number"/>
@@ -1120,8 +1143,8 @@
 <div class="form-hint">Auxiliary engines — sea + port; no stale default is applied</div>
 </div>
 </div>
-<div style="display:flex;align-items:center;gap:10px;margin-top:-4px;margin-bottom:10px;flex-wrap:wrap">
-<button onclick="fetchCPCPrices(true)" onmouseout="this.style.background='rgba(38,166,91,0.15)'" onmouseover="this.style.background='rgba(38,166,91,0.3)'" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(38,166,91,0.15);border:1px solid rgba(38,166,91,0.4);border-radius:6px;color:#146139;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s" type="button">
+<div class="bunker-price-actions" style="display:flex;align-items:center;gap:10px;margin-top:-4px;margin-bottom:10px;flex-wrap:wrap">
+<button id="refreshCpcButton" onclick="fetchCPCPrices(true)" onmouseout="this.style.background='rgba(38,166,91,0.15)'" onmouseover="this.style.background='rgba(38,166,91,0.3)'" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(38,166,91,0.15);border:1px solid rgba(38,166,91,0.4);border-radius:6px;color:#146139;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s" type="button">
             ↻ Refresh Live CPC Prices
           </button>
 <a href="https://www.cpc.com.tw/en/News_Content.aspx?n=2671&amp;s=3104" onmouseout="this.style.background='rgba(20,122,140,0.1)'" onmouseover="this.style.background='rgba(20,122,140,0.2)'" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(20,122,140,0.1);border:1px solid rgba(20,122,140,0.35);border-radius:6px;color:#8f4b08;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s" target="_blank">
@@ -2202,26 +2225,44 @@ function parseCpcPrices(html) {
 }
 
 async function fetchCPCHtml() {
-  // Try each proxy in order; accept only bodies that actually look like the CPC price page.
-  for (const p of CPC_PROXIES) {
-    const url = p.build(CPC_URL);
+  // CPC's schedule is hosted on a separate origin and does not consistently
+  // provide browser CORS headers. Public proxies are best-effort and intermittent.
+  const failures = [];
+  for (const [index, p] of CPC_PROXIES.entries()) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
+    const timer = setTimeout(() => controller.abort(), 8500);
     try {
-      const r = await fetch(url, { cache: 'no-store', signal:controller.signal });
-      if (!r.ok) continue;
+      const r = await fetch(p.build(CPC_URL), {
+        cache: 'no-store', signal: controller.signal,
+        headers: { 'Accept': 'text/html,application/json;q=0.9,*/*;q=0.8' }
+      });
+      if (!r.ok) { failures.push(`proxy ${index + 1}: HTTP ${r.status}`); continue; }
       const body = await r.text();
-      const html = p.unwrap(body);
-      if (html && html.length > 500 && /產品名稱|Marine|MyGridView/i.test(html)) {
-        return html;
-      }
-    } catch(e) { /* try next proxy */ }
-    finally { clearTimeout(timer); }
+      const page = p.unwrap(body);
+      if (page && page.length > 500 && /產品名稱|Marine|MyGridView/i.test(page) &&
+          !/too many requests|cloudflare.*blocked|access denied/i.test(page.slice(0,1200))) return page;
+      failures.push(`proxy ${index + 1}: invalid response`);
+    } catch (e) {
+      failures.push(`proxy ${index + 1}: ${e && e.name === 'AbortError' ? 'timeout' : 'network error'}`);
+    } finally { clearTimeout(timer); }
   }
+  console.warn('CPC price fetch failed across all proxy providers:', failures.join('; '));
   return null;
 }
 
+let cpcFetchInProgress = false;
 async function fetchCPCPrices(forceRefresh) {
+  if (cpcFetchInProgress) return;
+  cpcFetchInProgress = true;
+  const refreshButton = document.getElementById('refreshCpcButton');
+  if (refreshButton) {
+    refreshButton.disabled = true;
+    refreshButton.dataset.originalText = refreshButton.textContent.trim();
+    refreshButton.textContent = 'Fetching CPC prices…';
+    refreshButton.style.opacity = '.65';
+    refreshButton.style.cursor = 'wait';
+  }
+  try {
   // Cache check
   try {
     const cached = JSON.parse(localStorage.getItem(CPC_CACHE_KEY) || 'null');
@@ -2241,8 +2282,23 @@ async function fetchCPCPrices(forceRefresh) {
 
   const html = await fetchCPCHtml();
   if (!html) {
-    setBunkerHint('\u26A0 Could not fetch CPC prices (network/proxy). Enter both current prices manually or open CPC page; no default prices are used.',
-      'var(--red)');
+    // Fall back to the last successful reading, clearly labelled as potentially stale.
+    // Never overwrite manually entered prices.
+    try {
+      const lastGood = JSON.parse(localStorage.getItem(CPC_CACHE_KEY) || 'null');
+      if (lastGood && lastGood.vlsfoUsd && lastGood.mgoUsd &&
+          bunkerPriceSource !== 'manual' && applyCpcPrices(lastGood, false)) {
+        const ageDays = Math.max(0, Math.floor((Date.now() - lastGood.ts) / 86400000));
+        const ageLabel = ageDays === 0 ? 'less than 1 day old' : `${ageDays} day(s) old`;
+        setBunkerHint(`⚠ Live CPC refresh failed. Using the last successfully saved CPC reading from ${new Date(lastGood.ts).toLocaleString()} (${ageLabel}). Verify against CPC before fixing; no hardcoded defaults are used.`, 'var(--warn)');
+        return;
+      }
+    } catch (e) { /* continue to manual fallback message */ }
+    if (bunkerPriceSource === 'manual') {
+      setBunkerHint('⚠ Live CPC refresh failed. Your manually entered prices were kept. Verify both prices against a current supplier quote or CPC page.', 'var(--warn)');
+    } else {
+      setBunkerHint('⚠ Could not reach CPC through the available public network proxies. Enter both current prices manually or open the CPC page. No default prices are used.', 'var(--red)');
+    }
     return;
   }
 
@@ -2275,6 +2331,18 @@ async function fetchCPCPrices(forceRefresh) {
   if (vlsfoUsd) parts.push(`VLSFO $${vlsfoUsd}/MT`);
   if (mgoUsd)   parts.push(`MGO $${mgoUsd}/MT`);
   setBunkerHint(`\u26FD CPC live (${new Date().toLocaleString()}) &mdash; ${parts.join(' &middot; ')}`, 'var(--ok)');
+  } catch (error) {
+    console.error('Unexpected CPC price refresh error:', error);
+    setBunkerHint('⚠ CPC refresh encountered an unexpected error. Verify both prices before calculating.', 'var(--warn)');
+  } finally {
+    cpcFetchInProgress = false;
+    if (refreshButton) {
+      refreshButton.disabled = false;
+      refreshButton.textContent = refreshButton.dataset.originalText || '↻ Refresh Live CPC Prices';
+      refreshButton.style.opacity = '';
+      refreshButton.style.cursor = 'pointer';
+    }
+  }
 }
 
 function applyCpcPrices(p, force) {
