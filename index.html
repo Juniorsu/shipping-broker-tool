@@ -293,7 +293,15 @@
   .learning-types dt, .learning-types dd { padding: 8px 0; border-bottom: 1px solid #eee6d8; line-height: 1.5; }
   .learning-types dt { color: var(--accent2); font-weight: 700; }
   .learning-types dd { margin: 0; color: var(--text); }
+  .carriage-callout { margin: 12px 0; padding: 14px; border: 1px solid #d7bd8c; border-left: 4px solid var(--gold); border-radius: 9px; background: #fff8e9; }
+  .carriage-callout h5 { margin: 0 0 5px; color: var(--accent2); font-size: .86rem; }
+  .carriage-callout > p { margin: 0 0 10px; }
+  .carriage-responsibility { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .carriage-responsibility > div { padding: 10px; border: 1px solid #ead9b9; border-radius: 7px; background: #fff; }
+  .carriage-responsibility b { display: block; margin-bottom: 4px; color: var(--accent2); }
+  .carriage-responsibility span { display: block; font-size: .74rem; line-height: 1.5; }
   @media (max-width: 680px) { .learning-grid { grid-template-columns: minmax(0, 1fr); } .learning-card.learning-wide { grid-column: auto; } }
+  @media (max-width: 760px) { .carriage-responsibility { grid-template-columns: minmax(0, 1fr); } }
   .voyage-map { position: relative; display: grid; gap: 12px; margin-top: 16px; }
   .voyage-map::before { content: ''; position: absolute; top: 20px; bottom: 24px; left: 19px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), #d9c6a5 90%); }
   .voyage-stage { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; align-items: start; }
@@ -1612,6 +1620,15 @@
             <article class="learning-card learning-wide">
               <h4>Incoterms® · sale-contract handoff</h4>
               <p>Incoterms® rules allocate seller/buyer tasks, costs and risk transfer for delivery. They do not by themselves determine title, payment timing or the carrier’s cargo-release obligations. Always state the rule, precise named place/port and version (for example, <b>FOB [named port] Incoterms® 2020</b>).</p>
+              <div class="carriage-callout" role="group" aria-label="Who arranges the vessel or main carriage under FOB, CFR and CIF">
+                <h5>Broker check: who books the ship?</h5>
+                <p>For bulk and breakbulk, “books the ship” often means arranging a voyage charter. The rule allocates responsibility for main carriage; it does not require a particular type of carriage contract.</p>
+                <div class="carriage-responsibility">
+                  <div><b>FOB · Buyer arranges</b><span>Buyer nominates the vessel and arranges/pays the main carriage. Seller loads the goods on board at the named shipment port.</span></div>
+                  <div><b>CFR · Seller arranges</b><span>Seller contracts and pays for carriage to the named destination port. Risk still transfers to buyer once goods are on board at shipment.</span></div>
+                  <div><b>CIF · Seller arranges</b><span>Seller contracts and pays for carriage and obtains the required minimum insurance. Risk still transfers to buyer once goods are on board at shipment.</span></div>
+                </div>
+              </div>
               <dl class="learning-types">
                 <dt>Sea/inland-waterway</dt><dd><b>FAS</b> (alongside ship), <b>FOB</b> (on board), <b>CFR</b> (cost and freight), <b>CIF</b> (cost, insurance and freight). For bulk/general cargo loaded directly aboard, FOB may fit the intended delivery point; choose based on the sale contract and ICC guidance.</dd>
                 <dt>Any transport mode</dt><dd><b>EXW, FCA, CPT, CIP, DAP, DPU, DDP.</b> For containerized/multimodal cargo, compare FCA/CPT/CIP with sea-only FOB/CFR/CIF; select the rule that matches the actual delivery handoff.</dd>
