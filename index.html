@@ -660,6 +660,29 @@
   @media (max-width: 360px) { .logo p { display: none; } .logo h1 { font-size: .9rem; } }
   @media (max-width: 720px) { .login-layout { grid-template-columns: minmax(0,1fr); min-height: 0; width: min(500px,100%); } .login-showcase { min-height: 255px; padding: 26px; } .login-showcase-copy { margin-top: 28px; } .login-showcase-copy h1 { max-width: 420px; font-size: 2rem; } .login-showcase-copy p { margin-top: 9px; font-size: .8rem; } .login-route, .login-showcase-foot { display: none; } .login-panel { padding: 28px; } .login-panel h2 { margin-top: 16px; } .login-form { margin-top: 20px; } }
   @media (max-width: 420px) { .login-screen { padding: 12px; } .login-layout { border-radius: 15px; } .login-showcase { min-height: 218px; padding: 22px; } .login-panel { padding: 24px 22px; } .login-panel h2 { font-size: 1.45rem; } }
+
+
+/* iPhone / mobile ergonomics */
+@media (max-width: 680px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body { min-width: 320px; }
+  input, select, textarea { font-size: 16px; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  .form-group { min-width: 0; }
+  .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  .form-group select, .form-group textarea { width: 100%; min-height: 44px; padding: 10px 12px; }
+  .bunker-price-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .bunker-price-row .form-group { margin-bottom: 4px; }
+  .bunker-price-row .form-hint { line-height: 1.45; }
+  .bunker-price-actions { display: grid !important; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: stretch !important; gap: 8px !important; margin: 8px 0 14px !important; }
+  .bunker-price-actions button, .bunker-price-actions a { min-height: 44px; justify-content: center; text-align: center; white-space: normal; line-height: 1.25; padding: 9px 10px !important; font-size: 12px !important; }
+  #bunkerPriceHint { grid-column: 1 / -1; display: block; line-height: 1.45; overflow-wrap: anywhere; }
+  .form-hint { overflow-wrap: anywhere; }
+}
+@media (max-width: 390px) {
+  .bunker-price-actions { grid-template-columns: minmax(0,1fr); }
+  .bunker-price-actions button, .bunker-price-actions a { width: 100%; }
+}
 </style>
 <style>
 /* Learning Desk: concise, expandable topic library */
@@ -808,28 +831,6 @@
   }
 }
 </style>
-
-/* iPhone / mobile ergonomics */
-@media (max-width: 680px) {
-  html { -webkit-text-size-adjust: 100%; }
-  body { min-width: 320px; }
-  input, select, textarea { font-size: 16px; }
-  button, a { -webkit-tap-highlight-color: transparent; }
-  .form-group { min-width: 0; }
-  .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  .form-group select, .form-group textarea { width: 100%; min-height: 44px; padding: 10px 12px; }
-  .bunker-price-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .bunker-price-row .form-group { margin-bottom: 4px; }
-  .bunker-price-row .form-hint { line-height: 1.45; }
-  .bunker-price-actions { display: grid !important; grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: stretch !important; gap: 8px !important; margin: 8px 0 14px !important; }
-  .bunker-price-actions button, .bunker-price-actions a { min-height: 44px; justify-content: center; text-align: center; white-space: normal; line-height: 1.25; padding: 9px 10px !important; font-size: 12px !important; }
-  #bunkerPriceHint { grid-column: 1 / -1; display: block; line-height: 1.45; overflow-wrap: anywhere; }
-  .form-hint { overflow-wrap: anywhere; }
-}
-@media (max-width: 390px) {
-  .bunker-price-actions { grid-template-columns: minmax(0,1fr); }
-  .bunker-price-actions button, .bunker-price-actions a { width: 100%; }
-}
 
 </head>
 <body>
