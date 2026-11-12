@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#102b40">
 <title>Breakbulk & Drybulk Broker Dashboard</title>
 <meta name="description" content="Breakbulk and drybulk broker tools, searchable shipping glossary, and practical shipping document learning guides.">
 <!-- Inline SVG favicon (anchor) — no external file, works on GitHub Pages. -->
@@ -15,50 +16,53 @@
 <meta name="twitter:card" content="summary">
 <style>
   :root {
-    --navy:   #f5f0e8;
-    --navy2:  #ede7da;
-    --blue:   #e2dace;
-    --accent: #b8620a;
-    --accent2:#9a5210;
-    --gold:   #8a5808;
-    --green:  #1a7a48;
-    --red:    #c0392b;
-    --text:   #2a1e0e;
-    --muted:  #63533e;
-    --border: #c8b89a;
-    --card:   #faf6ef;
-    /* Status colours for badges/hints. Chosen to clear 4.5:1 on --card, unlike the
-       var(--warn) / var(--ok) pair inherited from the original dark theme. */
-    --warn:   #8a5408;
-    --ok:     #1a7a48;
+    --navy:   #f2f6f9;
+    --navy2:  #e8eff4;
+    --blue:   #dfeaf1;
+    --accent: #147a8c;
+    --accent2:#0d5264;
+    --gold:   #96620e;
+    --green:  #17734d;
+    --red:    #b42332;
+    --text:   #172b3a;
+    --muted:  #5c7182;
+    --border: #d3dee6;
+    --card:   #ffffff;
+    --warn:   #875706;
+    --ok:     #17734d;
+    --shadow-sm: 0 2px 8px rgba(17, 43, 61, .06);
+    --shadow-md: 0 12px 30px rgba(17, 43, 61, .09);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--navy); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--navy); color: var(--text); font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif; min-height: 100vh; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  button, input, select, textarea { font-family: inherit; }
+  button { touch-action: manipulation; }
 
   /* HEADER */
   header {
-    background: var(--navy2);
-    border-bottom: 2px solid var(--accent);
-    padding: 14px 24px;
+    background: #102b40;
+    border-bottom: 3px solid var(--accent);
+    padding: 14px clamp(16px, 2vw, 32px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 20px rgba(184,98,10,0.12);
+    box-shadow: 0 4px 18px rgba(13, 37, 54, .16);
   }
-  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .logo-icon { font-size: 28px; }
-  .logo h1 { font-size: 1.2rem; font-weight: 700; color: var(--text); letter-spacing: .5px; }
-  .logo p { font-size: .72rem; color: var(--accent2); letter-spacing: 1px; text-transform: uppercase; }
+  .logo h1 { font-size: 1.12rem; font-weight: 700; color: #f8fbfd; letter-spacing: .1px; }
+  .logo p { font-size: .68rem; color: #b7d0dc; letter-spacing: 1.1px; text-transform: uppercase; margin-top: 3px; }
   .header-meta { text-align: right; }
-  .header-meta .date { font-size: .8rem; color: var(--muted); }
-  .header-meta .segment { font-size: .75rem; color: var(--gold); font-weight: 600; letter-spacing: .5px; }
+  .header-meta .date { font-size: .78rem; color: #d0dce4; }
+  .header-meta .segment { font-size: .7rem; color: #f1c27c; font-weight: 650; letter-spacing: .7px; margin-top: 3px; }
 
   .up { color: var(--green); }
   .dn { color: var(--red); }
 
   /* LAYOUT */
-  .main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 22vw); gap: 16px; padding: 16px clamp(12px, 1.5vw, 24px); max-width: 1920px; margin: 0 auto; }
+  .main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, 22vw); gap: 18px; padding: 20px clamp(12px, 1.5vw, 28px); max-width: 1920px; margin: 0 auto; align-items: start; }
 
   /* SECTIONS */
   .section-title {
@@ -68,33 +72,34 @@
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
   /* NEWS */
-  .news-col { display: flex; flex-direction: column; gap: 16px; order: 2; }
-  .quote-col { order: 1; }
+  .news-col { display: flex; flex-direction: column; gap: 13px; order: 2; min-width: 0; }
+  .quote-col { order: 1; min-width: 0; }
 
   .news-sources {
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
   }
   .news-source {
-    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-    padding: 10px 8px; text-align: center; cursor: pointer; transition: all .2s;
+    background: var(--card); border: 1px solid var(--border); border-radius: 9px;
+    padding: 10px 8px; text-align: center; cursor: pointer; transition: border-color .18s, background .18s, transform .18s, box-shadow .18s;
     text-decoration: none; color: var(--text);
+    box-shadow: var(--shadow-sm);
   }
-  .news-source:hover { border-color: var(--accent); background: var(--blue); transform: translateY(-2px); }
-  .news-source .src-icon { font-size: 1.4rem; margin-bottom: 4px; }
-  .news-source .src-name { font-size: .72rem; font-weight: 600; color: var(--accent2); }
-  .news-source .src-desc { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+  .news-source:hover { border-color: var(--accent); background: var(--blue); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .news-source .src-icon { font-size: 1.25rem; margin-bottom: 4px; }
+  .news-source .src-name { font-size: .7rem; font-weight: 700; color: var(--accent2); }
+  .news-source .src-desc { font-size: .66rem; color: var(--muted); margin-top: 3px; }
 
-  .news-feed { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .news-feed { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; box-shadow: var(--shadow-sm); }
   .news-filter {
-    display: flex; gap: 8px; padding: 12px 16px; background: var(--navy2); flex-wrap: wrap;
+    display: flex; gap: 6px; padding: 11px 12px; background: #f7f9fb; flex-wrap: wrap;
     border-bottom: 1px solid var(--border);
   }
   .filter-btn {
     display: inline-flex; align-items: center; min-height: 32px;
-    padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-size: .72rem; cursor: pointer; transition: all .2s;
+    padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border);
+    background: #fff; color: var(--muted); font-size: .69rem; font-weight: 600; cursor: pointer; transition: all .18s;
   }
-  .filter-btn.active, .filter-btn:hover { background: #9a5210; border-color: #9a5210; color: #fff; }
+  .filter-btn.active, .filter-btn:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
 
   .news-list { max-height: 460px; overflow-y: auto; }
   .news-list::-webkit-scrollbar { width: 4px; }
@@ -102,11 +107,11 @@
   .news-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
   .news-item {
-    width: 100%; padding: 14px 16px; border: 0; border-bottom: 1px solid var(--border); cursor: pointer;
+    width: 100%; padding: 12px 13px; border: 0; border-bottom: 1px solid var(--border); cursor: pointer;
     transition: background .15s; display: flex; gap: 12px; text-align: left;
     background: transparent; color: var(--text); font: inherit;
   }
-  .news-item:hover { background: var(--blue); }
+  .news-item:hover { background: #f4f8fa; }
   .news-item:last-child { border-bottom: none; }
   .news-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
   .news-dot.hot { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
@@ -114,8 +119,8 @@
   .news-dot.live { background: var(--green); box-shadow: 0 0 8px rgba(26,122,72,.5); animation: livePulse 1.5s infinite; }
   @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.5} }
   .news-content {}
-  .news-headline { font-size: .83rem; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
-  .news-meta { display: flex; gap: 10px; font-size: .7rem; color: var(--muted); align-items: center; flex-wrap: wrap; }
+  .news-headline { font-size: .79rem; font-weight: 620; color: var(--text); line-height: 1.45; margin-bottom: 5px; overflow-wrap: anywhere; }
+  .news-meta { display: flex; gap: 7px; font-size: .66rem; color: var(--muted); align-items: center; flex-wrap: wrap; }
   .news-tag {
     display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: .7rem;
     font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
@@ -147,29 +152,31 @@
 
   /* QUOTE FORM */
   .quote-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
     position: sticky; top: 80px;
+    box-shadow: var(--shadow-md);
   }
   .quote-header {
-    background: linear-gradient(135deg, var(--blue), var(--navy2));
-    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(115deg, #e5f1f4, #f7fafc);
+    padding: 17px 20px; border-bottom: 1px solid var(--border);
   }
   .quote-header h2 { font-size: .95rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
   .quote-header p { font-size: .72rem; color: var(--muted); margin-top: 3px; }
 
-  form { padding: 18px 20px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+  form { padding: 20px clamp(16px, 1.6vw, 26px); }
+  .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .form-group { margin-bottom: 14px; display: flex; flex-direction: column; }
   /* Labels: min-height keeps inputs aligned across a row even when one label wraps */
-  label { display: block; font-size: .7rem; color: var(--accent2); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 5px; min-height: 1.2em; }
+  label { display: block; font-size: .68rem; color: var(--accent2); font-weight: 700; letter-spacing: .55px; text-transform: uppercase; margin-bottom: 6px; min-height: 1.2em; }
   input, select, textarea {
-    width: 100%; background: #fff; border: 1px solid var(--border); border-radius: 6px;
-    padding: 9px 12px; color: var(--text); font-size: .83rem; outline: none;
-    transition: border-color .2s;
+    width: 100%; background: #fff; border: 1px solid #c7d4de; border-radius: 7px;
+    padding: 10px 12px; color: var(--text); font: inherit; font-size: .82rem; outline: none;
+    transition: border-color .18s, box-shadow .18s, background .18s;
   }
-  input:focus, select:focus { border-color: var(--accent); }
+  input:hover, select:hover, textarea:hover { border-color: #a8bccb; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(20,122,140,.12); }
   select option { background: #fff; }
-  .form-hint { font-size: .65rem; color: var(--muted); margin-top: 3px; }
+  .form-hint { font-size: .69rem; color: var(--muted); margin-top: 4px; line-height: 1.45; }
 
   /* Port autocomplete dropdown */
   .port-wrap { position: relative; }
@@ -196,33 +203,33 @@
     flex: 1; padding: 9px; border: none; background: var(--navy); color: var(--muted);
     cursor: pointer; font-size: .8rem; transition: all .2s;
   }
-  .vessel-toggle button.active { background: #9a5210; color: #fff; }
+  .vessel-toggle button.active { background: var(--accent2); color: #fff; }
 
   .calc-btn {
-    width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #7a3a05);
+    width: 100%; padding: 13px; background: linear-gradient(135deg, var(--accent), var(--accent2));
     border: none; border-radius: 8px; color: #fff; font-size: .9rem; font-weight: 700;
-    cursor: pointer; transition: all .2s; letter-spacing: .5px; margin-top: 4px;
+    cursor: pointer; transition: transform .18s, box-shadow .18s, filter .18s; letter-spacing: .25px; margin-top: 5px;
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(184,98,10,.35); }
+  .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 7px 18px rgba(13,82,100,.25); filter: brightness(1.04); }
 
   /* Tool navigation: persistent left rail on desktop, scrollable strip on phones. */
   .quote-workspace { display: grid; grid-template-columns: 158px minmax(0, 1fr); align-items: stretch; min-width: 0; }
   .tabs {
-    display: flex; flex-direction: column; gap: 5px; padding: 14px 8px;
-    background: var(--navy2); border-right: 1px solid var(--border); min-width: 0;
+    display: flex; flex-direction: column; gap: 5px; padding: 15px 8px;
+    background: #f3f7f9; border-right: 1px solid var(--border); min-width: 0;
   }
   .tab-btn {
     display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px;
-    padding: 9px 11px; border: 1px solid transparent; border-left: 3px solid transparent;
+    padding: 9px 10px; border: 1px solid transparent; border-left: 3px solid transparent;
     border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer;
-    font: inherit; font-size: .78rem; font-weight: 650; text-align: left; white-space: nowrap;
-    transition: background .15s, color .15s, border-color .15s;
+    font: inherit; font-size: .77rem; font-weight: 650; text-align: left; white-space: nowrap;
+    transition: background .16s, color .16s, border-color .16s, transform .16s;
   }
-  .tab-btn:hover { color: var(--accent2); background: rgba(184,98,10,.08); }
+  .tab-btn:hover { color: var(--accent2); background: #e8f0f4; transform: translateX(1px); }
   .tab-btn.active {
-    color: var(--accent2); background: var(--card); border-color: var(--border);
-    border-left-color: var(--accent); box-shadow: 0 1px 3px rgba(42,30,14,.06);
+    color: var(--accent2); background: #fff; border-color: #d5e1e8;
+    border-left-color: var(--accent); box-shadow: var(--shadow-sm); font-weight: 750;
   }
   .tab-panels { min-width: 0; }
   .tab-content { display: none; }
@@ -246,12 +253,13 @@
   .glossary-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 10px; }
   .glossary-card {
     display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 10px;
-    width: 100%; min-height: 82px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+    width: 100%; min-height: 82px; padding: 13px; border: 1px solid var(--border); border-radius: 9px;
     background: #fff; color: var(--text); text-align: left; cursor: pointer;
-    transition: border-color .15s, box-shadow .15s, transform .15s;
+    transition: border-color .16s, box-shadow .16s, transform .16s;
+    box-shadow: var(--shadow-sm);
   }
   .glossary-card:hover, .glossary-card:focus-visible {
-    border-color: var(--accent); box-shadow: 0 3px 10px rgba(42,30,14,.09); transform: translateY(-1px);
+    border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-1px);
   }
   .glossary-card-term { font-size: .79rem; line-height: 1.35; font-weight: 700; overflow-wrap: anywhere; }
   .glossary-card-category { color: var(--muted); font-size: .64rem; }
@@ -272,9 +280,9 @@
   .glossary-dialog-aliases { margin-top: 14px; color: var(--muted); font-size: .76rem; }
   .learning-wrap { padding: 20px; }
   .learning-intro { margin: 8px 0 16px; color: var(--muted); font-size: .82rem; line-height: 1.6; }
-  .learning-notice { margin-bottom: 16px; padding: 12px 14px; border: 1px solid #d9b66d; border-left: 4px solid var(--gold); border-radius: 7px; background: #fff8e9; font-size: .76rem; line-height: 1.55; }
+  .learning-notice { margin-bottom: 16px; padding: 12px 14px; border: 1px solid #dfca9d; border-left: 4px solid var(--gold); border-radius: 8px; background: #fffaf0; font-size: .76rem; line-height: 1.55; }
   .learning-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 12px; align-items: start; }
-  .learning-card { min-width: 0; padding: 15px; border: 1px solid var(--border); border-radius: 9px; background: #fff; }
+  .learning-card { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: var(--shadow-sm); }
   .learning-card.learning-wide { grid-column: 1 / -1; }
   .learning-card h4 { margin: 0 0 9px; color: var(--accent2); font-size: .9rem; line-height: 1.4; }
   .learning-card p, .learning-card li { color: var(--text); font-size: .76rem; line-height: 1.6; }
@@ -290,7 +298,7 @@
   .voyage-stage { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; align-items: start; }
   .voyage-stage-marker { position: relative; z-index: 1; display: grid; place-items: center; width: 40px; height: 40px; border: 3px solid #fff; border-radius: 50%; background: var(--accent); color: #fff; box-shadow: 0 0 0 1px var(--accent); font-weight: 800; font-size: .82rem; }
   .voyage-stage:first-child .voyage-stage-marker { animation: voyage-pulse 2.4s ease-out infinite; }
-  @keyframes voyage-pulse { 0%, 100% { box-shadow: 0 0 0 1px var(--accent), 0 0 0 0 rgba(184,98,10,.22); } 55% { box-shadow: 0 0 0 1px var(--accent), 0 0 0 8px rgba(184,98,10,0); } }
+  @keyframes voyage-pulse { 0%, 100% { box-shadow: 0 0 0 1px var(--accent), 0 0 0 0 rgba(20,122,140,.22); } 55% { box-shadow: 0 0 0 1px var(--accent), 0 0 0 8px rgba(20,122,140,0); } }
   .voyage-stage-card { min-width: 0; padding: 13px 15px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); }
   .voyage-stage-card h5 { margin: 0 0 10px; color: var(--accent2); font-size: .84rem; }
   .voyage-stage-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -391,8 +399,8 @@
   .result-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0 16px; }
 
   .freight-display {
-    background: linear-gradient(135deg, #e8f5ee, #f5f0e8);
-    border: 1px solid var(--green); border-radius: 8px; padding: 16px;
+    background: linear-gradient(135deg, #e9f5f1, #f8fbfa);
+    border: 1px solid rgba(23,115,77,.45); border-radius: 9px; padding: 18px;
     text-align: center; margin-bottom: 14px;
   }
   .freight-label { font-size: .7rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
@@ -410,13 +418,13 @@
   .breakdown-row:last-child { border-bottom: none; }
   .breakdown-row .b-label { color: var(--muted); }
   .breakdown-row .b-val { color: var(--text); font-weight: 600; font-family: 'Courier New', monospace; }
-  .breakdown-row.total { background: rgba(184,98,10,.1); }
+  .breakdown-row.total { background: rgba(20,122,140,.1); }
   .breakdown-row.total .b-label { color: var(--accent2); font-weight: 700; }
   .breakdown-row.total .b-val { color: var(--accent); font-size: .85rem; }
 
   .voyage-tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
   .vtag {
-    background: rgba(184,98,10,.1); border: 1px solid rgba(184,98,10,.3);
+    background: rgba(20,122,140,.1); border: 1px solid rgba(20,122,140,.3);
     border-radius: 4px; padding: 4px 10px; font-size: .68rem; color: var(--accent2);
     display: flex; align-items: center; gap: 4px;
   }
@@ -428,10 +436,10 @@
 
   /* DISTANCE PANEL */
   .dist-panel {
-    max-width: 1400px; margin: 0 auto 24px; padding: 0 24px;
+    max-width: 1920px; margin: 0 auto 24px; padding: 0 clamp(12px, 1.5vw, 28px);
   }
   .dist-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 11px; box-shadow: var(--shadow-sm);
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 22px; flex-wrap: wrap; gap: 14px;
   }
@@ -469,7 +477,7 @@
 
   /* RECENT QUOTES */
   .hist-panel {
-    max-width: 1400px; margin: 0 auto 22px; padding: 0 22px;
+    max-width: 1920px; margin: 0 auto 22px; padding: 0 clamp(12px, 1.5vw, 28px);
   }
   .hist-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
   .hist-head h3 { font-size:.82rem; font-weight:700; color:var(--muted); letter-spacing:.3px; }
@@ -480,7 +488,7 @@
   }
   .hist-clear:hover { border-color:var(--red); color:var(--red); }
   #quoteHistory {
-    background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden;
+    background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:var(--shadow-sm);
   }
   .hist-row {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -515,6 +523,14 @@
     .dist-card { flex-direction: column; align-items: flex-start; }
   }
   @media (max-width: 680px) {
+    header { gap: 12px; padding: 11px 14px; }
+    .logo { gap: 8px; }
+    .logo-icon { font-size: 24px; }
+    .logo h1 { font-size: 1rem; }
+    .logo p { max-width: 230px; font-size: .61rem; line-height: 1.4; letter-spacing: .65px; }
+    .header-meta .date { font-size: .68rem; white-space: nowrap; }
+    .header-meta .segment { font-size: .61rem; }
+    .main { gap: 14px; padding-top: 14px; }
     .quote-workspace { grid-template-columns: minmax(0, 1fr); }
     .tabs {
       flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border);
@@ -524,10 +540,99 @@
     .tab-btn.active { border-color: var(--border); border-bottom-color: var(--accent); }
     .glossary-wrap { padding: 16px 14px 20px; }
   }
+  @media (max-width: 480px) {
+    header { align-items: center; }
+    .header-meta .segment { display: none; }
+    .logo p { max-width: 190px; }
+    .form-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    form { padding: 16px 14px; }
+    .news-filter { padding: 9px; }
+    .filter-btn { padding: 4px 9px; }
+  }
+
+  /* Sign-in landing screen. The dashboard itself remains a static public asset,
+     so this client-side gate is a convenience screen, not access control. */
+  .login-screen { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; overflow-y: auto; padding: 32px 20px; background: radial-gradient(ellipse at 14% 16%, rgba(49,130,153,.28), transparent 34%), linear-gradient(140deg, #0c2031, #153d53 58%, #102b40); }
+  .login-screen[hidden], #dashboardApp[hidden] { display: none !important; }
+  .login-layout { display: grid; grid-template-columns: minmax(0,1.08fr) minmax(360px,.82fr); width: min(1040px, 100%); min-height: 590px; overflow: hidden; border: 1px solid rgba(209,228,237,.2); border-radius: 22px; background: #fff; box-shadow: 0 28px 90px rgba(0,0,0,.3); }
+  .login-showcase { position: relative; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: clamp(30px, 5vw, 58px); background: linear-gradient(150deg, #12374d 0%, #0c5264 60%, #147a8c 100%); color: #f6fbfd; }
+  .login-showcase::before, .login-showcase::after { position: absolute; content: ''; border: 1px solid rgba(214,241,248,.12); border-radius: 50%; pointer-events: none; }
+  .login-showcase::before { width: 460px; height: 460px; right: -260px; top: -190px; }
+  .login-showcase::after { width: 360px; height: 360px; right: -205px; top: -140px; }
+  .login-brand, .login-showcase-copy, .login-route, .login-showcase-foot { position: relative; z-index: 1; }
+  .login-brand { display: flex; align-items: center; gap: 12px; color: #fff; font-weight: 750; letter-spacing: .2px; }
+  .login-brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.25); border-radius: 12px; background: rgba(255,255,255,.1); font-size: 1.35rem; }
+  .login-kicker { margin-bottom: 14px; color: #b8dce5; font-size: .7rem; font-weight: 750; letter-spacing: 1.6px; text-transform: uppercase; }
+  .login-showcase-copy h1 { max-width: 470px; font-size: clamp(2.1rem, 4.3vw, 3.5rem); line-height: 1.04; letter-spacing: -1.7px; }
+  .login-showcase-copy p { max-width: 440px; margin-top: 17px; color: #d4e8ee; font-size: .92rem; line-height: 1.7; }
+  .login-route { display: flex; align-items: center; gap: 9px; margin-top: 30px; color: #def0f3; font-size: .65rem; font-weight: 700; letter-spacing: .65px; }
+  .login-route-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,.72), rgba(255,255,255,.18)); }
+  .login-showcase-foot { color: #bad5dd; font-size: .68rem; }
+  .login-panel { display: flex; flex-direction: column; justify-content: center; padding: clamp(30px, 4vw, 54px); background: #fff; }
+  .login-badge { align-self: flex-start; padding: 5px 10px; border: 1px solid #cce5e8; border-radius: 20px; background: #eff8f8; color: var(--accent2); font-size: .67rem; font-weight: 750; letter-spacing: .65px; text-transform: uppercase; }
+  .login-panel h2 { margin-top: 23px; color: var(--text); font-size: 1.65rem; letter-spacing: -.5px; }
+  .login-panel-intro { margin-top: 7px; color: var(--muted); font-size: .83rem; line-height: 1.55; }
+  .login-form { display: grid; gap: 16px; padding: 0; margin-top: 26px; }
+  .login-field { display: grid; gap: 6px; }
+  .login-field label { min-height: auto; margin: 0; font-size: .7rem; }
+  .login-field input { min-height: 46px; padding: 11px 13px; border-color: #c7d4de; border-radius: 8px; font-size: .86rem; }
+  .login-password-wrap { position: relative; }
+  .login-password-wrap input { padding-right: 70px; }
+  .login-show-password { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); min-height: 32px; padding: 4px 7px; border: 0; border-radius: 5px; background: transparent; color: var(--accent2); font-size: .7rem; font-weight: 700; cursor: pointer; }
+  .login-show-password:hover { background: #edf5f7; }
+  .login-submit { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; margin-top: 3px; border: 0; border-radius: 8px; background: linear-gradient(120deg, var(--accent), var(--accent2)); color: #fff; font-size: .86rem; font-weight: 750; cursor: pointer; box-shadow: 0 7px 17px rgba(13,82,100,.18); transition: transform .16s, box-shadow .16s; }
+  .login-submit:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(13,82,100,.25); }
+  .login-error { min-height: 1.2em; color: var(--red); font-size: .75rem; }
+  .login-panel-foot { margin-top: 22px; color: #8091a0; font-size: .68rem; line-height: 1.5; }
+  .header-actions { display: flex; align-items: center; gap: 14px; }
+  .signout-btn { min-height: 32px; padding: 5px 10px; border: 1px solid rgba(233,244,248,.28); border-radius: 6px; background: rgba(255,255,255,.06); color: #e7f1f5; font-size: .68rem; font-weight: 650; cursor: pointer; }
+  .signout-btn:hover { background: rgba(255,255,255,.15); }
+  @media (max-width: 680px) { .header-actions { gap: 8px; flex-shrink: 0; } .signout-btn { min-height: 30px; padding: 4px 8px; font-size: .63rem; } }
+  @media (max-width: 480px) { .header-meta .date { font-size: .62rem; } .header-actions { gap: 6px; } .signout-btn { padding: 4px 6px; font-size: .6rem; } }
+  @media (max-width: 360px) { .logo p { display: none; } .logo h1 { font-size: .9rem; } }
+  @media (max-width: 720px) { .login-layout { grid-template-columns: minmax(0,1fr); min-height: 0; width: min(500px,100%); } .login-showcase { min-height: 255px; padding: 26px; } .login-showcase-copy { margin-top: 28px; } .login-showcase-copy h1 { max-width: 420px; font-size: 2rem; } .login-showcase-copy p { margin-top: 9px; font-size: .8rem; } .login-route, .login-showcase-foot { display: none; } .login-panel { padding: 28px; } .login-panel h2 { margin-top: 16px; } .login-form { margin-top: 20px; } }
+  @media (max-width: 420px) { .login-screen { padding: 12px; } .login-layout { border-radius: 15px; } .login-showcase { min-height: 218px; padding: 22px; } .login-panel { padding: 24px 22px; } .login-panel h2 { font-size: 1.45rem; } }
 </style>
 </head>
 <body>
 
+<section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+  <div class="login-layout">
+    <div class="login-showcase">
+      <div class="login-brand"><span class="login-brand-mark" aria-hidden="true">&#9875;</span><span>Broker Intelligence Suite</span></div>
+      <div class="login-showcase-copy">
+        <div class="login-kicker">Breakbulk &amp; Drybulk · 3,000–82,000 DWT</div>
+        <h1>Make the next fixture clearer.</h1>
+        <p>Freight estimating, voyage planning and shipping references in one focused workspace.</p>
+        <div class="login-route" aria-hidden="true"><span>FIXTURE</span><span class="login-route-line"></span><span>VOYAGE</span><span class="login-route-line"></span><span>DELIVERY</span></div>
+      </div>
+      <div class="login-showcase-foot">Chartering tools · Port intelligence · Shipping dictionary</div>
+    </div>
+    <div class="login-panel">
+      <span class="login-badge">Broker workspace</span>
+      <h2 id="loginTitle">Sign in to continue</h2>
+      <p class="login-panel-intro">Enter your account details to open the shipping dashboard.</p>
+      <form id="loginForm" class="login-form" novalidate>
+        <div class="login-field">
+          <label for="loginUsername">Account</label>
+          <input id="loginUsername" name="username" type="text" placeholder="Enter your account" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </div>
+        <div class="login-field">
+          <label for="loginPassword">Password</label>
+          <div class="login-password-wrap">
+            <input id="loginPassword" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <button class="login-show-password" id="togglePassword" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+          </div>
+        </div>
+        <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
+        <button class="login-submit" type="submit">Open dashboard <span aria-hidden="true">&#8594;</span></button>
+      </form>
+      <p class="login-panel-foot">Your sign-in stays active in this browser tab. Sign out when you finish.</p>
+    </div>
+  </div>
+</section>
+
+<div id="dashboardApp" hidden>
 <!-- HEADER -->
 <header>
   <div class="logo">
@@ -537,9 +642,12 @@
       <p>Breakbulk &amp; Drybulk &mdash; 3,000&ndash;82,000 DWT</p>
     </div>
   </div>
-  <div class="header-meta">
-    <div class="date" id="curDate"></div>
-    <div class="segment">Tramp / Spot Market</div>
+  <div class="header-actions">
+    <div class="header-meta">
+      <div class="date" id="curDate"></div>
+      <div class="segment">Tramp / Spot Market</div>
+    </div>
+    <button class="signout-btn" id="signoutButton" type="button">Sign out</button>
   </div>
 </header>
 
@@ -830,8 +938,8 @@
             &#8635; Refresh Live CPC Prices
           </button>
           <a href="https://www.cpc.com.tw/en/News_Content.aspx?n=2671&s=3104" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(184,98,10,0.1);border:1px solid rgba(184,98,10,0.35);border-radius:6px;color:#8f4b08;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
-             onmouseover="this.style.background='rgba(184,98,10,0.2)'" onmouseout="this.style.background='rgba(184,98,10,0.1)'">
+             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(20,122,140,0.1);border:1px solid rgba(20,122,140,0.35);border-radius:6px;color:#8f4b08;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
+             onmouseover="this.style.background='rgba(20,122,140,0.2)'" onmouseout="this.style.background='rgba(20,122,140,0.1)'">
             &#9981; Open CPC Page
           </a>
           <div id="bunkerPriceHint" class="form-hint" style="margin:0;font-size:11px;color:var(--warn)">&#9203; Loading current CPC prices. If unavailable, enter both prices manually; the calculator will not use old defaults.</div>
@@ -903,7 +1011,7 @@
       <!-- ========== TCE REVERSE TAB ========== -->
       <div id="tab-tce" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-tce" tabindex="0">
         <form id="tceForm" onsubmit="return false;">
-          <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
+          <div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
             &#128161; <b>How it works:</b> Enter the freight rate the charterer is offering and the voyage details. Tool back-calculates your time-charter equivalent (TCE) per day &mdash; what the owner actually earns after voyage costs.
           </div>
 
@@ -1062,7 +1170,7 @@
       <!-- ========== MULTI-PORT VOYAGE TAB ========== -->
       <div id="tab-multi" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-multi" tabindex="0">
         <form id="multiForm" onsubmit="return false;">
-          <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
+          <div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
             &#128205; <b>Multi-port voyage:</b> 2-load / 1-disch, 1-load / 2-disch, or full 4-stop sequences. Leg distances computed in order. Total loaded MT must equal total discharged MT (cargo balance check).
           </div>
 
@@ -1201,7 +1309,7 @@
       <!-- ========== FIXTURE NOTE TAB ========== -->
       <div id="tab-fn" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-fn" tabindex="0">
         <form id="fnForm" onsubmit="return false;">
-          <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
+          <div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
             &#128221; <b>Fixture Note draft generator:</b> fill the variables below — the 29-clause boilerplate is hardcoded to match your house template. Empty fields show as <code>[PLEASE ADVISE]</code>.
           </div>
 
@@ -1621,7 +1729,84 @@
   </div>
 </div>
 
+ </div><!-- /dashboardApp -->
+
 <script>
+// Lightweight front-end sign-in gate for the static version. This only hides
+// the dashboard UI; all page assets remain public and this is not real security.
+const STATIC_LOGIN = {
+  username: 'smartbroker',
+  salt: '03fdb4b3e0a4dd4b3e28c04d82da26cc',
+  hash: 'dc3c70ba3359a3e912fe963be612af66293cb5c96f3d1566fda0b87422c167d2',
+  iterations: 210000,
+};
+const LOGIN_SESSION_KEY = 'brokerSuiteSessionStart';
+const LOGIN_SESSION_MS = 8 * 60 * 60 * 1000;
+const loginScreen = document.getElementById('loginScreen');
+const dashboardApp = document.getElementById('dashboardApp');
+const loginForm = document.getElementById('loginForm');
+const loginUsername = document.getElementById('loginUsername');
+const loginPassword = document.getElementById('loginPassword');
+const loginError = document.getElementById('loginError');
+
+function unlockDashboard() {
+  loginScreen.hidden = true;
+  dashboardApp.hidden = false;
+}
+function clearDashboardSession() {
+  sessionStorage.removeItem(LOGIN_SESSION_KEY);
+  dashboardApp.hidden = true;
+  loginScreen.hidden = false;
+  loginForm.reset();
+  loginError.textContent = '';
+  loginUsername.focus();
+}
+function fromHex(value) {
+  return new Uint8Array(value.match(/.{2}/g).map(byte => parseInt(byte, 16)));
+}
+async function verifyStaticPassword(password) {
+  if (!crypto?.subtle) throw new Error('Secure browser cryptography is unavailable.');
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const derived = new Uint8Array(await crypto.subtle.deriveBits({
+    name: 'PBKDF2', salt: fromHex(STATIC_LOGIN.salt), iterations: STATIC_LOGIN.iterations, hash: 'SHA-256',
+  }, key, 256));
+  const expected = fromHex(STATIC_LOGIN.hash);
+  let difference = derived.length ^ expected.length;
+  for (let i = 0; i < Math.min(derived.length, expected.length); i++) difference |= derived[i] ^ expected[i];
+  return difference === 0;
+}
+const savedSession = Number(sessionStorage.getItem(LOGIN_SESSION_KEY));
+if (Number.isFinite(savedSession) && Date.now() - savedSession < LOGIN_SESSION_MS && Date.now() >= savedSession) unlockDashboard();
+else sessionStorage.removeItem(LOGIN_SESSION_KEY);
+
+loginForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  loginError.textContent = '';
+  const usernameMatches = loginUsername.value.trim().toLowerCase() === STATIC_LOGIN.username;
+  try {
+    const passwordMatches = await verifyStaticPassword(loginPassword.value);
+    if (!usernameMatches || !passwordMatches) {
+      loginError.textContent = 'Account or password not recognized.';
+      loginPassword.value = '';
+      loginPassword.focus();
+      return;
+    }
+    sessionStorage.setItem(LOGIN_SESSION_KEY, String(Date.now()));
+    unlockDashboard();
+    document.getElementById('tool-tab-freight')?.focus();
+  } catch (error) {
+    loginError.textContent = error.message || 'Unable to verify the sign-in. Please try again.';
+  }
+});
+document.getElementById('togglePassword').addEventListener('click', event => {
+  const visible = loginPassword.type === 'password';
+  loginPassword.type = visible ? 'text' : 'password';
+  event.currentTarget.textContent = visible ? 'Hide' : 'Show';
+  event.currentTarget.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} password`);
+  event.currentTarget.setAttribute('aria-pressed', String(visible));
+});
+document.getElementById('signoutButton').addEventListener('click', clearDashboardSession);
+
 // ─── DATE ────────────────────────────────────────────────────────────────────
 document.getElementById('curDate').textContent =
   new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
@@ -1909,7 +2094,7 @@ async function fetchCPCPrices(forceRefresh) {
     }
   } catch(e) {}
 
-  setBunkerHint('\u23F3 Fetching live CPC bunker prices&hellip;', '#b8620a');
+  setBunkerHint('\u23F3 Fetching live CPC bunker prices&hellip;', '#147a8c');
 
   const html = await fetchCPCHtml();
   if (!html) {
@@ -8259,7 +8444,7 @@ function calculateMulti() {
   }).join('');
 
   document.getElementById('multiBreakdown').innerHTML = `
-    <div class="breakdown-row" style="background:rgba(184,98,10,.06);font-weight:700"><span class="b-label">📍 Voyage legs</span><span class="b-val">Total ${totalDistance.toLocaleString()} nm</span></div>
+    <div class="breakdown-row" style="background:rgba(20,122,140,.06);font-weight:700"><span class="b-label">📍 Voyage legs</span><span class="b-val">Total ${totalDistance.toLocaleString()} nm</span></div>
     ${legsHtml}
     <div class="breakdown-row"><span class="b-label">Sea bunker (${seaDays.toFixed(1)} sea days incl. ${ballastDays.toFixed(1)} d ballast @ ${(seaIfo+seaMgo).toFixed(1)} MT/d)</span><span class="b-val">$${(seaIfo*seaDays*vlsfoPrice + seaMgo*seaDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row"><span class="b-label">Port bunker (${portDays.toFixed(1)} port days)</span><span class="b-val">$${(portIfo*portDays*vlsfoPrice + portMgo*portDays*mgoPrice).toLocaleString('en',{maximumFractionDigits:0})}</span></div>
@@ -8267,7 +8452,7 @@ function calculateMulti() {
     <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${bunkerPriceNote([mVlsfoIn,mMgoIn].filter(Number.isFinite).length)}</span><span class="b-val"></span></div>
     <div class="breakdown-row"><span class="b-label">Vessel hire ($${hireRate.toLocaleString()}/d × ${totalDays.toFixed(1)} d)</span><span class="b-val">$${hireCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     <div class="breakdown-row" style="font-size:.68rem"><span class="b-label">${hireRateAgeLabel()}</span><span class="b-val"></span></div>
-    <div class="breakdown-row" style="background:rgba(184,98,10,.06);font-weight:700"><span class="b-label">📍 Port costs (${stops.length} ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
+    <div class="breakdown-row" style="background:rgba(20,122,140,.06);font-weight:700"><span class="b-label">📍 Port costs (${stops.length} ports)</span><span class="b-val">$${portCosts.toLocaleString('en',{maximumFractionDigits:0})}</span></div>
     ${portCostsHtml}
     ${canalLines.map(c => `<div class="breakdown-row"><span class="b-label">${c.label}</span><span class="b-val">$${c.amt.toLocaleString('en',{maximumFractionDigits:0})}</span></div>`).join('')}
     ${stevCost !== 0 ? `<div class="breakdown-row"><span class="b-label">Stevedoring (${basis.toUpperCase()}, ${commodityKey||'general'} @ $${stevRate}/MT × ${(ownerStevShare*100).toFixed(0)}% × ${totalLoad.toLocaleString()} MT)</span><span class="b-val">$${stevCost.toLocaleString('en',{maximumFractionDigits:0})}</span></div>` : ''}
@@ -8421,7 +8606,7 @@ function savePartyDb() {
   const owner     = document.getElementById('fnOwner').value.trim();
   const ownerAddr = document.getElementById('fnOwnerAddr').value.trim();
   const status = document.getElementById('fnSavePartiesStatus');
-  if (!charterer && !owner) { status.textContent = '⚠ Fill at least one party first.'; status.style.color = '#c0392b'; return; }
+  if (!charterer && !owner) { status.textContent = '⚠ Fill at least one party first.'; status.style.color = 'var(--red)'; return; }
   let saved = { charterers: [], owners: [] };
   try { saved = JSON.parse(localStorage.getItem(PARTY_DB_LS_KEY) || '{}'); } catch(e) {}
   if (!saved.charterers) saved.charterers = [];
