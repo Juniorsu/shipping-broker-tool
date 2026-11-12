@@ -1,19 +1,20 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#102b40">
-<title>Breakbulk & Drybulk Broker Dashboard</title>
-<meta name="description" content="Breakbulk and drybulk broker tools, searchable shipping glossary, and practical shipping document learning guides.">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="#102b40" name="theme-color"/>
+<title>Breakbulk &amp; Drybulk Broker Dashboard</title>
+<meta content="Breakbulk and drybulk broker tools, searchable shipping glossary, and practical shipping document learning guides." name="description"/>
 <!-- Inline SVG favicon (anchor) — no external file, works on GitHub Pages. -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%93%3C/text%3E%3C/svg%3E">
+<link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%93%3C/text%3E%3C/svg%3E" rel="icon"/>
 <!-- Link preview for Slack / WhatsApp / email -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="Breakbulk &amp; Drybulk Broker Dashboard">
-<meta property="og:description" content="Breakbulk and drybulk broker tools, searchable shipping glossary, and practical shipping document learning guides.">
-<meta property="og:url" content="https://juniorsu.github.io/shipping-broker-tool/">
-<meta name="twitter:card" content="summary">
+<meta content="website" property="og:type"/>
+<meta content="Breakbulk &amp; Drybulk Broker Dashboard" property="og:title"/>
+<meta content="Breakbulk and drybulk broker tools, searchable shipping glossary, and practical shipping document learning guides." property="og:description"/>
+<meta content="https://juniorsu.github.io/shipping-broker-tool/" property="og:url"/>
+<meta content="summary" name="twitter:card"/>
 <style>
   :root {
     --navy:   #f2f6f9;
@@ -278,6 +279,64 @@
   .glossary-dialog h3 { clear: both; margin: 8px 36px 10px 0; font-size: 1.08rem; line-height: 1.4; }
   .glossary-dialog-definition { font-size: .88rem; line-height: 1.7; }
   .glossary-dialog-aliases { margin-top: 14px; color: var(--muted); font-size: .76rem; }
+
+  /* Broker voyage workflow diagram */
+  .broker-flow-card { grid-column: 1 / -1; min-width: 0; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
+  .broker-flow-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+  .broker-flow-heading h4 { margin: 0; color: var(--accent2); font-size: .95rem; }
+  .broker-flow-heading p { margin: 4px 0 0; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+  .broker-flow-rule { padding: 7px 10px; border: 1px solid #c9dced; border-radius: 7px; background: #eff6fc; color: #174d7a; font-size: .72rem; font-weight: 700; }
+  .broker-flow-grid { display: grid; grid-template-columns: minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr); grid-template-rows: auto 30px auto; gap: 0 7px; align-items: stretch; }
+  .broker-flow-stage { min-width: 0; padding: 12px 13px; border: 1px solid #d5d2c8; border-radius: 9px; background: var(--card); }
+  .broker-flow-stage h5 { margin: 0 0 6px; color: var(--text); font-size: .8rem; line-height: 1.35; }
+  .broker-flow-stage p { margin: 0; color: var(--muted); font-size: .73rem; line-height: 1.55; }
+  .broker-flow-stage strong { color: var(--accent2); }
+  .broker-flow-stage-a { grid-area: 1 / 1; }
+  .broker-flow-stage-b { grid-area: 1 / 3; }
+  .broker-flow-stage-c { grid-area: 1 / 5; }
+  .broker-flow-stage-d { grid-area: 3 / 5; }
+  .broker-flow-stage-e { grid-area: 3 / 3; }
+  .broker-flow-stage-f { grid-area: 3 / 1; }
+  .broker-flow-arrow { display: grid; place-items: center; color: #a9aa9f; font-size: 1.25rem; font-weight: 700; }
+  .broker-flow-arrow-ab { grid-area: 1 / 2; }
+  .broker-flow-arrow-bc { grid-area: 1 / 4; }
+  .broker-flow-arrow-cd { grid-area: 2 / 5; }
+  .broker-flow-arrow-de { grid-area: 3 / 4; }
+  .broker-flow-arrow-ef { grid-area: 3 / 2; }
+  .broker-loi-panel { margin-top: 14px; padding: 13px; border: 2px solid #3282d9; border-radius: 10px; background: #eff6ff; }
+  .broker-loi-title { margin: 0 0 10px; color: #174d7a; font-size: .8rem; font-weight: 800; }
+  .broker-loi-steps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; counter-reset: loi; }
+  .broker-loi-step { position: relative; display: flex; align-items: center; min-width: 0; min-height: 58px; padding: 10px 11px; border: 1px solid #c5d1df; border-radius: 8px; background: rgba(255,255,255,.72); color: var(--text); font-size: .72rem; line-height: 1.45; }
+  .broker-loi-step b { display: block; margin-right: 6px; color: #174d7a; font-size: .8rem; }
+  .broker-flow-footnote { margin: 10px 0 0; color: var(--muted); font-size: .73rem; line-height: 1.55; }
+  @media (max-width: 680px) {
+    .broker-flow-grid { grid-template-columns: minmax(0,1fr); grid-template-rows: none; gap: 0; }
+    .broker-flow-stage-a,.broker-flow-stage-b,.broker-flow-stage-c,.broker-flow-stage-d,.broker-flow-stage-e,.broker-flow-stage-f { grid-area: auto; }
+    .broker-flow-arrow { min-height: 25px; transform: rotate(90deg); }
+    .broker-flow-arrow-ab,.broker-flow-arrow-bc,.broker-flow-arrow-cd,.broker-flow-arrow-de,.broker-flow-arrow-ef { grid-area: auto; }
+    .broker-loi-steps { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  }
+  @media (max-width: 420px) { .broker-loi-steps { grid-template-columns: 1fr; } }
+
+
+  /* Learning Desk: compact expandable topic cards */
+  .learning-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+  .learning-accordion { min-width: 0; border: 1px solid var(--border); border-radius: 11px; background: var(--card); box-shadow: var(--shadow-sm); overflow: hidden; }
+  .learning-accordion.learning-wide { grid-column: 1 / -1; }
+  .learning-accordion > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; padding: 14px 16px; cursor: pointer; list-style: none; color: var(--accent2); font-size: .84rem; font-weight: 750; line-height: 1.4; }
+  .learning-accordion > summary::-webkit-details-marker { display: none; }
+  .learning-accordion > summary::after { content: '+'; flex: 0 0 26px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--bg, #f4f1eb); color: var(--accent2); font-size: 1.15rem; font-weight: 500; }
+  .learning-accordion[open] > summary { border-bottom: 1px solid var(--border); background: rgba(20,122,140,.045); }
+  .learning-accordion[open] > summary::after { content: '−'; }
+  .learning-accordion-body { padding: 15px 16px 17px; }
+  .learning-accordion-body > h4 { margin: 0 0 12px; color: var(--accent2); font-size: .88rem; }
+  .learning-accordion-body > :last-child { margin-bottom: 0; }
+  .learning-accordion:focus-within { outline: 2px solid rgba(20,122,140,.25); outline-offset: 2px; }
+  .broker-flow-more { margin-top: 10px; border-top: 1px solid rgba(0,0,0,.08); padding-top: 8px; }
+  .broker-flow-more > summary { cursor: pointer; color: var(--accent2); font-size: .75rem; font-weight: 700; }
+  .broker-flow-more .broker-flow-footnote { margin-bottom: 2px; }
+  @media (max-width: 680px) { .learning-grid { grid-template-columns: minmax(0, 1fr); } .learning-accordion.learning-wide { grid-column: auto; } }
+
   .learning-wrap { padding: 20px; }
   .learning-intro { margin: 8px 0 16px; color: var(--muted); font-size: .82rem; line-height: 1.6; }
   .learning-notice { margin-bottom: 16px; padding: 12px 14px; border: 1px solid #dfca9d; border-left: 4px solid var(--gold); border-radius: 8px; background: #fffaf0; font-size: .76rem; line-height: 1.55; }
@@ -602,1139 +661,1219 @@
   @media (max-width: 720px) { .login-layout { grid-template-columns: minmax(0,1fr); min-height: 0; width: min(500px,100%); } .login-showcase { min-height: 255px; padding: 26px; } .login-showcase-copy { margin-top: 28px; } .login-showcase-copy h1 { max-width: 420px; font-size: 2rem; } .login-showcase-copy p { margin-top: 9px; font-size: .8rem; } .login-route, .login-showcase-foot { display: none; } .login-panel { padding: 28px; } .login-panel h2 { margin-top: 16px; } .login-form { margin-top: 20px; } }
   @media (max-width: 420px) { .login-screen { padding: 12px; } .login-layout { border-radius: 15px; } .login-showcase { min-height: 218px; padding: 22px; } .login-panel { padding: 24px 22px; } .login-panel h2 { font-size: 1.45rem; } }
 </style>
+<style>
+/* Learning Desk: concise, expandable topic library */
+#tab-learning .learning-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+  margin-top: 16px;
+}
+#tab-learning .learning-accordion {
+  min-width: 0;
+  border: 1px solid var(--border, #d9d5cc);
+  border-radius: 12px;
+  background: var(--card, #fff);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.05));
+  overflow: hidden;
+}
+#tab-learning .learning-accordion.learning-wide { grid-column: 1 / -1; }
+#tab-learning .learning-accordion > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--accent2, #174d7a);
+  font-size: .9rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+#tab-learning .learning-accordion > summary::-webkit-details-marker { display: none; }
+#tab-learning .learning-accordion > summary::after {
+  content: '+';
+  flex: 0 0 27px;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: var(--bg, #f4f1eb);
+  color: var(--accent2, #174d7a);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+#tab-learning .learning-accordion[open] > summary {
+  border-bottom: 1px solid var(--border, #d9d5cc);
+  background: rgba(20,122,140,.045);
+}
+#tab-learning .learning-accordion[open] > summary::after { content: '−'; }
+#tab-learning .learning-accordion-body { padding: 16px; }
+#tab-learning .learning-accordion-body > :first-child { margin-top: 0; }
+#tab-learning .learning-accordion-body > :last-child { margin-bottom: 0; }
+#tab-learning .learning-accordion:focus-within { outline: 2px solid rgba(20,122,140,.25); outline-offset: 2px; }
+@media (max-width: 720px) {
+  #tab-learning .learning-grid { grid-template-columns: minmax(0, 1fr); }
+  #tab-learning .learning-accordion.learning-wide { grid-column: auto; }
+}
+</style>
+<style>
+/* Learning Desk content rhythm: consistent inset, list markers and readable spacing */
+#tab-learning .learning-accordion-body {
+  box-sizing: border-box;
+  padding: 20px 22px 22px;
+  overflow-wrap: anywhere;
+}
+#tab-learning .learning-accordion-body > p,
+#tab-learning .learning-accordion-body > .learning-types,
+#tab-learning .learning-accordion-body > table,
+#tab-learning .learning-accordion-body > blockquote {
+  max-width: 100%;
+  margin-inline: 0;
+}
+#tab-learning .learning-accordion-body > p {
+  margin-block: 0 13px;
+  line-height: 1.65;
+}
+#tab-learning .learning-accordion-body ul,
+#tab-learning .learning-accordion-body ol {
+  box-sizing: border-box;
+  display: flow-root;
+  width: 100%;
+  margin: 12px 0 16px;
+  padding-inline-start: 2rem;
+  list-style-position: outside;
+}
+#tab-learning .learning-accordion-body li {
+  padding-inline-start: .22rem;
+  margin-block: 0 7px;
+  line-height: 1.6;
+}
+#tab-learning .learning-accordion-body li:last-child { margin-bottom: 0; }
+#tab-learning .learning-accordion-body li::marker {
+  color: var(--accent2, #174d7a);
+  font-weight: 700;
+}
+#tab-learning .learning-accordion-body .learning-types {
+  display: grid;
+  grid-template-columns: minmax(145px, .32fr) minmax(0, 1fr);
+  column-gap: 18px;
+  row-gap: 0;
+  margin-block: 12px 16px;
+}
+#tab-learning .learning-accordion-body .learning-types dt,
+#tab-learning .learning-accordion-body .learning-types dd {
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 9px 0;
+  margin: 0;
+  line-height: 1.55;
+  border-bottom: 1px solid var(--border, #e5e0d6);
+}
+#tab-learning .learning-accordion-body .learning-types dt {
+  color: var(--accent2, #174d7a);
+  font-weight: 700;
+}
+#tab-learning .learning-accordion-body .learning-types dd { overflow-wrap: anywhere; }
+#tab-learning .learning-accordion-body table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+#tab-learning .learning-accordion-body th,
+#tab-learning .learning-accordion-body td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  #tab-learning .learning-accordion-body { padding: 16px 17px 18px; }
+  #tab-learning .learning-accordion-body ul,
+  #tab-learning .learning-accordion-body ol { padding-inline-start: 1.65rem; }
+  #tab-learning .learning-accordion-body .learning-types {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #tab-learning .learning-accordion-body .learning-types dt {
+    padding-bottom: 3px;
+    border-bottom: 0;
+  }
+  #tab-learning .learning-accordion-body .learning-types dd {
+    padding-top: 2px;
+    margin-bottom: 5px;
+  }
+}
+</style>
 </head>
 <body>
-
-<section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
-  <div class="login-layout">
-    <div class="login-showcase">
-      <div class="login-brand"><span class="login-brand-mark" aria-hidden="true">&#9875;</span><span>Broker Intelligence Suite</span></div>
-      <div class="login-showcase-copy">
-        <div class="login-kicker">Breakbulk &amp; Drybulk · 3,000–82,000 DWT</div>
-        <h1>Make the next fixture clearer.</h1>
-        <p>Freight estimating, voyage planning and shipping references in one focused workspace.</p>
-        <div class="login-route" aria-hidden="true"><span>FIXTURE</span><span class="login-route-line"></span><span>VOYAGE</span><span class="login-route-line"></span><span>DELIVERY</span></div>
-      </div>
-      <div class="login-showcase-foot">Chartering tools · Port intelligence · Shipping dictionary</div>
-    </div>
-    <div class="login-panel">
-      <span class="login-badge">Broker workspace</span>
-      <h2 id="loginTitle">Sign in to continue</h2>
-      <p class="login-panel-intro">Enter your account details to open the shipping dashboard.</p>
-      <form id="loginForm" class="login-form" novalidate>
-        <div class="login-field">
-          <label for="loginUsername">Account</label>
-          <input id="loginUsername" name="username" type="text" placeholder="Enter your account" autocomplete="username" autocapitalize="none" spellcheck="false" required>
-        </div>
-        <div class="login-field">
-          <label for="loginPassword">Password</label>
-          <div class="login-password-wrap">
-            <input id="loginPassword" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
-            <button class="login-show-password" id="togglePassword" type="button" aria-label="Show password" aria-pressed="false">Show</button>
-          </div>
-        </div>
-        <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
-        <button class="login-submit" type="submit">Open dashboard <span aria-hidden="true">&#8594;</span></button>
-      </form>
-      <p class="login-panel-foot">Your sign-in stays active in this browser tab. Sign out when you finish.</p>
-    </div>
-  </div>
+<section aria-labelledby="loginTitle" class="login-screen" id="loginScreen">
+<div class="login-layout">
+<div class="login-showcase">
+<div class="login-brand"><span aria-hidden="true" class="login-brand-mark">⚓</span><span>Broker Intelligence Suite</span></div>
+<div class="login-showcase-copy">
+<div class="login-kicker">Breakbulk &amp; Drybulk · 3,000–82,000 DWT</div>
+<h1>Make the next fixture clearer.</h1>
+<p>Freight estimating, voyage planning and shipping references in one focused workspace.</p>
+<div aria-hidden="true" class="login-route"><span>FIXTURE</span><span class="login-route-line"></span><span>VOYAGE</span><span class="login-route-line"></span><span>DELIVERY</span></div>
+</div>
+<div class="login-showcase-foot">Chartering tools · Port intelligence · Shipping dictionary</div>
+</div>
+<div class="login-panel">
+<span class="login-badge">Broker workspace</span>
+<h2 id="loginTitle">Sign in to continue</h2>
+<p class="login-panel-intro">Enter your account details to open the shipping dashboard.</p>
+<form class="login-form" id="loginForm" novalidate="">
+<div class="login-field">
+<label for="loginUsername">Account</label>
+<input autocapitalize="none" autocomplete="username" id="loginUsername" name="username" placeholder="Enter your account" required="" spellcheck="false" type="text"/>
+</div>
+<div class="login-field">
+<label for="loginPassword">Password</label>
+<div class="login-password-wrap">
+<input autocomplete="current-password" id="loginPassword" name="password" placeholder="Enter your password" required="" type="password"/>
+<button aria-label="Show password" aria-pressed="false" class="login-show-password" id="togglePassword" type="button">Show</button>
+</div>
+</div>
+<p aria-live="polite" class="login-error" id="loginError" role="alert"></p>
+<button class="login-submit" type="submit">Open dashboard <span aria-hidden="true">→</span></button>
+</form>
+<p class="login-panel-foot">Your sign-in stays active in this browser tab. Sign out when you finish.</p>
+</div>
+</div>
 </section>
-
-<div id="dashboardApp" hidden>
+<div hidden="" id="dashboardApp">
 <!-- HEADER -->
 <header>
-  <div class="logo">
-    <div class="logo-icon">&#9875;</div>
-    <div>
-      <h1>Broker Intelligence Suite</h1>
-      <p>Breakbulk &amp; Drybulk &mdash; 3,000&ndash;82,000 DWT</p>
-    </div>
-  </div>
-  <div class="header-actions">
-    <div class="header-meta">
-      <div class="date" id="curDate"></div>
-      <div class="segment">Tramp / Spot Market</div>
-    </div>
-    <button class="signout-btn" id="signoutButton" type="button">Sign out</button>
-  </div>
+<div class="logo">
+<div class="logo-icon">⚓</div>
+<div>
+<h1>Broker Intelligence Suite</h1>
+<p>Breakbulk &amp; Drybulk — 3,000–82,000 DWT</p>
+</div>
+</div>
+<div class="header-actions">
+<div class="header-meta">
+<div class="date" id="curDate"></div>
+<div class="segment">Tramp / Spot Market</div>
+</div>
+<button class="signout-btn" id="signoutButton" type="button">Sign out</button>
+</div>
 </header>
-
-
 <!-- MAIN -->
 <div class="main">
-
-  <!-- NEWS — visual position controlled by CSS grid `order` (right column on desktop) -->
-  <div class="news-col">
-
-    <div class="section-title">Live Market Intelligence</div>
-
-    <!-- Live feed sources — kept in sync with the `feeds` array in fetchLiveNews().
+<!-- NEWS — visual position controlled by CSS grid `order` (right column on desktop) -->
+<div class="news-col">
+<div class="section-title">Live Market Intelligence</div>
+<!-- Live feed sources — kept in sync with the `feeds` array in fetchLiveNews().
          Every badge here must correspond to an actual feed pulled below; don't add
          a badge for a source that isn't live-fetched (that's what caused the mismatch
          this replaced — 8 badges shown, only 2 of them actually live). -->
-    <div class="news-sources">
-      <a href="https://splash247.com" target="_blank" rel="noopener noreferrer" class="news-source">
-        <div class="src-icon">&#127754;</div>
-        <div class="src-name">Splash247</div>
-        <div class="src-desc">Global maritime</div>
-      </a>
-      <a href="https://gcaptain.com" target="_blank" rel="noopener noreferrer" class="news-source">
-        <div class="src-icon">&#9875;</div>
-        <div class="src-name">gCaptain</div>
-        <div class="src-desc">Maritime news &amp; ops</div>
-      </a>
-      <a href="https://www.hellenicshippingnews.com" target="_blank" rel="noopener noreferrer" class="news-source">
-        <div class="src-icon">&#127963;&#65039;</div>
-        <div class="src-name">Hellenic Shipping</div>
-        <div class="src-desc">Bulk &amp; market data</div>
-      </a>
-      <a href="https://www.porttechnology.org" target="_blank" rel="noopener noreferrer" class="news-source">
-        <div class="src-icon">&#128674;</div>
-        <div class="src-name">Port Technology</div>
-        <div class="src-desc">Port &amp; terminal news</div>
-      </a>
-    </div>
-
-    <!-- News feed -->
-    <div class="news-feed">
-      <div class="news-filter">
-        <button class="filter-btn active" onclick="filterNews('all',this)">All</button>
-        <button class="filter-btn" onclick="filterNews('bb',this)">Breakbulk</button>
-        <button class="filter-btn" onclick="filterNews('db',this)">Drybulk</button>
-        <button class="filter-btn" onclick="filterNews('port',this)">Ports &amp; Routes</button>
-        <button class="filter-btn" onclick="filterNews('mkt',this)">Market</button>
-        <button class="filter-btn" onclick="filterNews('reg',this)">Regulation</button>
-      </div>
-      <div class="news-list" id="newsList"></div>
-    </div>
-
-  </div>
-
-  <!-- PRIMARY BOARD: TOOLS AND QUOTATION FORM -->
-  <div class="quote-col">
-    <div class="quote-card">
-      <div class="quote-header">
-        <h2>&#129518; Freight Quotation Calculator</h2>
-        <p>Indicative freight basis &mdash; tramp / spot market</p>
-      </div>
-
-      <div class="quote-workspace">
-      <nav class="tabs" role="tablist" aria-label="Broker tools" aria-orientation="vertical">
-        <button id="tool-tab-freight" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-freight" tabindex="0" data-tab="tab-freight" onclick="switchTab('tab-freight')">&#9875; Freight</button>
-        <button id="tool-tab-tce" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-tce" tabindex="-1" data-tab="tab-tce" onclick="switchTab('tab-tce')">&#128200; TCE</button>
-        <button id="tool-tab-multi" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-multi" tabindex="-1" data-tab="tab-multi" onclick="switchTab('tab-multi')">&#128205; Multi-Port</button>
-        <button id="tool-tab-fn" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-fn" tabindex="-1" data-tab="tab-fn" onclick="switchTab('tab-fn')">&#128221; Fixture Note</button>
-        <button id="tool-tab-glossary" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-glossary" tabindex="-1" data-tab="tab-glossary" onclick="switchTab('tab-glossary')">&#128214; Glossary</button>
-        <button id="tool-tab-learning" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-learning" tabindex="-1" data-tab="tab-learning" onclick="switchTab('tab-learning')">&#127891; Learning</button>
-      </nav>
-      <div class="tab-panels">
-
-      <div id="tab-freight" class="tab-content active" role="tabpanel" aria-labelledby="tool-tab-freight" tabindex="0">
-
-      <form id="quoteForm" onsubmit="return false;">
-        <div class="form-group">
-          <label>Commodity</label>
-          <input type="text" id="commodity" list="commodityList" placeholder="Type or pick (e.g. corn, urea, bauxite, plywood)" autocomplete="off" spellcheck="false">
-          <datalist id="commodityList">
-            <!-- Agricultural / grains -->
-            <option value="grain">Wheat / Corn / Barley / Sorghum</option>
-            <option value="corn">Corn (US/Brazil/Argentina)</option>
-            <option value="wheat">Wheat</option>
-            <option value="barley">Barley</option>
-            <option value="rice">Rice (bagged)</option>
-            <option value="soybeans">Soybeans</option>
-            <option value="soybean_meal">Soybean Meal</option>
-            <option value="sugar">Sugar (raw / bagged)</option>
-            <option value="sorghum">Sorghum / Milo</option>
-            <option value="fertilizer">Fertilizer (NPK / DAP)</option>
-            <option value="urea">Urea</option>
-            <option value="dap">DAP / MAP</option>
-            <option value="potash">Potash / MOP</option>
-            <option value="ammonium_sulphate">Ammonium Sulphate</option>
-            <!-- Minerals / metals -->
-            <option value="iron_ore">Iron Ore (fines / lump / pellets)</option>
-            <option value="bauxite">Bauxite</option>
-            <option value="alumina">Alumina</option>
-            <option value="manganese">Manganese Ore</option>
-            <option value="nickel_ore">Nickel Ore</option>
-            <option value="copper_conc">Copper Concentrate</option>
-            <option value="zinc_conc">Zinc / Lead Concentrate</option>
-            <option value="iron_conc">Iron Concentrate</option>
-            <option value="chrome">Chrome Ore</option>
-            <option value="ilmenite">Ilmenite</option>
-            <option value="salt">Salt (bulk)</option>
-            <option value="cement">Cement (bagged / bulk)</option>
-            <option value="clinker">Clinker</option>
-            <option value="gypsum">Gypsum</option>
-            <option value="limestone">Limestone</option>
-            <!-- Energy -->
-            <option value="coal">Coal (steam / coking)</option>
-            <option value="pet_coke">Pet Coke</option>
-            <option value="anthracite">Anthracite</option>
-            <!-- Steel / breakbulk -->
-            <option value="steel">Steel Products (coils / plates / sheets)</option>
-            <option value="rebar">Rebar / Wire Rod</option>
-            <option value="hbi">HBI / DRI</option>
-            <option value="scrap">Steel Scrap</option>
-            <option value="pipes">Pipes / Tubes / Structures</option>
-            <option value="machinery">Machinery / Equipment</option>
-            <option value="vehicles">Vehicles / Heavy Lift</option>
-            <option value="project">Project Cargo</option>
-            <!-- Forestry -->
-            <option value="timber">Timber / Logs</option>
-            <option value="lumber">Lumber / Sawn Wood</option>
-            <option value="plywood">Plywood</option>
-            <option value="woodpulp">Woodpulp</option>
-            <option value="woodchips">Woodchips</option>
-          </datalist>
-          <div class="form-hint">Type any cargo name. Recognized cargoes apply specific stevedoring/handling factors; unknown defaults to general drybulk.</div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Quantity (MT)</label>
-            <input type="number" id="quantity" placeholder="e.g. 5000" min="500" max="200000">
-          </div>
-          <div class="form-group">
-            <label>Vessel Size (DWT)</label>
-            <select id="vesselSize">
-              <option value="auto">Auto-select</option>
-              <option value="3500">~3,500 DWT</option>
-              <option value="5000">~5,000 DWT</option>
-              <option value="7500">~7,500 DWT</option>
-              <option value="10000">~10,000 DWT</option>
-              <option value="12500">~12,500 DWT</option>
-              <option value="15000">~15,000 DWT</option>
-              <option value="17500">~17,500 DWT</option>
-              <option value="20000">~20,000 DWT</option>
-              <option value="25000">~25,000 DWT</option>
-              <option value="30000">~30,000 DWT (handysize)</option>
-              <option value="35000">~35,000 DWT (handymax)</option>
-              <option value="45000">~45,000 DWT (handymax)</option>
-              <option value="50000">~50,000 DWT (supramax)</option>
-              <option value="60000">~60,000 DWT (ultramax)</option>
-              <option value="75000">~75,000 DWT (panamax)</option>
-              <option value="82000">~82,000 DWT (kamsarmax)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Loading Port</label>
-            <div class="port-wrap">
-              <input type="text" id="loadPort" placeholder="e.g. Bangkok" autocomplete="off" spellcheck="false">
-              <div class="port-suggestions" id="loadPort-sugg" style="display:none"></div>
-            </div>
-            <div class="form-hint">Type to search port name</div>
-          </div>
-          <div class="form-group">
-            <label>Discharging Port</label>
-            <div class="port-wrap">
-              <input type="text" id="dischargePort" placeholder="e.g. Manila" autocomplete="off" spellcheck="false">
-              <div class="port-suggestions" id="dischargePort-sugg" style="display:none"></div>
-            </div>
-            <div class="form-hint">Type to search port name</div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Loading Rate (MT/day)</label>
-            <input type="number" id="loadRate" placeholder="e.g. 1500" min="100">
-            <div class="form-hint">SHINC / SHEX &mdash; enter daily rate</div>
-          </div>
-          <div class="form-group">
-            <label>Discharging Rate (MT/day)</label>
-            <input type="number" id="dischRate" placeholder="e.g. 1000" min="100">
-            <div class="form-hint">SHINC / SHEX &mdash; enter daily rate</div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Laycan (From)</label>
-            <input type="date" id="laycanFrom">
-          </div>
-          <div class="form-group">
-            <label>Laycan (To)</label>
-            <input type="date" id="laycanTo">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Vessel Speed (knots)</label>
-            <input type="number" id="vesselSpeed" value="11.5" min="6" max="16" step="0.5">
-            <div class="form-hint">Adjust for weather routing / eco-speed</div>
-          </div>
-          <div class="form-group">
-            <label>Freight Basis</label>
-            <select id="freightBasis">
-              <option value="fiost">FIOST (Free In/Out, Stowed &amp; Trimmed)</option>
-              <option value="liner">Full Liner Terms (Owner pays load + discharge)</option>
-              <option value="filo">FILO (Free In, Liner Out)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Ballast Leg (days to load port)</label>
-          <select id="ballastDays">
-            <option value="0">0 days &mdash; vessel already at load port / open there</option>
-            <option value="1">1 day &mdash; vessel very close (same range)</option>
-            <option value="2" selected>2 days &mdash; typical (nearby open position)</option>
-            <option value="3">3 days &mdash; maximum acceptable steaming to load port</option>
-          </select>
-          <div class="form-hint">Positioning voyage the owner must steam to reach the load port &mdash; burns hire + bunkers with no cargo earning. Capped at 3 days: beyond that the vessel is not a realistic candidate. Applies to all tabs.</div>
-        </div>
-
-        <div class="form-group">
-          <label>Voyage Buffer (extra days)</label>
-          <select id="bufferDays">
-            <option value="0">0 days &mdash; tight (no allowance)</option>
-            <option value="1" selected>1 day &mdash; minimal pilotage buffer</option>
-            <option value="2">2 days &mdash; typical (waiting + pilotage)</option>
-            <option value="3">3 days &mdash; conservative (anchorage / weather)</option>
-            <option value="4">4 days &mdash; congested ports / monsoon season</option>
-            <option value="5">5 days &mdash; heavy weather routing / lay-over risk</option>
-          </select>
-          <div class="form-hint">Extra days added to total voyage time for waiting at anchor, weather, pilotage. Applies to all tabs.</div>
-        </div>
-
-        <div class="form-group">
-          <label>
+<div class="news-sources">
+<a class="news-source" href="https://splash247.com" rel="noopener noreferrer" target="_blank">
+<div class="src-icon">🌊</div>
+<div class="src-name">Splash247</div>
+<div class="src-desc">Global maritime</div>
+</a>
+<a class="news-source" href="https://gcaptain.com" rel="noopener noreferrer" target="_blank">
+<div class="src-icon">⚓</div>
+<div class="src-name">gCaptain</div>
+<div class="src-desc">Maritime news &amp; ops</div>
+</a>
+<a class="news-source" href="https://www.hellenicshippingnews.com" rel="noopener noreferrer" target="_blank">
+<div class="src-icon">🏛️</div>
+<div class="src-name">Hellenic Shipping</div>
+<div class="src-desc">Bulk &amp; market data</div>
+</a>
+<a class="news-source" href="https://www.porttechnology.org" rel="noopener noreferrer" target="_blank">
+<div class="src-icon">🚢</div>
+<div class="src-name">Port Technology</div>
+<div class="src-desc">Port &amp; terminal news</div>
+</a>
+</div>
+<!-- News feed -->
+<div class="news-feed">
+<div class="news-filter">
+<button class="filter-btn active" onclick="filterNews('all',this)">All</button>
+<button class="filter-btn" onclick="filterNews('bb',this)">Breakbulk</button>
+<button class="filter-btn" onclick="filterNews('db',this)">Drybulk</button>
+<button class="filter-btn" onclick="filterNews('port',this)">Ports &amp; Routes</button>
+<button class="filter-btn" onclick="filterNews('mkt',this)">Market</button>
+<button class="filter-btn" onclick="filterNews('reg',this)">Regulation</button>
+</div>
+<div class="news-list" id="newsList"></div>
+</div>
+</div>
+<!-- PRIMARY BOARD: TOOLS AND QUOTATION FORM -->
+<div class="quote-col">
+<div class="quote-card">
+<div class="quote-header">
+<h2>🧮 Freight Quotation Calculator</h2>
+<p>Indicative freight basis — tramp / spot market</p>
+</div>
+<div class="quote-workspace">
+<nav aria-label="Broker tools" aria-orientation="vertical" class="tabs" role="tablist">
+<button aria-controls="tab-freight" aria-selected="true" class="tab-btn active" data-tab="tab-freight" id="tool-tab-freight" onclick="switchTab('tab-freight')" role="tab" tabindex="0">⚓ Freight</button>
+<button aria-controls="tab-tce" aria-selected="false" class="tab-btn" data-tab="tab-tce" id="tool-tab-tce" onclick="switchTab('tab-tce')" role="tab" tabindex="-1">📈 TCE</button>
+<button aria-controls="tab-multi" aria-selected="false" class="tab-btn" data-tab="tab-multi" id="tool-tab-multi" onclick="switchTab('tab-multi')" role="tab" tabindex="-1">📍 Multi-Port</button>
+<button aria-controls="tab-fn" aria-selected="false" class="tab-btn" data-tab="tab-fn" id="tool-tab-fn" onclick="switchTab('tab-fn')" role="tab" tabindex="-1">📝 Fixture Note</button>
+<button aria-controls="tab-glossary" aria-selected="false" class="tab-btn" data-tab="tab-glossary" id="tool-tab-glossary" onclick="switchTab('tab-glossary')" role="tab" tabindex="-1">📖 Glossary</button>
+<button aria-controls="tab-learning" aria-selected="false" class="tab-btn" data-tab="tab-learning" id="tool-tab-learning" onclick="switchTab('tab-learning')" role="tab" tabindex="-1">🎓 Learning</button>
+</nav>
+<div class="tab-panels">
+<div aria-labelledby="tool-tab-freight" class="tab-content active" id="tab-freight" role="tabpanel" tabindex="0">
+<form id="quoteForm" onsubmit="return false;">
+<div class="form-group">
+<label>Commodity</label>
+<input autocomplete="off" id="commodity" list="commodityList" placeholder="Type or pick (e.g. corn, urea, bauxite, plywood)" spellcheck="false" type="text"/>
+<datalist id="commodityList">
+<!-- Agricultural / grains -->
+<option value="grain">Wheat / Corn / Barley / Sorghum</option>
+<option value="corn">Corn (US/Brazil/Argentina)</option>
+<option value="wheat">Wheat</option>
+<option value="barley">Barley</option>
+<option value="rice">Rice (bagged)</option>
+<option value="soybeans">Soybeans</option>
+<option value="soybean_meal">Soybean Meal</option>
+<option value="sugar">Sugar (raw / bagged)</option>
+<option value="sorghum">Sorghum / Milo</option>
+<option value="fertilizer">Fertilizer (NPK / DAP)</option>
+<option value="urea">Urea</option>
+<option value="dap">DAP / MAP</option>
+<option value="potash">Potash / MOP</option>
+<option value="ammonium_sulphate">Ammonium Sulphate</option>
+<!-- Minerals / metals -->
+<option value="iron_ore">Iron Ore (fines / lump / pellets)</option>
+<option value="bauxite">Bauxite</option>
+<option value="alumina">Alumina</option>
+<option value="manganese">Manganese Ore</option>
+<option value="nickel_ore">Nickel Ore</option>
+<option value="copper_conc">Copper Concentrate</option>
+<option value="zinc_conc">Zinc / Lead Concentrate</option>
+<option value="iron_conc">Iron Concentrate</option>
+<option value="chrome">Chrome Ore</option>
+<option value="ilmenite">Ilmenite</option>
+<option value="salt">Salt (bulk)</option>
+<option value="cement">Cement (bagged / bulk)</option>
+<option value="clinker">Clinker</option>
+<option value="gypsum">Gypsum</option>
+<option value="limestone">Limestone</option>
+<!-- Energy -->
+<option value="coal">Coal (steam / coking)</option>
+<option value="pet_coke">Pet Coke</option>
+<option value="anthracite">Anthracite</option>
+<!-- Steel / breakbulk -->
+<option value="steel">Steel Products (coils / plates / sheets)</option>
+<option value="rebar">Rebar / Wire Rod</option>
+<option value="hbi">HBI / DRI</option>
+<option value="scrap">Steel Scrap</option>
+<option value="pipes">Pipes / Tubes / Structures</option>
+<option value="machinery">Machinery / Equipment</option>
+<option value="vehicles">Vehicles / Heavy Lift</option>
+<option value="project">Project Cargo</option>
+<!-- Forestry -->
+<option value="timber">Timber / Logs</option>
+<option value="lumber">Lumber / Sawn Wood</option>
+<option value="plywood">Plywood</option>
+<option value="woodpulp">Woodpulp</option>
+<option value="woodchips">Woodchips</option>
+</datalist>
+<div class="form-hint">Type any cargo name. Recognized cargoes apply specific stevedoring/handling factors; unknown defaults to general drybulk.</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Quantity (MT)</label>
+<input id="quantity" max="200000" min="500" placeholder="e.g. 5000" type="number"/>
+</div>
+<div class="form-group">
+<label>Vessel Size (DWT)</label>
+<select id="vesselSize">
+<option value="auto">Auto-select</option>
+<option value="3500">~3,500 DWT</option>
+<option value="5000">~5,000 DWT</option>
+<option value="7500">~7,500 DWT</option>
+<option value="10000">~10,000 DWT</option>
+<option value="12500">~12,500 DWT</option>
+<option value="15000">~15,000 DWT</option>
+<option value="17500">~17,500 DWT</option>
+<option value="20000">~20,000 DWT</option>
+<option value="25000">~25,000 DWT</option>
+<option value="30000">~30,000 DWT (handysize)</option>
+<option value="35000">~35,000 DWT (handymax)</option>
+<option value="45000">~45,000 DWT (handymax)</option>
+<option value="50000">~50,000 DWT (supramax)</option>
+<option value="60000">~60,000 DWT (ultramax)</option>
+<option value="75000">~75,000 DWT (panamax)</option>
+<option value="82000">~82,000 DWT (kamsarmax)</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Loading Port</label>
+<div class="port-wrap">
+<input autocomplete="off" id="loadPort" placeholder="e.g. Bangkok" spellcheck="false" type="text"/>
+<div class="port-suggestions" id="loadPort-sugg" style="display:none"></div>
+</div>
+<div class="form-hint">Type to search port name</div>
+</div>
+<div class="form-group">
+<label>Discharging Port</label>
+<div class="port-wrap">
+<input autocomplete="off" id="dischargePort" placeholder="e.g. Manila" spellcheck="false" type="text"/>
+<div class="port-suggestions" id="dischargePort-sugg" style="display:none"></div>
+</div>
+<div class="form-hint">Type to search port name</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Loading Rate (MT/day)</label>
+<input id="loadRate" min="100" placeholder="e.g. 1500" type="number"/>
+<div class="form-hint">SHINC / SHEX — enter daily rate</div>
+</div>
+<div class="form-group">
+<label>Discharging Rate (MT/day)</label>
+<input id="dischRate" min="100" placeholder="e.g. 1000" type="number"/>
+<div class="form-hint">SHINC / SHEX — enter daily rate</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Laycan (From)</label>
+<input id="laycanFrom" type="date"/>
+</div>
+<div class="form-group">
+<label>Laycan (To)</label>
+<input id="laycanTo" type="date"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Vessel Speed (knots)</label>
+<input id="vesselSpeed" max="16" min="6" step="0.5" type="number" value="11.5"/>
+<div class="form-hint">Adjust for weather routing / eco-speed</div>
+</div>
+<div class="form-group">
+<label>Freight Basis</label>
+<select id="freightBasis">
+<option value="fiost">FIOST (Free In/Out, Stowed &amp; Trimmed)</option>
+<option value="liner">Full Liner Terms (Owner pays load + discharge)</option>
+<option value="filo">FILO (Free In, Liner Out)</option>
+</select>
+</div>
+</div>
+<div class="form-group">
+<label>Ballast Leg (days to load port)</label>
+<select id="ballastDays">
+<option value="0">0 days — vessel already at load port / open there</option>
+<option value="1">1 day — vessel very close (same range)</option>
+<option selected="" value="2">2 days — typical (nearby open position)</option>
+<option value="3">3 days — maximum acceptable steaming to load port</option>
+</select>
+<div class="form-hint">Positioning voyage the owner must steam to reach the load port — burns hire + bunkers with no cargo earning. Capped at 3 days: beyond that the vessel is not a realistic candidate. Applies to all tabs.</div>
+</div>
+<div class="form-group">
+<label>Voyage Buffer (extra days)</label>
+<select id="bufferDays">
+<option value="0">0 days — tight (no allowance)</option>
+<option selected="" value="1">1 day — minimal pilotage buffer</option>
+<option value="2">2 days — typical (waiting + pilotage)</option>
+<option value="3">3 days — conservative (anchorage / weather)</option>
+<option value="4">4 days — congested ports / monsoon season</option>
+<option value="5">5 days — heavy weather routing / lay-over risk</option>
+</select>
+<div class="form-hint">Extra days added to total voyage time for waiting at anchor, weather, pilotage. Applies to all tabs.</div>
+</div>
+<div class="form-group">
+<label>
             Address + Broker Commission
             <span id="commissionPctLabel" style="font-weight:700;color:var(--accent2);float:right;letter-spacing:0;text-transform:none">2.50%</span>
-          </label>
-          <input type="range" id="commissionPct" value="2.5" min="0" max="5" step="0.25"
-                 oninput="document.getElementById('commissionPctLabel').textContent=parseFloat(this.value).toFixed(2)+'%'"
-                 style="width:100%;accent-color:var(--accent);margin-top:6px">
-          <div class="form-hint">Default 2.5% (1.25% address + 1.25% broker). Slide to 0% for direct deals or 5% for full address+broker. <i>Owner profit margin stays fixed at 5%.</i></div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Route Via</label>
-            <select id="routeVia" onchange="updateDistPanel(); if(document.getElementById('results').classList.contains('show')) calculateFreight();">
-              <option value="auto">Auto (distance table) &mdash; no canal allowance</option>
-              <option value="suez">Suez Canal &mdash; indicative +$0.70/DWT allowance</option>
-              <option value="panama">Panama Canal &mdash; indicative +$2.50/DWT allowance</option>
-              <option value="cape">Cape of Good Hope &mdash; no canal toll</option>
-            </select>
-            <div class="form-hint">Explicit routes use waypoint estimates. Canal charges are indicative; verify current tolls before fixing.</div>
-          </div>
-        </div>
-
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>VLSFO Price (USD/MT)</label>
-            <input type="number" id="vlsfoPrice" placeholder="Enter current price" min="200" max="1500" step="1" oninput="markBunkerManual(this)">
-            <div class="form-hint">Main engine &mdash; sea; no stale default is applied</div>
-          </div>
-          <div class="form-group">
-            <label>MGO Price (USD/MT)</label>
-            <input type="number" id="mgoPrice" placeholder="Enter current price" min="300" max="2000" step="1" oninput="markBunkerManual(this)">
-            <div class="form-hint">Auxiliary engines &mdash; sea + port; no stale default is applied</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:-4px;margin-bottom:10px;flex-wrap:wrap">
-          <button type="button" onclick="fetchCPCPrices(true)"
-             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(38,166,91,0.15);border:1px solid rgba(38,166,91,0.4);border-radius:6px;color:#146139;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s"
-             onmouseover="this.style.background='rgba(38,166,91,0.3)'" onmouseout="this.style.background='rgba(38,166,91,0.15)'">
-            &#8635; Refresh Live CPC Prices
+</label>
+<input id="commissionPct" max="5" min="0" oninput="document.getElementById('commissionPctLabel').textContent=parseFloat(this.value).toFixed(2)+'%'" step="0.25" style="width:100%;accent-color:var(--accent);margin-top:6px" type="range" value="2.5"/>
+<div class="form-hint">Default 2.5% (1.25% address + 1.25% broker). Slide to 0% for direct deals or 5% for full address+broker. <i>Owner profit margin stays fixed at 5%.</i></div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Route Via</label>
+<select id="routeVia" onchange="updateDistPanel(); if(document.getElementById('results').classList.contains('show')) calculateFreight();">
+<option value="auto">Auto (distance table) — no canal allowance</option>
+<option value="suez">Suez Canal — indicative +$0.70/DWT allowance</option>
+<option value="panama">Panama Canal — indicative +$2.50/DWT allowance</option>
+<option value="cape">Cape of Good Hope — no canal toll</option>
+</select>
+<div class="form-hint">Explicit routes use waypoint estimates. Canal charges are indicative; verify current tolls before fixing.</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>VLSFO Price (USD/MT)</label>
+<input id="vlsfoPrice" max="1500" min="200" oninput="markBunkerManual(this)" placeholder="Enter current price" step="1" type="number"/>
+<div class="form-hint">Main engine — sea; no stale default is applied</div>
+</div>
+<div class="form-group">
+<label>MGO Price (USD/MT)</label>
+<input id="mgoPrice" max="2000" min="300" oninput="markBunkerManual(this)" placeholder="Enter current price" step="1" type="number"/>
+<div class="form-hint">Auxiliary engines — sea + port; no stale default is applied</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:-4px;margin-bottom:10px;flex-wrap:wrap">
+<button onclick="fetchCPCPrices(true)" onmouseout="this.style.background='rgba(38,166,91,0.15)'" onmouseover="this.style.background='rgba(38,166,91,0.3)'" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(38,166,91,0.15);border:1px solid rgba(38,166,91,0.4);border-radius:6px;color:#146139;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s" type="button">
+            ↻ Refresh Live CPC Prices
           </button>
-          <a href="https://www.cpc.com.tw/en/News_Content.aspx?n=2671&s=3104" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(20,122,140,0.1);border:1px solid rgba(20,122,140,0.35);border-radius:6px;color:#8f4b08;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s"
-             onmouseover="this.style.background='rgba(20,122,140,0.2)'" onmouseout="this.style.background='rgba(20,122,140,0.1)'">
-            &#9981; Open CPC Page
+<a href="https://www.cpc.com.tw/en/News_Content.aspx?n=2671&amp;s=3104" onmouseout="this.style.background='rgba(20,122,140,0.1)'" onmouseover="this.style.background='rgba(20,122,140,0.2)'" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(20,122,140,0.1);border:1px solid rgba(20,122,140,0.35);border-radius:6px;color:#8f4b08;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .2s" target="_blank">
+            ⛽ Open CPC Page
           </a>
-          <div id="bunkerPriceHint" class="form-hint" style="margin:0;font-size:11px;color:var(--warn)">&#9203; Loading current CPC prices. If unavailable, enter both prices manually; the calculator will not use old defaults.</div>
-        </div>
-
-        <div class="form-group">
-          <label>Vessel Type</label>
-          <div class="vessel-toggle">
-            <button type="button" id="btnGeared" class="active" onclick="setVesselType('geared')">&#9881;&#65039; Geared</button>
-            <button type="button" id="btnGearless" onclick="setVesselType('gearless')">&#127959;&#65039; Gearless</button>
-            <button type="button" id="btnEither" onclick="setVesselType('either')">Both</button>
-          </div>
-          <div class="form-hint">Gearless requires shore crane &mdash; specify account below</div>
-        </div>
-
-        <div class="form-group" id="craneAccountGroup" style="display:none">
-          <label>Shore Crane Account (gearless only)</label>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
-              <input type="radio" name="craneAccount" value="charterer" checked>
-              <span>Charterer&rsquo;s account</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
-              <input type="radio" name="craneAccount" value="owner">
-              <span>Owner&rsquo;s account</span>
-            </label>
-          </div>
-          <div class="form-hint">If Charterer&rsquo;s account &rarr; crane cost excluded from freight.</div>
-        </div>
-
-        <button class="calc-btn" onclick="calculateFreight()">
-          &#9875; Calculate Indicative Freight
+<div class="form-hint" id="bunkerPriceHint" style="margin:0;font-size:11px;color:var(--warn)">⏳ Loading current CPC prices. If unavailable, enter both prices manually; the calculator will not use old defaults.</div>
+</div>
+<div class="form-group">
+<label>Vessel Type</label>
+<div class="vessel-toggle">
+<button class="active" id="btnGeared" onclick="setVesselType('geared')" type="button">⚙️ Geared</button>
+<button id="btnGearless" onclick="setVesselType('gearless')" type="button">🏗️ Gearless</button>
+<button id="btnEither" onclick="setVesselType('either')" type="button">Both</button>
+</div>
+<div class="form-hint">Gearless requires shore crane — specify account below</div>
+</div>
+<div class="form-group" id="craneAccountGroup" style="display:none">
+<label>Shore Crane Account (gearless only)</label>
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
+<input checked="" name="craneAccount" type="radio" value="charterer"/>
+<span>Charterer’s account</span>
+</label>
+<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400">
+<input name="craneAccount" type="radio" value="owner"/>
+<span>Owner’s account</span>
+</label>
+</div>
+<div class="form-hint">If Charterer’s account → crane cost excluded from freight.</div>
+</div>
+<button class="calc-btn" onclick="calculateFreight()">
+          ⚓ Calculate Indicative Freight
         </button>
-      </form>
-
-      <!-- RESULTS -->
-      <div class="results" id="results">
-        <hr class="result-divider">
-
-        <div class="freight-display">
-          <div class="freight-label">Indicative Freight Rate</div>
-          <div class="freight-value" id="freightRate">&mdash;</div>
-          <div class="freight-unit">USD / MT</div>
-          <div class="freight-range" id="freightRange"></div>
-        </div>
-
-        <div class="voyage-tags" id="voyageTags"></div>
-
-        <div class="breakdown" id="breakdown"></div>
-
-        <div class="action-btn-row">
-          <button class="copy-btn" id="copyFreightBtn" onclick="copyQuote('freight')">
-            &#128203; Copy
+</form>
+<!-- RESULTS -->
+<div class="results" id="results">
+<hr class="result-divider"/>
+<div class="freight-display">
+<div class="freight-label">Indicative Freight Rate</div>
+<div class="freight-value" id="freightRate">—</div>
+<div class="freight-unit">USD / MT</div>
+<div class="freight-range" id="freightRange"></div>
+</div>
+<div class="voyage-tags" id="voyageTags"></div>
+<div class="breakdown" id="breakdown"></div>
+<div class="action-btn-row">
+<button class="copy-btn" id="copyFreightBtn" onclick="copyQuote('freight')">
+            📋 Copy
           </button>
-          <button class="print-btn" onclick="printQuote('freight')">
-            &#128424; Print / PDF
+<button class="print-btn" onclick="printQuote('freight')">
+            🖨 Print / PDF
           </button>
-        </div>
-
-        <p class="disclaimer">
-          Indicative basis only &mdash; built on cost-plus model: voyage costs &times; (commission slider + 5% owner margin).
-          Tool shows &plusmn;10% market band; real spot fixtures can swing wider on tonnage tightness, bunker spikes,
+</div>
+<p class="disclaimer">
+          Indicative basis only — built on cost-plus model: voyage costs × (commission slider + 5% owner margin).
+          Tool shows ±10% market band; real spot fixtures can swing wider on tonnage tightness, bunker spikes,
           or laycan pressure. Always validate against current market fixtures before quoting.
         </p>
-      </div>
-
-      </div><!-- /tab-freight -->
-
-      <!-- ========== TCE REVERSE TAB ========== -->
-      <div id="tab-tce" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-tce" tabindex="0">
-        <form id="tceForm" onsubmit="return false;">
-          <div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
-            &#128161; <b>How it works:</b> Enter the freight rate the charterer is offering and the voyage details. Tool back-calculates your time-charter equivalent (TCE) per day &mdash; what the owner actually earns after voyage costs.
+</div>
+</div><!-- /tab-freight -->
+<!-- ========== TCE REVERSE TAB ========== -->
+<div aria-labelledby="tool-tab-tce" class="tab-content" id="tab-tce" role="tabpanel" tabindex="0">
+<form id="tceForm" onsubmit="return false;">
+<div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
+            💡 <b>How it works:</b> Enter the freight rate the charterer is offering and the voyage details. Tool back-calculates your time-charter equivalent (TCE) per day — what the owner actually earns after voyage costs.
           </div>
-
-          <div class="form-group">
-            <label>Freight Rate Offered (USD / MT) <b style="color:var(--accent2)">*</b></label>
-            <input type="number" id="tceFreightRate" placeholder="e.g. 45.5" min="1" step="0.5">
-            <div class="form-hint">The $/MT being offered by the charterer.</div>
-          </div>
-
-          <div class="form-group">
-            <label>Commodity</label>
-            <input type="text" id="tceCommodity" list="commodityList" placeholder="e.g. corn, urea, steel" autocomplete="off" spellcheck="false">
-            <div class="form-hint">Affects stevedoring cost (which reduces TCE on Liner / FILO basis).</div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Quantity (MT)</label>
-              <input type="number" id="tceQuantity" placeholder="e.g. 28000" min="500">
-            </div>
-            <div class="form-group">
-              <label>Vessel Size (DWT)</label>
-              <select id="tceVesselSize">
-                <option value="3500">~3,500 DWT</option>
-                <option value="5000">~5,000 DWT</option>
-                <option value="7500">~7,500 DWT</option>
-                <option value="10000">~10,000 DWT</option>
-                <option value="12500">~12,500 DWT</option>
-                <option value="15000">~15,000 DWT</option>
-                <option value="17500">~17,500 DWT</option>
-                <option value="20000">~20,000 DWT</option>
-                <option value="25000">~25,000 DWT</option>
-                <option value="30000" selected>~30,000 DWT (handysize)</option>
-                <option value="35000">~35,000 DWT (handymax)</option>
-                <option value="45000">~45,000 DWT (handymax)</option>
-                <option value="50000">~50,000 DWT (supramax)</option>
-                <option value="60000">~60,000 DWT (ultramax)</option>
-                <option value="75000">~75,000 DWT (panamax)</option>
-                <option value="82000">~82,000 DWT (kamsarmax)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Loading Port</label>
-              <div class="port-wrap">
-                <input type="text" id="tceLoadPort" placeholder="e.g. Singapore" autocomplete="off" spellcheck="false">
-                <div class="port-suggestions" id="tceLoadPort-sugg" style="display:none"></div>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Discharging Port</label>
-              <div class="port-wrap">
-                <input type="text" id="tceDischargePort" placeholder="e.g. Tianjin" autocomplete="off" spellcheck="false">
-                <div class="port-suggestions" id="tceDischargePort-sugg" style="display:none"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Loading Rate (MT/day)</label>
-              <input type="number" id="tceLoadRate" placeholder="e.g. 3000" value="3000" min="100">
-            </div>
-            <div class="form-group">
-              <label>Discharging Rate (MT/day)</label>
-              <input type="number" id="tceDischRate" placeholder="e.g. 2500" value="2500" min="100">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Speed (kts)</label>
-              <input type="number" id="tceSpeed" value="11.5" min="6" max="16" step="0.5">
-            </div>
-            <div class="form-group">
-              <label>Freight Basis</label>
-              <select id="tceBasis">
-                <option value="fiost" selected>FIOST</option>
-                <option value="filo">FILO</option>
-                <option value="liner">Full Liner Terms</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Route Via</label>
-              <select id="tceRouteVia">
-              <option value="auto">Auto (distance table) &mdash; no canal allowance</option>
-                <option value="suez">Suez &mdash; indicative +$0.70/DWT</option>
-                <option value="panama">Panama &mdash; indicative +$2.50/DWT</option>
-                <option value="cape">Cape &mdash; no toll</option>
-              </select>
-              <div class="form-hint">Explicit routes use waypoint estimates; canal charges are indicative.</div>
-            </div>
-            <div class="form-group">
-              <label>Vessel Type</label>
-              <select id="tceVesselType" onchange="onTabVesselTypeChange(this.value)">
-                <option value="geared" selected>Geared</option>
-                <option value="gearless">Gearless</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>VLSFO Price ($/MT)</label>
-              <input type="number" id="tceVlsfoPrice" placeholder="auto" min="200" max="1500" step="1">
-              <div class="form-hint">Leave blank to use Freight tab value.</div>
-            </div>
-            <div class="form-group">
-              <label>MGO Price ($/MT)</label>
-              <input type="number" id="tceMgoPrice" placeholder="auto" min="300" max="2000" step="1">
-            </div>
-          </div>
-
-          <button class="calc-btn" onclick="calculateTCE()">
-            &#128200; Calculate Owner's TCE
+<div class="form-group">
+<label>Freight Rate Offered (USD / MT) <b style="color:var(--accent2)">*</b></label>
+<input id="tceFreightRate" min="1" placeholder="e.g. 45.5" step="0.5" type="number"/>
+<div class="form-hint">The $/MT being offered by the charterer.</div>
+</div>
+<div class="form-group">
+<label>Commodity</label>
+<input autocomplete="off" id="tceCommodity" list="commodityList" placeholder="e.g. corn, urea, steel" spellcheck="false" type="text"/>
+<div class="form-hint">Affects stevedoring cost (which reduces TCE on Liner / FILO basis).</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Quantity (MT)</label>
+<input id="tceQuantity" min="500" placeholder="e.g. 28000" type="number"/>
+</div>
+<div class="form-group">
+<label>Vessel Size (DWT)</label>
+<select id="tceVesselSize">
+<option value="3500">~3,500 DWT</option>
+<option value="5000">~5,000 DWT</option>
+<option value="7500">~7,500 DWT</option>
+<option value="10000">~10,000 DWT</option>
+<option value="12500">~12,500 DWT</option>
+<option value="15000">~15,000 DWT</option>
+<option value="17500">~17,500 DWT</option>
+<option value="20000">~20,000 DWT</option>
+<option value="25000">~25,000 DWT</option>
+<option selected="" value="30000">~30,000 DWT (handysize)</option>
+<option value="35000">~35,000 DWT (handymax)</option>
+<option value="45000">~45,000 DWT (handymax)</option>
+<option value="50000">~50,000 DWT (supramax)</option>
+<option value="60000">~60,000 DWT (ultramax)</option>
+<option value="75000">~75,000 DWT (panamax)</option>
+<option value="82000">~82,000 DWT (kamsarmax)</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Loading Port</label>
+<div class="port-wrap">
+<input autocomplete="off" id="tceLoadPort" placeholder="e.g. Singapore" spellcheck="false" type="text"/>
+<div class="port-suggestions" id="tceLoadPort-sugg" style="display:none"></div>
+</div>
+</div>
+<div class="form-group">
+<label>Discharging Port</label>
+<div class="port-wrap">
+<input autocomplete="off" id="tceDischargePort" placeholder="e.g. Tianjin" spellcheck="false" type="text"/>
+<div class="port-suggestions" id="tceDischargePort-sugg" style="display:none"></div>
+</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Loading Rate (MT/day)</label>
+<input id="tceLoadRate" min="100" placeholder="e.g. 3000" type="number" value="3000"/>
+</div>
+<div class="form-group">
+<label>Discharging Rate (MT/day)</label>
+<input id="tceDischRate" min="100" placeholder="e.g. 2500" type="number" value="2500"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Speed (kts)</label>
+<input id="tceSpeed" max="16" min="6" step="0.5" type="number" value="11.5"/>
+</div>
+<div class="form-group">
+<label>Freight Basis</label>
+<select id="tceBasis">
+<option selected="" value="fiost">FIOST</option>
+<option value="filo">FILO</option>
+<option value="liner">Full Liner Terms</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Route Via</label>
+<select id="tceRouteVia">
+<option value="auto">Auto (distance table) — no canal allowance</option>
+<option value="suez">Suez — indicative +$0.70/DWT</option>
+<option value="panama">Panama — indicative +$2.50/DWT</option>
+<option value="cape">Cape — no toll</option>
+</select>
+<div class="form-hint">Explicit routes use waypoint estimates; canal charges are indicative.</div>
+</div>
+<div class="form-group">
+<label>Vessel Type</label>
+<select id="tceVesselType" onchange="onTabVesselTypeChange(this.value)">
+<option selected="" value="geared">Geared</option>
+<option value="gearless">Gearless</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>VLSFO Price ($/MT)</label>
+<input id="tceVlsfoPrice" max="1500" min="200" placeholder="auto" step="1" type="number"/>
+<div class="form-hint">Leave blank to use Freight tab value.</div>
+</div>
+<div class="form-group">
+<label>MGO Price ($/MT)</label>
+<input id="tceMgoPrice" max="2000" min="300" placeholder="auto" step="1" type="number"/>
+</div>
+</div>
+<button class="calc-btn" onclick="calculateTCE()">
+            📈 Calculate Owner's TCE
           </button>
-        </form>
-
-        <!-- TCE RESULTS -->
-        <div class="results" id="tceResults">
-          <hr class="result-divider">
-
-          <div class="tce-display">
-            <div class="tce-label">Owner's Time-Charter Equivalent</div>
-            <div class="tce-value" id="tceValue">&mdash;</div>
-            <div class="tce-unit">USD / day</div>
-            <div id="tceVsMarket"></div>
-          </div>
-
-          <div class="voyage-tags" id="tceVoyageTags"></div>
-
-          <div class="breakdown" id="tceBreakdown"></div>
-
-          <div class="action-btn-row">
-            <button class="copy-btn" id="copyTceBtn" onclick="copyQuote('tce')">
-              &#128203; Copy
+</form>
+<!-- TCE RESULTS -->
+<div class="results" id="tceResults">
+<hr class="result-divider"/>
+<div class="tce-display">
+<div class="tce-label">Owner's Time-Charter Equivalent</div>
+<div class="tce-value" id="tceValue">—</div>
+<div class="tce-unit">USD / day</div>
+<div id="tceVsMarket"></div>
+</div>
+<div class="voyage-tags" id="tceVoyageTags"></div>
+<div class="breakdown" id="tceBreakdown"></div>
+<div class="action-btn-row">
+<button class="copy-btn" id="copyTceBtn" onclick="copyQuote('tce')">
+              📋 Copy
             </button>
-            <button class="print-btn" onclick="printQuote('tce')">
-              &#128424; Print / PDF
+<button class="print-btn" onclick="printQuote('tce')">
+              🖨 Print / PDF
             </button>
-          </div>
-
-          <p class="disclaimer">
+</div>
+<p class="disclaimer">
             TCE = net daily earnings after voyage costs (bunker + port + canal + stevedoring + shore crane on owner's account).
             Commission rate read from Freight tab's slider (default 5%). Crane account also read from Freight tab.
             Compare TCE against current market hire to assess if the offered rate is acceptable.
           </p>
-        </div>
-      </div><!-- /tab-tce -->
-
-      <!-- ========== MULTI-PORT VOYAGE TAB ========== -->
-      <div id="tab-multi" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-multi" tabindex="0">
-        <form id="multiForm" onsubmit="return false;">
-          <div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
-            &#128205; <b>Multi-port voyage:</b> 2-load / 1-disch, 1-load / 2-disch, or full 4-stop sequences. Leg distances computed in order. Total loaded MT must equal total discharged MT (cargo balance check).
+</div>
+</div><!-- /tab-tce -->
+<!-- ========== MULTI-PORT VOYAGE TAB ========== -->
+<div aria-labelledby="tool-tab-multi" class="tab-content" id="tab-multi" role="tabpanel" tabindex="0">
+<form id="multiForm" onsubmit="return false;">
+<div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
+            📍 <b>Multi-port voyage:</b> 2-load / 1-disch, 1-load / 2-disch, or full 4-stop sequences. Leg distances computed in order. Total loaded MT must equal total discharged MT (cargo balance check).
           </div>
-
-          <!-- Stops list (dynamic) -->
-          <div class="form-group">
-            <label>Voyage Stops <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">— in order of call</span></label>
-            <div id="multiStopsList" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"></div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button type="button" onclick="addMultiStop('load')" style="flex:1;padding:7px;background:var(--card);border:1px solid var(--green);color:var(--green);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer">+ Add Load Port</button>
-              <button type="button" onclick="addMultiStop('disch')" style="flex:1;padding:7px;background:var(--card);border:1px solid var(--red);color:var(--red);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer">+ Add Discharge Port</button>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Commodity</label>
-            <input type="text" id="multiCommodity" list="commodityList" placeholder="e.g. corn, urea, steel" autocomplete="off" spellcheck="false">
-            <div class="form-hint">Same commodity assumed across all stops.</div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Vessel Size (DWT)</label>
-              <select id="multiVesselSize">
-                <option value="3500">~3,500 DWT</option>
-                <option value="5000">~5,000 DWT</option>
-                <option value="7500">~7,500 DWT</option>
-                <option value="10000">~10,000 DWT</option>
-                <option value="12500">~12,500 DWT</option>
-                <option value="15000">~15,000 DWT</option>
-                <option value="17500">~17,500 DWT</option>
-                <option value="20000">~20,000 DWT</option>
-                <option value="25000">~25,000 DWT</option>
-                <option value="30000" selected>~30,000 DWT (handysize)</option>
-                <option value="35000">~35,000 DWT (handymax)</option>
-                <option value="45000">~45,000 DWT (handymax)</option>
-                <option value="50000">~50,000 DWT (supramax)</option>
-                <option value="60000">~60,000 DWT (ultramax)</option>
-                <option value="75000">~75,000 DWT (panamax)</option>
-                <option value="82000">~82,000 DWT (kamsarmax)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Vessel Type</label>
-              <select id="multiVesselType" onchange="onTabVesselTypeChange(this.value)">
-                <option value="geared" selected>Geared</option>
-                <option value="gearless">Gearless</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Loading Rate (MT/day)</label>
-              <input type="number" id="multiLoadRate" value="1500" min="50" step="50">
-              <div class="form-hint">Applied at every load stop.</div>
-            </div>
-            <div class="form-group">
-              <label>Discharging Rate (MT/day)</label>
-              <input type="number" id="multiDischRate" value="1000" min="50" step="50">
-              <div class="form-hint">Applied at every discharge stop.</div>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Speed (kts)</label>
-              <input type="number" id="multiSpeed" value="11.5" min="6" max="16" step="0.5">
-            </div>
-            <div class="form-group">
-              <label>Freight Basis</label>
-              <select id="multiBasis">
-                <option value="fiost" selected>FIOST</option>
-                <option value="filo">FILO</option>
-                <option value="liner">Full Liner Terms</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Route Via</label>
-              <select id="multiRouteVia">
-                <option value="auto">Auto (distance table) &mdash; no canal allowance</option>
-                <option value="suez">Suez &mdash; indicative +$0.70/DWT</option>
-                <option value="panama">Panama &mdash; indicative +$2.50/DWT</option>
-                <option value="cape">Cape &mdash; no toll</option>
-              </select>
-              <div class="form-hint">Explicit routes use waypoint estimates; indicative canal allowance applies once per voyage.</div>
-            </div>
-            <div class="form-group">
-              <label>VLSFO / MGO ($/MT)</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-                <input type="number" id="multiVlsfo" placeholder="auto" min="200" max="1500" step="1">
-                <input type="number" id="multiMgo" placeholder="auto" min="300" max="2000" step="1">
-              </div>
-              <div class="form-hint">Blank = use Freight tab values.</div>
-            </div>
-          </div>
-
-          <button class="calc-btn" onclick="calculateMulti()">
-            &#128205; Calculate Multi-Port Voyage
+<!-- Stops list (dynamic) -->
+<div class="form-group">
+<label>Voyage Stops <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">— in order of call</span></label>
+<div id="multiStopsList" style="display:flex;flex-direction:column;gap:8px;margin-top:6px"></div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button onclick="addMultiStop('load')" style="flex:1;padding:7px;background:var(--card);border:1px solid var(--green);color:var(--green);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer" type="button">+ Add Load Port</button>
+<button onclick="addMultiStop('disch')" style="flex:1;padding:7px;background:var(--card);border:1px solid var(--red);color:var(--red);border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer" type="button">+ Add Discharge Port</button>
+</div>
+</div>
+<div class="form-group">
+<label>Commodity</label>
+<input autocomplete="off" id="multiCommodity" list="commodityList" placeholder="e.g. corn, urea, steel" spellcheck="false" type="text"/>
+<div class="form-hint">Same commodity assumed across all stops.</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Vessel Size (DWT)</label>
+<select id="multiVesselSize">
+<option value="3500">~3,500 DWT</option>
+<option value="5000">~5,000 DWT</option>
+<option value="7500">~7,500 DWT</option>
+<option value="10000">~10,000 DWT</option>
+<option value="12500">~12,500 DWT</option>
+<option value="15000">~15,000 DWT</option>
+<option value="17500">~17,500 DWT</option>
+<option value="20000">~20,000 DWT</option>
+<option value="25000">~25,000 DWT</option>
+<option selected="" value="30000">~30,000 DWT (handysize)</option>
+<option value="35000">~35,000 DWT (handymax)</option>
+<option value="45000">~45,000 DWT (handymax)</option>
+<option value="50000">~50,000 DWT (supramax)</option>
+<option value="60000">~60,000 DWT (ultramax)</option>
+<option value="75000">~75,000 DWT (panamax)</option>
+<option value="82000">~82,000 DWT (kamsarmax)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Vessel Type</label>
+<select id="multiVesselType" onchange="onTabVesselTypeChange(this.value)">
+<option selected="" value="geared">Geared</option>
+<option value="gearless">Gearless</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Loading Rate (MT/day)</label>
+<input id="multiLoadRate" min="50" step="50" type="number" value="1500"/>
+<div class="form-hint">Applied at every load stop.</div>
+</div>
+<div class="form-group">
+<label>Discharging Rate (MT/day)</label>
+<input id="multiDischRate" min="50" step="50" type="number" value="1000"/>
+<div class="form-hint">Applied at every discharge stop.</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Speed (kts)</label>
+<input id="multiSpeed" max="16" min="6" step="0.5" type="number" value="11.5"/>
+</div>
+<div class="form-group">
+<label>Freight Basis</label>
+<select id="multiBasis">
+<option selected="" value="fiost">FIOST</option>
+<option value="filo">FILO</option>
+<option value="liner">Full Liner Terms</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Route Via</label>
+<select id="multiRouteVia">
+<option value="auto">Auto (distance table) — no canal allowance</option>
+<option value="suez">Suez — indicative +$0.70/DWT</option>
+<option value="panama">Panama — indicative +$2.50/DWT</option>
+<option value="cape">Cape — no toll</option>
+</select>
+<div class="form-hint">Explicit routes use waypoint estimates; indicative canal allowance applies once per voyage.</div>
+</div>
+<div class="form-group">
+<label>VLSFO / MGO ($/MT)</label>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+<input id="multiVlsfo" max="1500" min="200" placeholder="auto" step="1" type="number"/>
+<input id="multiMgo" max="2000" min="300" placeholder="auto" step="1" type="number"/>
+</div>
+<div class="form-hint">Blank = use Freight tab values.</div>
+</div>
+</div>
+<button class="calc-btn" onclick="calculateMulti()">
+            📍 Calculate Multi-Port Voyage
           </button>
-        </form>
-
-        <!-- MULTI-PORT RESULTS -->
-        <div class="results" id="multiResults">
-          <hr class="result-divider">
-
-          <div class="freight-display">
-            <div class="freight-label">Indicative Freight Rate (blended)</div>
-            <div class="freight-value" id="multiFreightRate">&mdash;</div>
-            <div class="freight-unit">USD / MT</div>
-            <div class="freight-range" id="multiFreightRange"></div>
-          </div>
-
-          <div class="voyage-tags" id="multiVoyageTags"></div>
-
-          <div class="breakdown" id="multiBreakdown"></div>
-
-          <div class="action-btn-row">
-            <button class="copy-btn" id="copyMultiBtn" onclick="copyQuote('multi')">
-              &#128203; Copy
+</form>
+<!-- MULTI-PORT RESULTS -->
+<div class="results" id="multiResults">
+<hr class="result-divider"/>
+<div class="freight-display">
+<div class="freight-label">Indicative Freight Rate (blended)</div>
+<div class="freight-value" id="multiFreightRate">—</div>
+<div class="freight-unit">USD / MT</div>
+<div class="freight-range" id="multiFreightRange"></div>
+</div>
+<div class="voyage-tags" id="multiVoyageTags"></div>
+<div class="breakdown" id="multiBreakdown"></div>
+<div class="action-btn-row">
+<button class="copy-btn" id="copyMultiBtn" onclick="copyQuote('multi')">
+              📋 Copy
             </button>
-            <button class="print-btn" onclick="printQuote('multi')">
-              &#128424; Print / PDF
+<button class="print-btn" onclick="printQuote('multi')">
+              🖨 Print / PDF
             </button>
-          </div>
-
-          <p class="disclaimer">
+</div>
+<p class="disclaimer">
             Multi-port indicative basis. Each leg routed by current "Route Via" selection.
             Cargo balance enforced: total loaded MT must equal total discharged MT.
           </p>
-        </div>
-      </div><!-- /tab-multi -->
-
-      <!-- ========== FIXTURE NOTE TAB ========== -->
-      <div id="tab-fn" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-fn" tabindex="0">
-        <form id="fnForm" onsubmit="return false;">
-          <div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
-            &#128221; <b>Fixture Note draft generator:</b> fill the variables below — the 29-clause boilerplate is hardcoded to match your house template. Empty fields show as <code>[PLEASE ADVISE]</code>.
+</div>
+</div><!-- /tab-multi -->
+<!-- ========== FIXTURE NOTE TAB ========== -->
+<div aria-labelledby="tool-tab-fn" class="tab-content" id="tab-fn" role="tabpanel" tabindex="0">
+<form id="fnForm" onsubmit="return false;">
+<div style="background:rgba(20,122,140,.08);border:1px solid rgba(20,122,140,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:var(--warn);line-height:1.5">
+            📝 <b>Fixture Note draft generator:</b> fill the variables below — the 29-clause boilerplate is hardcoded to match your house template. Empty fields show as <code>[PLEASE ADVISE]</code>.
           </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>FN No.</label>
-              <input type="text" id="fnNo" placeholder="auto-generated">
-              <div class="form-hint">Auto = MV{vessel-initials}{YYYYMMDD}. Edit if needed.</div>
-            </div>
-            <div class="form-group">
-              <label>Date</label>
-              <input type="date" id="fnDate">
-              <div class="form-hint">Defaults to today.</div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Charterer Name <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">&mdash; type to search or paste new</span></label>
-            <div class="port-wrap" style="position:relative">
-              <input type="text" id="fnCharterer" placeholder="e.g. SUPAS VIETNAM COMPANY LIMITED" autocomplete="off" spellcheck="false">
-              <div class="port-suggestions" id="fnCharterer-sugg" style="display:none"></div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Charterer Address</label>
-            <textarea id="fnChartererAddr" rows="2" placeholder="Full registered address" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Owner Name <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">&mdash; type to search or paste new</span></label>
-            <div class="port-wrap" style="position:relative">
-              <input type="text" id="fnOwner" placeholder="e.g. TRANSMARINE STEAMSHIP CO., LIMITED" autocomplete="off" spellcheck="false">
-              <div class="port-suggestions" id="fnOwner-sugg" style="display:none"></div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Owner Address</label>
-            <textarea id="fnOwnerAddr" rows="2" placeholder="Full registered address" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
-            <div style="margin-top:6px;font-size:.7rem">
-              <button type="button" id="fnSavePartiesBtn" onclick="savePartyDb()" style="padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-size:.7rem">&#128190; Save these parties to my local DB</button>
-              <span id="fnSavePartiesStatus" style="margin-left:8px;color:var(--green);font-weight:600"></span>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
-              <input type="checkbox" id="fnIncludeBank" onchange="document.getElementById('fnBankBlock').style.display=this.checked?'block':'none'">
-              <span style="font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;font-size:.7rem">Include Owner Bank Details (optional)</span>
-            </label>
-            <div id="fnBankBlock" style="display:none;margin-top:8px;padding:12px;background:var(--navy2);border-radius:6px;border:1px solid var(--border)">
-              <div class="form-group">
-                <label>Beneficiary Name</label>
-                <input type="text" id="fnBankBeneficiary" placeholder="usually same as Owner Name">
-              </div>
-              <div class="form-group">
-                <label>Beneficiary Address</label>
-                <textarea id="fnBankBeneficiaryAddr" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Account Number</label>
-                  <input type="text" id="fnBankAcct">
-                </div>
-                <div class="form-group">
-                  <label>Bank Name</label>
-                  <input type="text" id="fnBankName">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>SWIFT Code</label>
-                  <input type="text" id="fnBankSwift">
-                </div>
-                <div class="form-group">
-                  <label>Bank Code / Branch Code</label>
-                  <input type="text" id="fnBankCode" placeholder="e.g. 035 / 802">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Bank Address</label>
-                <textarea id="fnBankAddr" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
-
-          <div class="form-group">
-            <label>Vessel Name</label>
-            <input type="text" id="fnVesselName" placeholder="e.g. MV HONOR SPRING">
-            <div class="form-hint">Used to auto-generate FN No.</div>
-          </div>
-          <div class="form-group">
-            <label>Vessel Particulars (optional)</label>
-            <textarea id="fnVesselParticulars" rows="4" placeholder="e.g.&#10;BOX VSL (LOG AVAILABLE)&#10;PANAMA FLAG BLT 2022 DWT/DWCC/GRT/NRT 8200/8000/5582/2834MT&#10;LENGTH/BREADTH/DEPTH/DRAFT 109.55/18.30/8.50/6.50M&#10;G/B CAPA 10119/10000CBM 2H/2H HATCH SIZE: NO.1:31.45X13.65M; NO.2: 31.45X13.65M&#10;STL BTM GEARLESS SD P&amp;I AND CLASS COVERED ADA WOG" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Vessel Itinerary (optional)</label>
-            <textarea id="fnItinerary" rows="3" placeholder="e.g.&#10;VESSEL IS DISCHARGING AT WEIFANG:&#10;ATA WEIFANG : 0030 26TH JAN, 2026&#10;ETD WEIFANG : PM 30TH JAN, 2026" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
-          </div>
-
-          <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
-
-          <div class="form-group">
-            <label>Cargo &amp; Quantity (Clause 2)</label>
-            <textarea id="fnCargo" rows="2" placeholder="e.g. 7,800 - 8,000 MT NET WEIGHT CEMENT IN JUMBO BAGS (1.5-2.0 MT / BAGS) AT OWNER OPTION..." style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
-            <div class="form-hint">Free text — include MIN/MAX, packaging, owner-option clauses if any.</div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Loading Port (Clause 3)</label>
-              <input type="text" id="fnLoadPort" placeholder="e.g. 1SAP HONGAI, VIETNAM">
-            </div>
-            <div class="form-group">
-              <label>Discharging Port (Clause 4)</label>
-              <input type="text" id="fnDischPort" placeholder="e.g. 1 SBP TANJUNG MANIS PORT, SARAWAK, MALAYSIA">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Laycan (Clause 5)</label>
-              <input type="text" id="fnLaycan" placeholder="e.g. 24-28TH FEB, 2026">
-            </div>
-            <div class="form-group">
-              <label>Freight (Clause 7)</label>
-              <input type="text" id="fnFreight" placeholder="e.g. USD 15.50 / NET WEIGHT MT FIOST BSS 1/1">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Loading Rate (Clause 6)</label>
-              <input type="text" id="fnLoadRate" placeholder="e.g. 2,500MTS PWWD SHINC">
-            </div>
-            <div class="form-group">
-              <label>Discharging Rate (Clause 6)</label>
-              <input type="text" id="fnDischRate" placeholder="e.g. 2,000MTS PWWD SHINC">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Demurrage / Despatch / Detention (Clause 8)</label>
-            <input type="text" id="fnDemDes" placeholder="e.g. USD 3,500 PDPR / DHD">
-            <div class="form-hint">Per fixture — leave blank if still under negotiation.</div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Commission % (Clause 24)</label>
-              <input type="text" id="fnCommission" placeholder="e.g. 2.5">
-            </div>
-            <div class="form-group">
-              <label>Commission Payable To</label>
-              <input type="text" id="fnCommBroker" placeholder="e.g. DELIGHT STAR SHIPPING">
-            </div>
-          </div>
-
-          <button class="calc-btn" onclick="generateFN()">
-            &#128221; Generate Fixture Note Draft
+<div class="form-row">
+<div class="form-group">
+<label>FN No.</label>
+<input id="fnNo" placeholder="auto-generated" type="text"/>
+<div class="form-hint">Auto = MV{vessel-initials}{YYYYMMDD}. Edit if needed.</div>
+</div>
+<div class="form-group">
+<label>Date</label>
+<input id="fnDate" type="date"/>
+<div class="form-hint">Defaults to today.</div>
+</div>
+</div>
+<div class="form-group">
+<label>Charterer Name <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">— type to search or paste new</span></label>
+<div class="port-wrap" style="position:relative">
+<input autocomplete="off" id="fnCharterer" placeholder="e.g. SUPAS VIETNAM COMPANY LIMITED" spellcheck="false" type="text"/>
+<div class="port-suggestions" id="fnCharterer-sugg" style="display:none"></div>
+</div>
+</div>
+<div class="form-group">
+<label>Charterer Address</label>
+<textarea id="fnChartererAddr" placeholder="Full registered address" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+</div>
+<div class="form-group">
+<label>Owner Name <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">— type to search or paste new</span></label>
+<div class="port-wrap" style="position:relative">
+<input autocomplete="off" id="fnOwner" placeholder="e.g. TRANSMARINE STEAMSHIP CO., LIMITED" spellcheck="false" type="text"/>
+<div class="port-suggestions" id="fnOwner-sugg" style="display:none"></div>
+</div>
+</div>
+<div class="form-group">
+<label>Owner Address</label>
+<textarea id="fnOwnerAddr" placeholder="Full registered address" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+<div style="margin-top:6px;font-size:.7rem">
+<button id="fnSavePartiesBtn" onclick="savePartyDb()" style="padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-size:.7rem" type="button">💾 Save these parties to my local DB</button>
+<span id="fnSavePartiesStatus" style="margin-left:8px;color:var(--green);font-weight:600"></span>
+</div>
+</div>
+<div class="form-group">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
+<input id="fnIncludeBank" onchange="document.getElementById('fnBankBlock').style.display=this.checked?'block':'none'" type="checkbox"/>
+<span style="font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;font-size:.7rem">Include Owner Bank Details (optional)</span>
+</label>
+<div id="fnBankBlock" style="display:none;margin-top:8px;padding:12px;background:var(--navy2);border-radius:6px;border:1px solid var(--border)">
+<div class="form-group">
+<label>Beneficiary Name</label>
+<input id="fnBankBeneficiary" placeholder="usually same as Owner Name" type="text"/>
+</div>
+<div class="form-group">
+<label>Beneficiary Address</label>
+<textarea id="fnBankBeneficiaryAddr" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Account Number</label>
+<input id="fnBankAcct" type="text"/>
+</div>
+<div class="form-group">
+<label>Bank Name</label>
+<input id="fnBankName" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>SWIFT Code</label>
+<input id="fnBankSwift" type="text"/>
+</div>
+<div class="form-group">
+<label>Bank Code / Branch Code</label>
+<input id="fnBankCode" placeholder="e.g. 035 / 802" type="text"/>
+</div>
+</div>
+<div class="form-group">
+<label>Bank Address</label>
+<textarea id="fnBankAddr" rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+</div>
+</div>
+</div>
+<hr style="border:none;border-top:1px solid var(--border);margin:14px 0"/>
+<div class="form-group">
+<label>Vessel Name</label>
+<input id="fnVesselName" placeholder="e.g. MV HONOR SPRING" type="text"/>
+<div class="form-hint">Used to auto-generate FN No.</div>
+</div>
+<div class="form-group">
+<label>Vessel Particulars (optional)</label>
+<textarea id="fnVesselParticulars" placeholder="e.g.
+BOX VSL (LOG AVAILABLE)
+PANAMA FLAG BLT 2022 DWT/DWCC/GRT/NRT 8200/8000/5582/2834MT
+LENGTH/BREADTH/DEPTH/DRAFT 109.55/18.30/8.50/6.50M
+G/B CAPA 10119/10000CBM 2H/2H HATCH SIZE: NO.1:31.45X13.65M; NO.2: 31.45X13.65M
+STL BTM GEARLESS SD P&amp;I AND CLASS COVERED ADA WOG" rows="4" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+</div>
+<div class="form-group">
+<label>Vessel Itinerary (optional)</label>
+<textarea id="fnItinerary" placeholder="e.g.
+VESSEL IS DISCHARGING AT WEIFANG:
+ATA WEIFANG : 0030 26TH JAN, 2026
+ETD WEIFANG : PM 30TH JAN, 2026" rows="3" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+</div>
+<hr style="border:none;border-top:1px solid var(--border);margin:14px 0"/>
+<div class="form-group">
+<label>Cargo &amp; Quantity (Clause 2)</label>
+<textarea id="fnCargo" placeholder="e.g. 7,800 - 8,000 MT NET WEIGHT CEMENT IN JUMBO BAGS (1.5-2.0 MT / BAGS) AT OWNER OPTION..." rows="2" style="width:100%;padding:9px 10px;font-size:.85rem;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:#fff;resize:vertical"></textarea>
+<div class="form-hint">Free text — include MIN/MAX, packaging, owner-option clauses if any.</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Loading Port (Clause 3)</label>
+<input id="fnLoadPort" placeholder="e.g. 1SAP HONGAI, VIETNAM" type="text"/>
+</div>
+<div class="form-group">
+<label>Discharging Port (Clause 4)</label>
+<input id="fnDischPort" placeholder="e.g. 1 SBP TANJUNG MANIS PORT, SARAWAK, MALAYSIA" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Laycan (Clause 5)</label>
+<input id="fnLaycan" placeholder="e.g. 24-28TH FEB, 2026" type="text"/>
+</div>
+<div class="form-group">
+<label>Freight (Clause 7)</label>
+<input id="fnFreight" placeholder="e.g. USD 15.50 / NET WEIGHT MT FIOST BSS 1/1" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Loading Rate (Clause 6)</label>
+<input id="fnLoadRate" placeholder="e.g. 2,500MTS PWWD SHINC" type="text"/>
+</div>
+<div class="form-group">
+<label>Discharging Rate (Clause 6)</label>
+<input id="fnDischRate" placeholder="e.g. 2,000MTS PWWD SHINC" type="text"/>
+</div>
+</div>
+<div class="form-group">
+<label>Demurrage / Despatch / Detention (Clause 8)</label>
+<input id="fnDemDes" placeholder="e.g. USD 3,500 PDPR / DHD" type="text"/>
+<div class="form-hint">Per fixture — leave blank if still under negotiation.</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Commission % (Clause 24)</label>
+<input id="fnCommission" placeholder="e.g. 2.5" type="text"/>
+</div>
+<div class="form-group">
+<label>Commission Payable To</label>
+<input id="fnCommBroker" placeholder="e.g. DELIGHT STAR SHIPPING" type="text"/>
+</div>
+</div>
+<button class="calc-btn" onclick="generateFN()">
+            📝 Generate Fixture Note Draft
           </button>
-        </form>
-
-        <!-- FN OUTPUT -->
-        <div class="results" id="fnResults">
-          <hr class="result-divider">
-
-          <div id="fnDraft" style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:24px;margin:16px 0;font-family:'Times New Roman',Georgia,serif;font-size:11pt;line-height:1.5;color:#000;white-space:pre-wrap;word-wrap:break-word"></div>
-
-          <div class="action-btn-row" style="grid-template-columns:1fr 1fr 1fr">
-            <button class="copy-btn" id="copyFnBtn" onclick="copyQuote('fn')">
-              &#128203; Copy
+</form>
+<!-- FN OUTPUT -->
+<div class="results" id="fnResults">
+<hr class="result-divider"/>
+<div id="fnDraft" style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:24px;margin:16px 0;font-family:'Times New Roman',Georgia,serif;font-size:11pt;line-height:1.5;color:#000;white-space:pre-wrap;word-wrap:break-word"></div>
+<div class="action-btn-row" style="grid-template-columns:1fr 1fr 1fr">
+<button class="copy-btn" id="copyFnBtn" onclick="copyQuote('fn')">
+              📋 Copy
             </button>
-            <button class="print-btn" onclick="printQuote('fn')">
-              &#128424; Print / PDF
+<button class="print-btn" onclick="printQuote('fn')">
+              🖨 Print / PDF
             </button>
-            <button class="print-btn" onclick="exportFNWord()" style="border-color:#2c5f9b;color:#2c5f9b" onmouseover="this.style.background='#2c5f9b';this.style.color='#fff'" onmouseout="this.style.background='var(--card)';this.style.color='#2c5f9b'">
-              &#128221; Word (.doc)
+<button class="print-btn" onclick="exportFNWord()" onmouseout="this.style.background='var(--card)';this.style.color='#2c5f9b'" onmouseover="this.style.background='#2c5f9b';this.style.color='#fff'" style="border-color:#2c5f9b;color:#2c5f9b">
+              📝 Word (.doc)
             </button>
-          </div>
-
-          <p class="disclaimer">
+</div>
+<p class="disclaimer">
             Draft only. Review every clause against the actual deal before sending.
             29-clause body matches house template (Honor Spring style); commercial inputs from form above.
           </p>
-        </div>
-      </div><!-- /tab-fn -->
-
-      <div id="tab-glossary" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-glossary" tabindex="0">
-        <div class="glossary-wrap">
-          <h3 class="section-title">Shipping Dictionary &amp; Acronyms</h3>
-          <p class="glossary-intro">Quick desk definitions for chartering, vessel, cargo, laytime and voyage terms. Search an acronym or phrase, then open a result for its meaning.</p>
-          <div class="glossary-search">
-            <input type="search" id="glossarySearch" placeholder="Search e.g. NOR, DWT, demurrage, FIOST" autocomplete="off" oninput="renderShippingGlossary()" aria-label="Search shipping terms">
-          </div>
-          <div class="glossary-categories" id="glossaryCategories" aria-label="Filter terms by category"></div>
-          <p class="glossary-count" id="glossaryCount" aria-live="polite"></p>
-          <div class="glossary-list" id="glossaryList"></div>
-          <p class="form-hint" style="margin-top:14px">Quick reference only. The recap and signed charterparty control the fixture-specific meaning. See <a href="https://www.bimco.org/media/qy2neqim/laytime-definitions-for-charter-parties-2013-v2.pdf" target="_blank" rel="noopener noreferrer">BIMCO laytime definitions</a> and <a href="https://www.imo.org/en/mediacentre/hottopics/pages/sulphur-2020.aspx" target="_blank" rel="noopener noreferrer">IMO sulphur guidance</a> for source wording.</p>
-        </div>
-      </div><!-- /tab-glossary -->
-
-      <div id="tab-learning" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-learning" tabindex="0">
-        <div class="learning-wrap">
-          <h3 class="section-title">Shipping Learning Desk</h3>
-          <p class="learning-intro">A practical voyage map for breakbulk brokers: from fixture recap and loading documents to freight, original bills, discharge and close-out.</p>
-          <div class="learning-notice"><b>Operational guide, not legal or P&amp;I advice.</b> Follow the signed charterparty, sale contract, bill wording, owner/agent instructions and local law. Discharging cargo from the vessel is different from releasing it to a receiver.</div>
-
-          <div class="learning-grid">
-            <article class="learning-card learning-wide">
-              <h4>Voyage workflow · six stages from fixture to close-out</h4>
-              <div class="voyage-route" aria-label="Voyage stages: fix the contract, before load port, load port, voyage underway, discharge port, after voyage">
-                <span>FIXTURE</span><span aria-hidden="true">&#10140;</span><span>PRE-LOAD</span><span aria-hidden="true">&#10140;</span><span>LOAD PORT</span><span aria-hidden="true">&#10140;</span><span>UNDERWAY</span><span aria-hidden="true">&#10140;</span><span>DISCHARGE</span><span aria-hidden="true">&#10140;</span><span>CLOSE-OUT</span>
-              </div>
-              <div class="voyage-map" aria-label="Detailed voyage workflow">
-                <article class="voyage-stage">
-                  <div class="voyage-stage-marker" aria-hidden="true">1</div>
-                  <div class="voyage-stage-card"><h5>A. Fix the contract</h5><div class="voyage-stage-details">
-                    <section><h6>Prepare</h6><ul><li>Fix the vessel and sign the charterparty.</li><li>Set up a voyage group chat with owner and vessel; request a daily position update.</li><li>Working board and revenue sheet.</li></ul></section>
-                    <section><h6>Do</h6><ul><li>Keep the charterer updated by email or in the group chat.</li><li>Confirm laycan, cargo, ports, freight, demurrage and document instructions.</li><li>Record key contacts, subjects and responsibilities.</li></ul></section>
-                  </div></div>
-                </article>
-                <article class="voyage-stage">
-                  <div class="voyage-stage-marker" aria-hidden="true">2</div>
-                  <div class="voyage-stage-card"><h5>B. Before the load port</h5><div class="voyage-stage-details">
-                    <section><h6>Prepare</h6><ul><li>Ask for a pre-loading plan about one week before arrival, earlier where possible.</li><li>Cargo particulars, stowage factor, dimensions and handling needs.</li><li>Photos of the holds from owner or vessel.</li></ul></section>
-                    <section><h6>Do</h6><ul><li>Track the vessel so she remains within the laycan.</li><li>Review hold allocation, port limits, vessel gear and loading sequence.</li><li>Resolve cargo compatibility, lifting, lashing and weather-protection questions.</li></ul></section>
-                  </div></div>
-                </article>
-                <article class="voyage-stage">
-                  <div class="voyage-stage-marker" aria-hidden="true">3</div>
-                  <div class="voyage-stage-card"><h5>C. At the load port</h5><div class="voyage-stage-details">
-                    <section><h6>Prepare</h6><ul><li>Arrival and NOR instructions, loading sequence and SOF log.</li><li>Daily loading photos and draft B/L from owner or agent.</li><li>Draft-survey and weighbridge quantity figures.</li></ul></section>
-                    <section><h6>Do</h6><ul><li>Tender NOR as required and record loading events in the SOF.</li><li>Check any quantity discrepancy with owner and charterer; assess whether an LOI is requested.</li><li>Check draft B/L against the Mate’s Receipt. Carry remarks accurately; do not issue a knowingly inaccurate clean B/L.</li></ul></section>
-                  </div></div>
-                </article>
-                <article class="voyage-stage">
-                  <div class="voyage-stage-marker" aria-hidden="true">4</div>
-                  <div class="voyage-stage-card"><h5>D. Voyage underway</h5><div class="voyage-stage-details">
-                    <section><h6>Prepare</h6><ul><li>Load-port demurrage/despatch calculation under the charterparty.</li><li>Owner’s freight invoice and charterer’s payment slip.</li><li>Original B/L issue, courier and tracking details.</li></ul></section>
-                    <section><h6>Do</h6><ul><li>After authorized payment evidence, follow owner instructions for B/L issue and release.</li><li>Prepare debit note, credit note and final revenue sheet; invoice agreed commission.</li><li>Resolve any LOI, including delivery without original B/L, before arrival at discharge port.</li></ul></section>
-                  </div></div>
-                </article>
-                <article class="voyage-stage">
-                  <div class="voyage-stage-marker" aria-hidden="true">5</div>
-                  <div class="voyage-stage-card"><h5>E. At the discharge port</h5><div class="voyage-stage-details">
-                    <section><h6>Prepare</h6><ul><li>Discharge NOR requirements, receiving agent details and discharge plan.</li><li>Daily discharge photos and document requirements.</li><li>Verified original B/L surrender or written owner release authority.</li></ul></section>
-                    <section><h6>Do</h6><ul><li>Tender NOR and maintain the SOF through discharge.</li><li>Agent issues discharge documents; record outturn and exceptions.</li><li>Separate discharge from delivery: only release cargo with verified controlling documents and authorization.</li></ul></section>
-                  </div></div>
-                </article>
-                <article class="voyage-stage">
-                  <div class="voyage-stage-marker" aria-hidden="true">6</div>
-                  <div class="voyage-stage-card"><h5>F. After the voyage</h5><div class="voyage-stage-details">
-                    <section><h6>Prepare</h6><ul><li>Discharge SOF, outturn/tally/survey reports and agent statements.</li><li>Discharge-port demurrage/despatch calculation.</li><li>Freight, port-cost, commission and claim records.</li></ul></section>
-                    <section><h6>Do</h6><ul><li>Reconcile quantity, time, freight, port costs and claims against the contract.</li><li>Record difficulties and lessons on the working board.</li><li>Close accounts and thank the parties for their support.</li></ul></section>
-                  </div></div>
-                </article>
-              </div>
-              <p>Run the stages in order. Document names and timing vary by charterparty, trade and port. The pre-loading plan is provisional; final stowage and quantity records must reflect the completed load. Any LOI must be resolved before the vessel reaches the discharge port.</p>
-            </article>
-
-            <article class="learning-card">
-              <h4>OBL essentials · common forms</h4>
-              <p><b>OBL</b> means an issued original bill of lading, not one special bill type. A B/L is a cargo receipt and evidence of the carriage contract; an order bill may also function as a transferable document of title depending on wording and law.</p>
-              <dl class="learning-types">
-                <dt>Order B/L</dt><dd>Common in breakbulk and documentary sales. Made “to order”; check endorsement chain and presentation requirements before delivery.</dd>
-                <dt>Straight B/L</dt><dd>Names the consignee. Not transferable by endorsement, but an original may still be required; check wording and applicable law.</dd>
-                <dt>Sea waybill</dt><dd>Common alternative for trusted parties; non-negotiable and usually no original surrender. It is not an OBL—follow its named-consignee and local delivery rules.</dd>
-                <dt>Original set</dt><dd>Check the number issued (for example, 3/3), consignee/order wording and surrender clause. Never assume one original cancels all others unless the bill says so.</dd>
-              </dl>
-              <p><b>On-board/received for shipment</b> and <b>clean/claused</b> are status/condition notations, not B/L forms. A clean bill must not conceal known adverse remarks.</p>
-            </article>
-
-            <article class="learning-card">
-              <h4>Freight wording on the B/L</h4>
-              <dl class="learning-types">
-                <dt>Freight Prepaid</dt><dd>States freight is prepaid under the applicable arrangement. Use only as authorized and consistent with the fixture and payment status; it is not a broker’s assumption.</dd>
-                <dt>Freight Payable at</dt><dd>Names where freight is due under the bill/contract. Check the named place, payer and payment trigger exactly.</dd>
-                <dt>Freight Collect</dt><dd>Common wording for freight due from the receiver at destination, subject to the actual contract and bill terms.</dd>
-              </dl>
-              <p>These clauses describe freight arrangements; they do not by themselves decide title to cargo or who is entitled to delivery. Reconcile B/L wording with the signed fixture and owner’s release instructions.</p>
-            </article>
-
-            <article class="learning-card learning-wide">
-              <h4>Incoterms® · sale-contract handoff</h4>
-              <p>Incoterms® rules allocate seller/buyer tasks, costs and risk transfer for delivery. They do not by themselves determine title, payment timing or the carrier’s cargo-release obligations. Always state the rule, precise named place/port and version (for example, <b>FOB [named port] Incoterms® 2020</b>).</p>
-              <div class="carriage-callout" role="group" aria-label="Who arranges the vessel or main carriage under FOB, CFR and CIF">
-                <h5>Broker check: who books the ship?</h5>
-                <p>For bulk and breakbulk, “books the ship” often means arranging a voyage charter. The rule allocates responsibility for main carriage; it does not require a particular type of carriage contract.</p>
-                <div class="carriage-responsibility">
-                  <div><b>FOB · Buyer arranges</b><span>Buyer nominates the vessel and arranges/pays the main carriage. Seller loads the goods on board at the named shipment port.</span></div>
-                  <div><b>CFR · Seller arranges</b><span>Seller contracts and pays for carriage to the named destination port. Risk still transfers to buyer once goods are on board at shipment.</span></div>
-                  <div><b>CIF · Seller arranges</b><span>Seller contracts and pays for carriage and obtains the required minimum insurance. Risk still transfers to buyer once goods are on board at shipment.</span></div>
-                </div>
-              </div>
-              <dl class="learning-types">
-                <dt>Sea/inland-waterway</dt><dd><b>FAS</b> (alongside ship), <b>FOB</b> (on board), <b>CFR</b> (cost and freight), <b>CIF</b> (cost, insurance and freight). For bulk/general cargo loaded directly aboard, FOB may fit the intended delivery point; choose based on the sale contract and ICC guidance.</dd>
-                <dt>Any transport mode</dt><dd><b>EXW, FCA, CPT, CIP, DAP, DPU, DDP.</b> For containerized/multimodal cargo, compare FCA/CPT/CIP with sea-only FOB/CFR/CIF; select the rule that matches the actual delivery handoff.</dd>
-              </dl>
-              <p>Broker check: sale Incoterm and charterparty freight terms are separate contracts. Confirm who books/pays carriage and insurance, where risk transfers, and whether the named port/terminal and B/L instructions align.</p>
-            </article>
-
-            <article class="learning-card learning-wide">
-              <h4>LOIs · common requests and safeguards</h4>
-              <p>A <b>letter of indemnity (LOI)</b> is a separate undertaking for a specified operation. It is not proof of title, an original B/L, or guaranteed insurance. The LOIs below are request categories, not one universal standard form.</p>
-              <dl class="learning-types">
-                <dt>Switching B/L LOI</dt><dd>For a requested replacement B/L set. Owner/carrier approval is essential; control and cancel the full first set, verify the legitimate reason, and keep parties, cargo, dates and routing accurate. Never facilitate concealment or fraud.</dd>
-                <dt>Clean B/L LOI</dt><dd>May be requested when shipper disputes a mate’s-receipt remark. Do not use an LOI to erase a known adverse condition or issue a knowingly inaccurate clean bill. Record actual condition and escalate for owner/club/legal review.</dd>
-                <dt>Telex release LOI</dt><dd>Terminology varies. A telex release usually follows issue and surrender of the full original set at origin, with carrier instruction to release at destination. It is not automatically an LOI or a substitute for surrender; confirm exactly what was issued, surrendered and approved.</dd>
-                <dt>Situational operations LOI</dt><dd>Examples include loading/discharging moisture-sensitive cargo in light rain, or another specifically requested operational deviation. Define the activity, cargo, limits and parties; owner must approve. An LOI never overrides safe-work rules, port authority directions or the charterparty.</dd>
-              </dl>
-              <ol>
-                <li>Confirm the LOI type, the charterparty position, owner acceptance and which party must issue and sign it.</li>
-                <li>Obtain the owner’s current LOI format for that exact request; do not substitute a generic form.</li>
-                <li>Prepare the draft from the verified draft or original B/L and the specific operation, then verify issuer identity, authority and every named detail.</li>
-                <li>Send it to the owner for written confirmation before sending it to the charterer, shipper or consignee for signature, as the contract requires.</li>
-                <li>Keep the signed LOI and approval chain. Do not issue bills, change instructions or release cargo until the owner explicitly authorizes the action.</li>
-              </ol>
-            </article>
-
-            <article class="learning-card">
-              <h4>Stop and escalate</h4>
-              <ul>
-                <li>Request to backdate or make a knowingly false/clean B/L despite a material remark.</li>
-                <li>Unclear original set, inconsistent endorsements, missing originals or disputed cargo ownership.</li>
-                <li>Unverified recipient or LOI signer, or pressure to act before written owner approval.</li>
-                <li>Switch request before the first set is controlled and cancelled, or a telex-release request without confirmed surrender status.</li>
-                <li>Unsafe weather/cargo operation, including pressure to work in rain outside agreed limits.</li>
-              </ul>
-              <p>Knowingly inaccurate bills or delivery instructions can create serious liability and jeopardize P&amp;I cover. Stop and refer the case to owner/operator and their P&amp;I/legal contact.</p>
-            </article>
-
-            <article class="learning-card">
-              <h4>What to learn next</h4>
-              <ul>
-                <li><b>Chartering:</b> recap/subjects, laycan, cargo options, freight and commissions.</li>
-                <li><b>Laytime:</b> valid NOR, SOF, SHINC/SHEX, weather, demurrage and despatch.</li>
-                <li><b>Cargo/vessel fit:</b> draft, DWCC, stowage factor, gear/SWL, lashing and port limits.</li>
-                <li><b>Port costs:</b> agency, stevedoring, surveys, canal dues, bunkers and voyage estimates.</li>
-                <li><b>Sale vs carriage:</b> Incoterms, sale contract, charterparty and B/L perform different jobs.</li>
-              </ul>
-              <p><button type="button" class="glossary-chip" onclick="switchTab('tab-glossary')">Open shipping glossary</button></p>
-            </article>
-
-            <article class="learning-card learning-wide">
-              <h4>Sources and further reading</h4>
-              <p>Use the signed contracts and current owner/club instructions for live shipments. This desk is training material, not a release authority.</p>
-              <div class="learning-links">
-                <a href="https://gard.no/en/circulars/8-2023-ig-proforma-letters-of-indemnity-review/" target="_blank" rel="noopener noreferrer">Gard: LOI risks and wording</a>
-                <a href="https://www.gard.no/rules-statutes-and-guidances/document/risks-covered-rule-34-cargo-liability/" target="_blank" rel="noopener noreferrer">Gard: cargo liability and delivery risks</a>
-                <a href="https://www.westpandi.com/getattachment/fa2a3cc4-500f-4a8a-aff3-6d040ef57d60/p-i_guide_bills_of_lading_5_4pp_v2_lr-1-.pdf" target="_blank" rel="noopener noreferrer">West P&amp;I: bill of lading guide</a>
-                <a href="https://iccwbo.org/business-solutions/incoterms-rules/incoterms-2020/" target="_blank" rel="noopener noreferrer">ICC: Incoterms® 2020</a>
-                <a href="https://library.iccwbo.org/clp/clp-incoterms-qa-2020.htm?AGENT=ICC_HQ" target="_blank" rel="noopener noreferrer">ICC: what Incoterms® rules cover</a>
-              </div>
-            </article>
-          </div>
-        </div>
-      </div><!-- /tab-learning -->
-
-      </div><!-- /tab-panels -->
-      </div><!-- /quote-workspace -->
-
-    </div>
-  </div>
 </div>
+</div><!-- /tab-fn -->
+<div aria-labelledby="tool-tab-glossary" class="tab-content" id="tab-glossary" role="tabpanel" tabindex="0">
+<div class="glossary-wrap">
+<h3 class="section-title">Shipping Dictionary &amp; Acronyms</h3>
+<p class="glossary-intro">Quick desk definitions for chartering, vessel, cargo, laytime and voyage terms. Search an acronym or phrase, then open a result for its meaning.</p>
+<div class="glossary-search">
+<input aria-label="Search shipping terms" autocomplete="off" id="glossarySearch" oninput="renderShippingGlossary()" placeholder="Search e.g. NOR, DWT, demurrage, FIOST" type="search"/>
+</div>
+<div aria-label="Filter terms by category" class="glossary-categories" id="glossaryCategories"></div>
+<p aria-live="polite" class="glossary-count" id="glossaryCount"></p>
+<div class="glossary-list" id="glossaryList"></div>
+<p class="form-hint" style="margin-top:14px">Quick reference only. The recap and signed charterparty control the fixture-specific meaning. See <a href="https://www.bimco.org/media/qy2neqim/laytime-definitions-for-charter-parties-2013-v2.pdf" rel="noopener noreferrer" target="_blank">BIMCO laytime definitions</a> and <a href="https://www.imo.org/en/mediacentre/hottopics/pages/sulphur-2020.aspx" rel="noopener noreferrer" target="_blank">IMO sulphur guidance</a> for source wording.</p>
+</div>
+</div><!-- /tab-glossary -->
+<div aria-labelledby="tool-tab-learning" class="tab-content" id="tab-learning" role="tabpanel" tabindex="0">
+<div class="learning-wrap">
+<h3 class="section-title">Shipping Learning Desk</h3>
+<p class="learning-intro">Use the voyage map as your quick reference. Open any topic below for the full procedure and guidance.</p>
+<div class="learning-notice"><b>Desk reference:</b> Use the signed contracts and current owner/agent instructions for each fixture. Vessel discharge and cargo release to the receiver are separate steps.</div>
+<article aria-labelledby="broker-flow-title" class="broker-flow-card">
+<div class="broker-flow-heading">
+<div>
+<h4 id="broker-flow-title">Broker’s voyage workflow · six stages</h4>
+<p>Follow the voyage from fixture to close-out, with document and payment checks along the way.</p>
+</div>
+<div class="broker-flow-rule">LOI, if required, to be settled before discharge-port arrival</div>
+</div>
+<div aria-label="Six-stage voyage workflow, flowing from A to B to C, down to D, then left to E and F" class="broker-flow-grid">
+<section class="broker-flow-stage broker-flow-stage-a"><h5>A. Fix the contract</h5><p>Sign the charter party<br/>Group chat with owner<br/>Update the charterer<br/>Working board and revenue sheet</p></section>
+<div aria-hidden="true" class="broker-flow-arrow broker-flow-arrow-ab">→</div>
+<section class="broker-flow-stage broker-flow-stage-b"><h5>B. Before the load port</h5><p>Pre-loading plan, about 1 week out<br/>Keep in touch with the laycan<br/>Hold photos</p></section>
+<div aria-hidden="true" class="broker-flow-arrow broker-flow-arrow-bc">→</div>
+<section class="broker-flow-stage broker-flow-stage-c"><h5>C. At the load port</h5><p>Tender NOR; daily photos<br/>Draft B/L; check quantity<br/>B/L follows Mate’s Receipt<br/>Sail from load port</p></section>
+<div aria-hidden="true" class="broker-flow-arrow broker-flow-arrow-cd">↓</div>
+<section class="broker-flow-stage broker-flow-stage-d"><h5>D. Voyage underway</h5><p>Load-port demurrage/despatch<br/>Freight invoice and payment<br/>Issue and send B/Ls<br/>Notes and commission invoice</p></section>
+<div aria-hidden="true" class="broker-flow-arrow broker-flow-arrow-de">←</div>
+<section class="broker-flow-stage broker-flow-stage-e"><h5>E. At the discharge port</h5><p>Tender NOR; daily photos<br/>Agent issues discharge docs<br/>Complete and sail</p></section>
+<div aria-hidden="true" class="broker-flow-arrow broker-flow-arrow-ef">←</div>
+<section class="broker-flow-stage broker-flow-stage-f"><h5>F. After the voyage</h5><p>Discharge demurrage/despatch<br/>Review and note difficulties<br/>Thank both sides</p></section>
+</div>
+<div aria-label="Letter of Indemnity procedure" class="broker-loi-panel">
+<h5 class="broker-loi-title">LOI procedure · confirm the LOI type and contract terms first</h5>
+<div class="broker-loi-steps">
+<div class="broker-loi-step"><b>1.</b> Get the owner’s LOI format</div>
+<div class="broker-loi-step"><b>2.</b> Draft against the draft or original B/L</div>
+<div class="broker-loi-step"><b>3.</b> Send to owner to confirm</div>
+<div class="broker-loi-step"><b>4.</b> Obtain sign-off by charterer, shipper or consignee, as applicable</div>
+</div>
+</div>
+<details class="broker-flow-more"><summary>When might an LOI be needed?</summary><p class="broker-flow-footnote">Stages A to F run in sequence. An LOI may be requested where quantity differs, the Mate’s Receipt contains remarks, a B/L is telex-released, or original B/Ls are delayed. Confirm the required wording, parties, supporting documents and owner/P&amp;I instructions; complete the agreed process before the vessel reaches the discharge port. An LOI does not replace proper cargo-document checks or automatically remove carrier risk.</p></details>
+</article>
+<div class="learning-grid">
+<details class="learning-accordion learning-wide" data-learning-topic="voyage workflow · six stages from fixture to close-out"><summary>Voyage workflow · six stages from fixture to close-out</summary><div class="learning-accordion-body">
 
-<dialog id="glossaryDialog" class="glossary-dialog" aria-labelledby="glossaryDialogTitle" onclick="if(event.target===this)this.close()">
-  <button type="button" class="glossary-dialog-close" onclick="closeGlossaryDefinition()" aria-label="Close definition">&#10005;</button>
-  <div class="glossary-dialog-category" id="glossaryDialogCategory"></div>
-  <h3 id="glossaryDialogTitle"></h3>
-  <p class="glossary-dialog-definition" id="glossaryDialogDefinition"></p>
-  <p class="glossary-dialog-aliases" id="glossaryDialogAliases" hidden></p>
+<div aria-label="Voyage stages: fix the contract, before load port, load port, voyage underway, discharge port, after voyage" class="voyage-route">
+<span>FIXTURE</span><span aria-hidden="true">➜</span><span>PRE-LOAD</span><span aria-hidden="true">➜</span><span>LOAD PORT</span><span aria-hidden="true">➜</span><span>UNDERWAY</span><span aria-hidden="true">➜</span><span>DISCHARGE</span><span aria-hidden="true">➜</span><span>CLOSE-OUT</span>
+</div>
+<div aria-label="Detailed voyage workflow" class="voyage-map">
+<article class="voyage-stage">
+<div aria-hidden="true" class="voyage-stage-marker">1</div>
+<div class="voyage-stage-card"><h5>A. Fix the contract</h5><div class="voyage-stage-details">
+<section><h6>Prepare</h6><ul><li>Fix the vessel and sign the charterparty.</li><li>Set up a voyage group chat with owner and vessel; request a daily position update.</li><li>Working board and revenue sheet.</li></ul></section>
+<section><h6>Do</h6><ul><li>Keep the charterer updated by email or in the group chat.</li><li>Confirm laycan, cargo, ports, freight, demurrage and document instructions.</li><li>Record key contacts, subjects and responsibilities.</li></ul></section>
+</div></div>
+</article>
+<article class="voyage-stage">
+<div aria-hidden="true" class="voyage-stage-marker">2</div>
+<div class="voyage-stage-card"><h5>B. Before the load port</h5><div class="voyage-stage-details">
+<section><h6>Prepare</h6><ul><li>Ask for a pre-loading plan about one week before arrival, earlier where possible.</li><li>Cargo particulars, stowage factor, dimensions and handling needs.</li><li>Photos of the holds from owner or vessel.</li></ul></section>
+<section><h6>Do</h6><ul><li>Track the vessel so she remains within the laycan.</li><li>Review hold allocation, port limits, vessel gear and loading sequence.</li><li>Resolve cargo compatibility, lifting, lashing and weather-protection questions.</li></ul></section>
+</div></div>
+</article>
+<article class="voyage-stage">
+<div aria-hidden="true" class="voyage-stage-marker">3</div>
+<div class="voyage-stage-card"><h5>C. At the load port</h5><div class="voyage-stage-details">
+<section><h6>Prepare</h6><ul><li>Arrival and NOR instructions, loading sequence and SOF log.</li><li>Daily loading photos and draft B/L from owner or agent.</li><li>Draft-survey and weighbridge quantity figures.</li></ul></section>
+<section><h6>Do</h6><ul><li>Tender NOR as required and record loading events in the SOF.</li><li>Check any quantity discrepancy with owner and charterer; assess whether an LOI is requested.</li><li>Check draft B/L against the Mate’s Receipt. Carry remarks accurately; do not issue a knowingly inaccurate clean B/L.</li></ul></section>
+</div></div>
+</article>
+<article class="voyage-stage">
+<div aria-hidden="true" class="voyage-stage-marker">4</div>
+<div class="voyage-stage-card"><h5>D. Voyage underway</h5><div class="voyage-stage-details">
+<section><h6>Prepare</h6><ul><li>Load-port demurrage/despatch calculation under the charterparty.</li><li>Owner’s freight invoice and charterer’s payment slip.</li><li>Original B/L issue, courier and tracking details.</li></ul></section>
+<section><h6>Do</h6><ul><li>After authorized payment evidence, follow owner instructions for B/L issue and release.</li><li>Prepare debit note, credit note and final revenue sheet; invoice agreed commission.</li><li>Resolve any LOI, including delivery without original B/L, before arrival at discharge port.</li></ul></section>
+</div></div>
+</article>
+<article class="voyage-stage">
+<div aria-hidden="true" class="voyage-stage-marker">5</div>
+<div class="voyage-stage-card"><h5>E. At the discharge port</h5><div class="voyage-stage-details">
+<section><h6>Prepare</h6><ul><li>Discharge NOR requirements, receiving agent details and discharge plan.</li><li>Daily discharge photos and document requirements.</li><li>Verified original B/L surrender or written owner release authority.</li></ul></section>
+<section><h6>Do</h6><ul><li>Tender NOR and maintain the SOF through discharge.</li><li>Agent issues discharge documents; record outturn and exceptions.</li><li>Separate discharge from delivery: only release cargo with verified controlling documents and authorization.</li></ul></section>
+</div></div>
+</article>
+<article class="voyage-stage">
+<div aria-hidden="true" class="voyage-stage-marker">6</div>
+<div class="voyage-stage-card"><h5>F. After the voyage</h5><div class="voyage-stage-details">
+<section><h6>Prepare</h6><ul><li>Discharge SOF, outturn/tally/survey reports and agent statements.</li><li>Discharge-port demurrage/despatch calculation.</li><li>Freight, port-cost, commission and claim records.</li></ul></section>
+<section><h6>Do</h6><ul><li>Reconcile quantity, time, freight, port costs and claims against the contract.</li><li>Record difficulties and lessons on the working board.</li><li>Close accounts and thank the parties for their support.</li></ul></section>
+</div></div>
+</article>
+</div>
+<p>Run the stages in order. Document names and timing vary by charterparty, trade and port. The pre-loading plan is provisional; final stowage and quantity records must reflect the completed load. Any LOI must be resolved before the vessel reaches the discharge port.</p>
+</div></details>
+<details class="learning-accordion" data-learning-topic="obl essentials · common forms"><summary>OBL essentials · common forms</summary><div class="learning-accordion-body">
+
+<p><b>OBL</b> means an issued original bill of lading, not one special bill type. A B/L is a cargo receipt and evidence of the carriage contract; an order bill may also function as a transferable document of title depending on wording and law.</p>
+<dl class="learning-types">
+<dt>Order B/L</dt><dd>Common in breakbulk and documentary sales. Made “to order”; check endorsement chain and presentation requirements before delivery.</dd>
+<dt>Straight B/L</dt><dd>Names the consignee. Not transferable by endorsement, but an original may still be required; check wording and applicable law.</dd>
+<dt>Sea waybill</dt><dd>Common alternative for trusted parties; non-negotiable and usually no original surrender. It is not an OBL—follow its named-consignee and local delivery rules.</dd>
+<dt>Original set</dt><dd>Check the number issued (for example, 3/3), consignee/order wording and surrender clause. Never assume one original cancels all others unless the bill says so.</dd>
+</dl>
+<p><b>On-board/received for shipment</b> and <b>clean/claused</b> are status/condition notations, not B/L forms. A clean bill must not conceal known adverse remarks.</p>
+</div></details>
+<details class="learning-accordion" data-learning-topic="freight wording on the b/l"><summary>Freight wording on the B/L</summary><div class="learning-accordion-body">
+
+<dl class="learning-types">
+<dt>Freight Prepaid</dt><dd>States freight is prepaid under the applicable arrangement. Use only as authorized and consistent with the fixture and payment status; it is not a broker’s assumption.</dd>
+<dt>Freight Payable at</dt><dd>Names where freight is due under the bill/contract. Check the named place, payer and payment trigger exactly.</dd>
+<dt>Freight Collect</dt><dd>Common wording for freight due from the receiver at destination, subject to the actual contract and bill terms.</dd>
+</dl>
+<p>These clauses describe freight arrangements; they do not by themselves decide title to cargo or who is entitled to delivery. Reconcile B/L wording with the signed fixture and owner’s release instructions.</p>
+</div></details>
+<details class="learning-accordion learning-wide" data-learning-topic="incoterms® · sale-contract handoff"><summary>Incoterms® · sale-contract handoff</summary><div class="learning-accordion-body">
+
+<p>Incoterms® rules allocate seller/buyer tasks, costs and risk transfer for delivery. They do not by themselves determine title, payment timing or the carrier’s cargo-release obligations. Always state the rule, precise named place/port and version (for example, <b>FOB [named port] Incoterms® 2020</b>).</p>
+<div aria-label="Who arranges the vessel or main carriage under FOB, CFR and CIF" class="carriage-callout" role="group">
+<h5>Broker check: who books the ship?</h5>
+<p>For bulk and breakbulk, “books the ship” often means arranging a voyage charter. The rule allocates responsibility for main carriage; it does not require a particular type of carriage contract.</p>
+<div class="carriage-responsibility">
+<div><b>FOB · Buyer arranges</b><span>Buyer nominates the vessel and arranges/pays the main carriage. Seller loads the goods on board at the named shipment port.</span></div>
+<div><b>CFR · Seller arranges</b><span>Seller contracts and pays for carriage to the named destination port. Risk still transfers to buyer once goods are on board at shipment.</span></div>
+<div><b>CIF · Seller arranges</b><span>Seller contracts and pays for carriage and obtains the required minimum insurance. Risk still transfers to buyer once goods are on board at shipment.</span></div>
+</div>
+</div>
+<dl class="learning-types">
+<dt>Sea/inland-waterway</dt><dd><b>FAS</b> (alongside ship), <b>FOB</b> (on board), <b>CFR</b> (cost and freight), <b>CIF</b> (cost, insurance and freight). For bulk/general cargo loaded directly aboard, FOB may fit the intended delivery point; choose based on the sale contract and ICC guidance.</dd>
+<dt>Any transport mode</dt><dd><b>EXW, FCA, CPT, CIP, DAP, DPU, DDP.</b> For containerized/multimodal cargo, compare FCA/CPT/CIP with sea-only FOB/CFR/CIF; select the rule that matches the actual delivery handoff.</dd>
+</dl>
+<p>Broker check: sale Incoterm and charterparty freight terms are separate contracts. Confirm who books/pays carriage and insurance, where risk transfers, and whether the named port/terminal and B/L instructions align.</p>
+</div></details>
+<details class="learning-accordion learning-wide" data-learning-topic="lois · common requests and safeguards"><summary>LOIs · common requests and safeguards</summary><div class="learning-accordion-body">
+
+<p>A <b>letter of indemnity (LOI)</b> is a separate undertaking for a specified operation. It is not proof of title, an original B/L, or guaranteed insurance. The LOIs below are request categories, not one universal standard form.</p>
+<dl class="learning-types">
+<dt>Switching B/L LOI</dt><dd>For a requested replacement B/L set. Owner/carrier approval is essential; control and cancel the full first set, verify the legitimate reason, and keep parties, cargo, dates and routing accurate. Never facilitate concealment or fraud.</dd>
+<dt>Clean B/L LOI</dt><dd>May be requested when shipper disputes a mate’s-receipt remark. Do not use an LOI to erase a known adverse condition or issue a knowingly inaccurate clean bill. Record actual condition and escalate for owner/club/legal review.</dd>
+<dt>Telex release LOI</dt><dd>Terminology varies. A telex release usually follows issue and surrender of the full original set at origin, with carrier instruction to release at destination. It is not automatically an LOI or a substitute for surrender; confirm exactly what was issued, surrendered and approved.</dd>
+<dt>Situational operations LOI</dt><dd>Examples include loading/discharging moisture-sensitive cargo in light rain, or another specifically requested operational deviation. Define the activity, cargo, limits and parties; owner must approve. An LOI never overrides safe-work rules, port authority directions or the charterparty.</dd>
+</dl>
+<ol>
+<li>Confirm the LOI type, the charterparty position, owner acceptance and which party must issue and sign it.</li>
+<li>Obtain the owner’s current LOI format for that exact request; do not substitute a generic form.</li>
+<li>Prepare the draft from the verified draft or original B/L and the specific operation, then verify issuer identity, authority and every named detail.</li>
+<li>Send it to the owner for written confirmation before sending it to the charterer, shipper or consignee for signature, as the contract requires.</li>
+<li>Keep the signed LOI and approval chain. Do not issue bills, change instructions or release cargo until the owner explicitly authorizes the action.</li>
+</ol>
+</div></details>
+<details class="learning-accordion" data-learning-topic="stop and escalate"><summary>Stop and escalate</summary><div class="learning-accordion-body">
+
+<ul>
+<li>Request to backdate or make a knowingly false/clean B/L despite a material remark.</li>
+<li>Unclear original set, inconsistent endorsements, missing originals or disputed cargo ownership.</li>
+<li>Unverified recipient or LOI signer, or pressure to act before written owner approval.</li>
+<li>Switch request before the first set is controlled and cancelled, or a telex-release request without confirmed surrender status.</li>
+<li>Unsafe weather/cargo operation, including pressure to work in rain outside agreed limits.</li>
+</ul>
+<p>Knowingly inaccurate bills or delivery instructions can create serious liability and jeopardize P&amp;I cover. Stop and refer the case to owner/operator and their P&amp;I/legal contact.</p>
+</div></details>
+<details class="learning-accordion" data-learning-topic="what to learn next"><summary>What to learn next</summary><div class="learning-accordion-body">
+
+<ul>
+<li><b>Chartering:</b> recap/subjects, laycan, cargo options, freight and commissions.</li>
+<li><b>Laytime:</b> valid NOR, SOF, SHINC/SHEX, weather, demurrage and despatch.</li>
+<li><b>Cargo/vessel fit:</b> draft, DWCC, stowage factor, gear/SWL, lashing and port limits.</li>
+<li><b>Port costs:</b> agency, stevedoring, surveys, canal dues, bunkers and voyage estimates.</li>
+<li><b>Sale vs carriage:</b> Incoterms, sale contract, charterparty and B/L perform different jobs.</li>
+</ul>
+<p><button class="glossary-chip" onclick="switchTab('tab-glossary')" type="button">Open shipping glossary</button></p>
+</div></details>
+<details class="learning-accordion learning-wide" data-learning-topic="sources and further reading"><summary>Sources and further reading</summary><div class="learning-accordion-body">
+
+<p>Use the signed contracts and current owner/club instructions for live shipments. This desk is training material, not a release authority.</p>
+<div class="learning-links">
+<a href="https://gard.no/en/circulars/8-2023-ig-proforma-letters-of-indemnity-review/" rel="noopener noreferrer" target="_blank">Gard: LOI risks and wording</a>
+<a href="https://www.gard.no/rules-statutes-and-guidances/document/risks-covered-rule-34-cargo-liability/" rel="noopener noreferrer" target="_blank">Gard: cargo liability and delivery risks</a>
+<a href="https://www.westpandi.com/getattachment/fa2a3cc4-500f-4a8a-aff3-6d040ef57d60/p-i_guide_bills_of_lading_5_4pp_v2_lr-1-.pdf" rel="noopener noreferrer" target="_blank">West P&amp;I: bill of lading guide</a>
+<a href="https://iccwbo.org/business-solutions/incoterms-rules/incoterms-2020/" rel="noopener noreferrer" target="_blank">ICC: Incoterms® 2020</a>
+<a href="https://library.iccwbo.org/clp/clp-incoterms-qa-2020.htm?AGENT=ICC_HQ" rel="noopener noreferrer" target="_blank">ICC: what Incoterms® rules cover</a>
+</div>
+</div></details>
+</div>
+</div>
+</div><!-- /tab-learning -->
+</div><!-- /tab-panels -->
+</div><!-- /quote-workspace -->
+</div>
+</div>
+</div>
+<dialog aria-labelledby="glossaryDialogTitle" class="glossary-dialog" id="glossaryDialog" onclick="if(event.target===this)this.close()">
+<button aria-label="Close definition" class="glossary-dialog-close" onclick="closeGlossaryDefinition()" type="button">✕</button>
+<div class="glossary-dialog-category" id="glossaryDialogCategory"></div>
+<h3 id="glossaryDialogTitle"></h3>
+<p class="glossary-dialog-definition" id="glossaryDialogDefinition"></p>
+<p class="glossary-dialog-aliases" hidden="" id="glossaryDialogAliases"></p>
 </dialog>
-
 <!-- DISTANCE PANEL -->
 <div class="dist-panel">
-  <div class="dist-card">
-    <h3>&#128205; Voyage Distance</h3>
-    <div class="dist-stats">
-      <div class="dist-stat"><div class="ms-label">Distance</div><div class="ms-val" id="mapDist">&mdash;</div></div>
-      <div class="dist-stat"><div class="ms-label">Sea Days</div><div class="ms-val" id="mapDays">&mdash;</div></div>
-      <div class="dist-stat"><div class="ms-label">ETA (from now)</div><div class="ms-val" id="mapEta">&mdash;</div></div>
-      <div class="speed-control">
-        <label>Speed</label>
-        <input type="number" id="mapSpeed" value="11.5" min="6" max="16" step="0.5" oninput="syncSpeed(this)">
-        <span class="speed-unit">knots</span>
-      </div>
-    </div>
-  </div>
-  <div class="dist-note" id="distNote"></div>
+<div class="dist-card">
+<h3>📍 Voyage Distance</h3>
+<div class="dist-stats">
+<div class="dist-stat"><div class="ms-label">Distance</div><div class="ms-val" id="mapDist">—</div></div>
+<div class="dist-stat"><div class="ms-label">Sea Days</div><div class="ms-val" id="mapDays">—</div></div>
+<div class="dist-stat"><div class="ms-label">ETA (from now)</div><div class="ms-val" id="mapEta">—</div></div>
+<div class="speed-control">
+<label>Speed</label>
+<input id="mapSpeed" max="16" min="6" oninput="syncSpeed(this)" step="0.5" type="number" value="11.5"/>
+<span class="speed-unit">knots</span>
 </div>
-
+</div>
+</div>
+<div class="dist-note" id="distNote"></div>
+</div>
 <!-- RECENT QUOTES -->
 <div class="hist-panel">
-  <div class="hist-head">
-    <h3>&#128203; Recent Quotes</h3>
-    <button type="button" class="hist-clear" onclick="clearHistory()">Clear</button>
-  </div>
-  <div id="quoteHistory"></div>
-  <div class="hist-foot">Saved in this browser only &mdash; never uploaded. Last 15 kept.</div>
+<div class="hist-head">
+<h3>📋 Recent Quotes</h3>
+<button class="hist-clear" onclick="clearHistory()" type="button">Clear</button>
 </div>
-
+<div id="quoteHistory"></div>
+<div class="hist-foot">Saved in this browser only — never uploaded. Last 15 kept.</div>
+</div>
 <!-- NEWS MODAL -->
-  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <button class="modal-close" onclick="closeModalBtn()" aria-label="Close article">&#10005; Close</button>
-    <div class="news-tag" id="modalTag"></div>
-    <h3 id="modalTitle"></h3>
-    <div class="modal-meta" id="modalMeta"></div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+<div aria-labelledby="modalTitle" aria-modal="true" class="modal" role="dialog">
+<button aria-label="Close article" class="modal-close" onclick="closeModalBtn()">✕ Close</button>
+<div class="news-tag" id="modalTag"></div>
+<h3 id="modalTitle"></h3>
+<div class="modal-meta" id="modalMeta"></div>
+<div class="modal-body" id="modalBody"></div>
 </div>
-
- </div><!-- /dashboardApp -->
-
+</div>
+</div><!-- /dashboardApp -->
 <script>
 // Lightweight front-end sign-in gate for the static version. This only hides
 // the dashboard UI; all page assets remain public and this is not real security.
@@ -9410,7 +9549,32 @@ const GLOSSARY_CATEGORIES = ['All', ...new Set(SHIPPING_GLOSSARY.map(item => ite
 let activeGlossaryCategory = 'All';
 function setGlossaryCategory(category) {
   activeGlossaryCategory = category;
-  renderShippingGlossary();
+  
+// Convert the long-form Learning Desk articles into accessible expandable topics.
+function initialiseLearningAccordions() {
+  const grid = document.querySelector('#tab-learning .learning-grid');
+  if (!grid || grid.dataset.accordionsReady === 'true') return;
+  grid.dataset.accordionsReady = 'true';
+  grid.querySelectorAll(':scope > article.learning-card').forEach((article, index) => {
+    const heading = article.querySelector(':scope > h4');
+    if (!heading) return;
+    const details = document.createElement('details');
+    details.className = 'learning-accordion' + (article.classList.contains('learning-wide') ? ' learning-wide' : '');
+    const summary = document.createElement('summary');
+    summary.textContent = heading.textContent.trim();
+    summary.setAttribute('aria-label', 'Expand topic: ' + heading.textContent.trim());
+    const body = document.createElement('div');
+    body.className = 'learning-accordion-body';
+    while (article.firstChild) body.appendChild(article.firstChild);
+    details.append(summary, body);
+    article.replaceWith(details);
+    // Keep the opening view focused: all reference chapters start collapsed.
+    details.open = false;
+  });
+}
+initialiseLearningAccordions();
+
+renderShippingGlossary();
   document.querySelectorAll('#glossaryCategories .glossary-chip').forEach(button => {
     if (button.dataset.category === category) button.focus();
   });
@@ -9459,6 +9623,5 @@ function closeGlossaryDefinition() {
 renderShippingGlossary();
 
 </script>
-
 </body>
 </html>
