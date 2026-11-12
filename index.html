@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Breakbulk & Drybulk Broker Dashboard</title>
-<meta name="description" content="Freight, TCE, multi-port voyage calculator and searchable shipping glossary for breakbulk and drybulk brokers.">
+<meta name="description" content="Breakbulk and drybulk broker tools, searchable shipping glossary, and practical shipping document learning guides.">
 <!-- Inline SVG favicon (anchor) — no external file, works on GitHub Pages. -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%93%3C/text%3E%3C/svg%3E">
 <!-- Link preview for Slack / WhatsApp / email -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Breakbulk &amp; Drybulk Broker Dashboard">
-<meta property="og:description" content="Freight, TCE, multi-port voyage calculator and searchable shipping glossary for breakbulk and drybulk brokers.">
+<meta property="og:description" content="Breakbulk and drybulk broker tools, searchable shipping glossary, and practical shipping document learning guides.">
 <meta property="og:url" content="https://juniorsu.github.io/shipping-broker-tool/">
 <meta name="twitter:card" content="summary">
 <style>
@@ -206,23 +206,30 @@
   }
   .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(184,98,10,.35); }
 
-  /* TABS */
+  /* Tool navigation: persistent left rail on desktop, scrollable strip on phones. */
+  .quote-workspace { display: grid; grid-template-columns: 178px minmax(0, 1fr); align-items: stretch; min-width: 0; }
   .tabs {
-    display: flex; border-bottom: 1px solid var(--border); background: var(--navy2);
+    display: flex; flex-direction: column; gap: 5px; padding: 14px 9px;
+    background: var(--navy2); border-right: 1px solid var(--border); min-width: 0;
   }
   .tab-btn {
-    flex: 1; padding: 11px 14px; background: transparent; border: none; cursor: pointer;
-    font-size: .78rem; font-weight: 700; color: var(--muted); letter-spacing: .4px;
-    text-transform: uppercase; transition: all .15s; border-bottom: 3px solid transparent;
+    display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px;
+    padding: 9px 11px; border: 1px solid transparent; border-left: 3px solid transparent;
+    border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer;
+    font: inherit; font-size: .78rem; font-weight: 650; text-align: left; white-space: nowrap;
+    transition: background .15s, color .15s, border-color .15s;
   }
-  .tab-btn:hover { color: var(--accent2); background: rgba(184,98,10,.06); }
+  .tab-btn:hover { color: var(--accent2); background: rgba(184,98,10,.08); }
   .tab-btn.active {
-    color: var(--accent2); background: var(--card); border-bottom-color: var(--accent);
+    color: var(--accent2); background: var(--card); border-color: var(--border);
+    border-left-color: var(--accent); box-shadow: 0 1px 3px rgba(42,30,14,.06);
   }
-  .tabs { overflow-x: auto; }
-  .tab-btn { min-width: max-content; }
+  .tab-panels { min-width: 0; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
+  .main.wide-tool-focus { grid-template-columns: minmax(0, 1fr); }
+  .main.wide-tool-focus .news-col { display: none; }
+  .main.wide-tool-focus .quote-card { position: static; }
 
   /* Searchable broker glossary */
   .glossary-wrap { padding: 18px 20px 22px; }
@@ -236,20 +243,53 @@
   }
   .glossary-chip:hover, .glossary-chip.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
   .glossary-count { color: var(--muted); font-size: .7rem; margin: 0 0 8px; }
-  .glossary-list { display: grid; gap: 8px; }
-  .glossary-item { border: 1px solid var(--border); border-radius: 7px; background: #fff; overflow: hidden; }
-  .glossary-item summary {
-    list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    cursor: pointer; padding: 11px 12px; min-height: 44px;
+  .glossary-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 10px; }
+  .glossary-card {
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 10px;
+    width: 100%; min-height: 82px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+    background: #fff; color: var(--text); text-align: left; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
   }
-  .glossary-item summary::-webkit-details-marker { display: none; }
-  .glossary-item summary::after { content: '+'; color: var(--accent2); font-size: 1.1rem; font-weight: 700; }
-  .glossary-item[open] summary::after { content: '−'; }
-  .glossary-term { min-width: 0; font-size: .82rem; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
-  .glossary-category { flex-shrink: 0; color: var(--muted); font-size: .65rem; }
-  .glossary-definition { padding: 0 12px 12px; color: var(--text); font-size: .78rem; line-height: 1.6; }
-  .glossary-aliases { display: block; margin-top: 5px; color: var(--muted); font-size: .68rem; }
-  .glossary-empty { padding: 22px 12px; border: 1px dashed var(--border); border-radius: 7px; color: var(--muted); text-align: center; font-size: .8rem; }
+  .glossary-card:hover, .glossary-card:focus-visible {
+    border-color: var(--accent); box-shadow: 0 3px 10px rgba(42,30,14,.09); transform: translateY(-1px);
+  }
+  .glossary-card-term { font-size: .79rem; line-height: 1.35; font-weight: 700; overflow-wrap: anywhere; }
+  .glossary-card-category { color: var(--muted); font-size: .64rem; }
+  .glossary-empty { grid-column: 1 / -1; padding: 22px 12px; border: 1px dashed var(--border); border-radius: 7px; color: var(--muted); text-align: center; font-size: .8rem; }
+  .glossary-dialog {
+    width: min(560px, calc(100vw - 28px)); max-height: min(80vh, 600px); overflow-y: auto;
+    margin: auto; padding: 24px; border: 1px solid var(--border); border-top: 4px solid var(--accent);
+    border-radius: 12px; background: var(--card); color: var(--text); box-shadow: 0 18px 55px rgba(0,0,0,.28);
+  }
+  .glossary-dialog::backdrop { background: rgba(24,19,13,.62); backdrop-filter: blur(2px); }
+  .glossary-dialog-close {
+    float: right; min-width: 36px; min-height: 36px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--navy2); color: var(--text); cursor: pointer; font-size: 1rem;
+  }
+  .glossary-dialog-category { display: inline-block; margin: 5px 0 10px; color: var(--accent2); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
+  .glossary-dialog h3 { clear: both; margin: 8px 36px 10px 0; font-size: 1.08rem; line-height: 1.4; }
+  .glossary-dialog-definition { font-size: .88rem; line-height: 1.7; }
+  .glossary-dialog-aliases { margin-top: 14px; color: var(--muted); font-size: .76rem; }
+  .learning-wrap { padding: 20px; }
+  .learning-intro { margin: 8px 0 16px; color: var(--muted); font-size: .82rem; line-height: 1.6; }
+  .learning-notice { margin-bottom: 16px; padding: 12px 14px; border: 1px solid #d9b66d; border-left: 4px solid var(--gold); border-radius: 7px; background: #fff8e9; font-size: .76rem; line-height: 1.55; }
+  .learning-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 12px; align-items: start; }
+  .learning-card { min-width: 0; padding: 15px; border: 1px solid var(--border); border-radius: 9px; background: #fff; }
+  .learning-card.learning-wide { grid-column: 1 / -1; }
+  .learning-card h4 { margin: 0 0 9px; color: var(--accent2); font-size: .9rem; line-height: 1.4; }
+  .learning-card p, .learning-card li { color: var(--text); font-size: .76rem; line-height: 1.6; }
+  .learning-card p + p { margin-top: 8px; }
+  .learning-card ul, .learning-card ol { padding-left: 19px; margin-top: 8px; }
+  .learning-card li + li { margin-top: 5px; }
+  .learning-types { display: grid; grid-template-columns: minmax(100px,.38fr) minmax(0,1fr); gap: 0 10px; font-size: .74rem; }
+  .learning-types dt, .learning-types dd { padding: 8px 0; border-bottom: 1px solid #eee6d8; line-height: 1.5; }
+  .learning-types dt { color: var(--accent2); font-weight: 700; }
+  .learning-types dd { margin: 0; color: var(--text); }
+  .learning-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 9px; margin-top: 10px; }
+  .learning-step { padding: 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--card); }
+  .learning-step b { display: block; margin-bottom: 4px; color: var(--accent2); font-size: .74rem; }
+  .learning-step span { display: block; color: var(--text); font-size: .72rem; line-height: 1.5; }
+  .learning-links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: .73rem; }
 
   /* COPY / PRINT BUTTONS */
   .action-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
@@ -461,6 +501,16 @@
     .quote-card { position: static; }
     .dist-card { flex-direction: column; align-items: flex-start; }
   }
+  @media (max-width: 680px) {
+    .quote-workspace { grid-template-columns: minmax(0, 1fr); }
+    .tabs {
+      flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border);
+      padding: 8px; gap: 6px; scrollbar-width: thin;
+    }
+    .tab-btn { flex: 0 0 auto; width: auto; min-height: 40px; padding: 8px 11px; border: 1px solid transparent; }
+    .tab-btn.active { border-color: var(--border); border-bottom-color: var(--accent); }
+    .glossary-wrap { padding: 16px 14px 20px; }
+  }
 </style>
 </head>
 <body>
@@ -539,16 +589,18 @@
         <p>Indicative freight basis &mdash; tramp / spot market</p>
       </div>
 
-      <!-- TABS -->
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="tab-freight" onclick="switchTab('tab-freight')">&#9875; Freight</button>
-        <button class="tab-btn"        data-tab="tab-tce"     onclick="switchTab('tab-tce')">&#128200; TCE</button>
-        <button class="tab-btn"        data-tab="tab-multi"   onclick="switchTab('tab-multi')">&#128205; Multi-Port</button>
-        <button class="tab-btn"        data-tab="tab-fn"      onclick="switchTab('tab-fn')">&#128221; Fixture Note</button>
-        <button class="tab-btn"        data-tab="tab-glossary" onclick="switchTab('tab-glossary')">&#128214; Glossary</button>
-      </div>
+      <div class="quote-workspace">
+      <nav class="tabs" role="tablist" aria-label="Broker tools" aria-orientation="vertical">
+        <button id="tool-tab-freight" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-freight" tabindex="0" data-tab="tab-freight" onclick="switchTab('tab-freight')">&#9875; Freight</button>
+        <button id="tool-tab-tce" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-tce" tabindex="-1" data-tab="tab-tce" onclick="switchTab('tab-tce')">&#128200; TCE</button>
+        <button id="tool-tab-multi" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-multi" tabindex="-1" data-tab="tab-multi" onclick="switchTab('tab-multi')">&#128205; Multi-Port</button>
+        <button id="tool-tab-fn" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-fn" tabindex="-1" data-tab="tab-fn" onclick="switchTab('tab-fn')">&#128221; Fixture Note</button>
+        <button id="tool-tab-glossary" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-glossary" tabindex="-1" data-tab="tab-glossary" onclick="switchTab('tab-glossary')">&#128214; Glossary</button>
+        <button id="tool-tab-learning" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-learning" tabindex="-1" data-tab="tab-learning" onclick="switchTab('tab-learning')">&#127891; Learning</button>
+      </nav>
+      <div class="tab-panels">
 
-      <div id="tab-freight" class="tab-content active">
+      <div id="tab-freight" class="tab-content active" role="tabpanel" aria-labelledby="tool-tab-freight" tabindex="0">
 
       <form id="quoteForm" onsubmit="return false;">
         <div class="form-group">
@@ -836,7 +888,7 @@
       </div><!-- /tab-freight -->
 
       <!-- ========== TCE REVERSE TAB ========== -->
-      <div id="tab-tce" class="tab-content">
+      <div id="tab-tce" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-tce" tabindex="0">
         <form id="tceForm" onsubmit="return false;">
           <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
             &#128161; <b>How it works:</b> Enter the freight rate the charterer is offering and the voyage details. Tool back-calculates your time-charter equivalent (TCE) per day &mdash; what the owner actually earns after voyage costs.
@@ -995,7 +1047,7 @@
       </div><!-- /tab-tce -->
 
       <!-- ========== MULTI-PORT VOYAGE TAB ========== -->
-      <div id="tab-multi" class="tab-content">
+      <div id="tab-multi" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-multi" tabindex="0">
         <form id="multiForm" onsubmit="return false;">
           <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
             &#128205; <b>Multi-port voyage:</b> 2-load / 1-disch, 1-load / 2-disch, or full 4-stop sequences. Leg distances computed in order. Total loaded MT must equal total discharged MT (cargo balance check).
@@ -1134,7 +1186,7 @@
       </div><!-- /tab-multi -->
 
       <!-- ========== FIXTURE NOTE TAB ========== -->
-      <div id="tab-fn" class="tab-content">
+      <div id="tab-fn" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-fn" tabindex="0">
         <form id="fnForm" onsubmit="return false;">
           <div style="background:rgba(184,98,10,.08);border:1px solid rgba(184,98,10,.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a5020;line-height:1.5">
             &#128221; <b>Fixture Note draft generator:</b> fill the variables below — the 29-clause boilerplate is hardcoded to match your house template. Empty fields show as <code>[PLEASE ADVISE]</code>.
@@ -1326,7 +1378,7 @@
         </div>
       </div><!-- /tab-fn -->
 
-      <div id="tab-glossary" class="tab-content">
+      <div id="tab-glossary" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-glossary" tabindex="0">
         <div class="glossary-wrap">
           <h3 class="section-title">Shipping Dictionary &amp; Acronyms</h3>
           <p class="glossary-intro">Quick desk definitions for chartering, vessel, cargo, laytime and voyage terms. Search an acronym or phrase, then open a result for its meaning.</p>
@@ -1340,9 +1392,123 @@
         </div>
       </div><!-- /tab-glossary -->
 
+      <div id="tab-learning" class="tab-content" role="tabpanel" aria-labelledby="tool-tab-learning" tabindex="0">
+        <div class="learning-wrap">
+          <h3 class="section-title">Shipping Learning Desk</h3>
+          <p class="learning-intro">Practical broker training for bills of lading, original document control, LOIs and the checks that protect a fixture from avoidable misdelivery and document disputes.</p>
+          <div class="learning-notice"><b>Use this as an operational guide, not legal or P&amp;I advice.</b> Delivery obligations depend on the bill wording, charterparty, governing law, local port practice and carrier instructions. Never promise release or accept an LOI on behalf of owners.</div>
+
+          <div class="learning-grid">
+            <article class="learning-card">
+              <h4>1. What is an OBL?</h4>
+              <p><b>OBL</b> usually means an <b>original bill of lading</b>. It is not a special bill type: it means an issued original, as opposed to a copy or draft.</p>
+              <p>A bill of lading may act as a cargo receipt, evidence of the carriage contract and, depending on its form and governing law, a transferable document of title. Those functions are related but not identical.</p>
+              <p>A set may be issued as 3/3 originals. Surrender of one original makes the others void only where the bill wording says so. Always check the actual set and clauses.</p>
+            </article>
+
+            <article class="learning-card">
+              <h4>2. Bill of lading and transport document forms</h4>
+              <dl class="learning-types">
+                <dt>Order bill</dt><dd>Made “to order” or “to order of” a party. Transfer generally requires endorsement and delivery; check every endorsement in the chain.</dd>
+                <dt>Bearer bill</dt><dd>Payable to its bearer; possession can control transfer. Treat custody and presentation as high risk.</dd>
+                <dt>Straight bill</dt><dd>Names a consignee and is not transferable by endorsement. It may still require presentation of an original; do not treat it as a sea waybill.</dd>
+                <dt>Sea waybill</dt><dd>Non-negotiable transport document. Delivery is generally to the named consignee without surrendering an original, subject to the document and local law.</dd>
+                <dt>On-board / received</dt><dd>Describes shipment status, not negotiability. “On board” confirms loading; “received for shipment” does not by itself confirm loading.</dd>
+                <dt>Clean / claused</dt><dd>Describes cargo or packaging condition notations. It is not a negotiability type. Never agree to omit a known material defect or false statement.</dd>
+                <dt>Switch bill</dt><dd>A replacement set requested for a legitimate change. It is not a routine amendment: obtain carrier/owner approval, resolve and cancel the full first set, and keep every description and date accurate.</dd>
+                <dt>House / master</dt><dd>Different bills issued at different levels of a forwarding or carrier chain. Confirm which document controls delivery from the vessel and which party issued it.</dd>
+              </dl>
+            </article>
+
+            <article class="learning-card learning-wide">
+              <h4>3. Common OBL workflow</h4>
+              <div class="learning-steps">
+                <div class="learning-step"><b>1 · Agree instructions</b><span>Confirm shipper, carrier, cargo, ports, consignee or order party, notify party, freight wording and any bank-document requirements.</span></div>
+                <div class="learning-step"><b>2 · Load and record</b><span>Record what was loaded. The mate’s receipt should note apparent cargo condition, quantity and any exceptions.</span></div>
+                <div class="learning-step"><b>3 · Check the draft</b><span>Reconcile vessel/voyage, dates, load/discharge ports, cargo marks, quantity, freight and on-board status against source records.</span></div>
+                <div class="learning-step"><b>4 · Issue originals</b><span>Only the authorized carrier or agent signs and releases the stated original set. Track the number issued and who receives it.</span></div>
+                <div class="learning-step"><b>5 · Transfer documents</b><span>Originals may pass from shipper through banks to the buyer. A sale contract or invoice alone does not prove who can demand delivery under the bill.</span></div>
+                <div class="learning-step"><b>6 · Verify before release</b><span>Carrier/agent checks the required original, endorsements and identity; records surrender/cancellation; then follows owner, customs and terminal release instructions.</span></div>
+              </div>
+            </article>
+
+            <article class="learning-card">
+              <h4>4. LOI: what it is and common forms</h4>
+              <p>A <b>letter of indemnity (LOI)</b> is a separate promise to indemnify a party for specified consequences of an agreed action. It is not an original bill of lading, proof of title, or automatic replacement for one.</p>
+              <ul>
+                <li>Delivery without production of the original bill.</li>
+                <li>Delivery at a port different from the bill’s discharge port.</li>
+                <li>Delivery at a different port <i>and</i> without the original bill.</li>
+                <li>The International Group forms also have versions with proposed bank countersignature. Bank involvement is uncommon and does not itself remove the risk.</li>
+              </ul>
+              <p>Switching bills, split delivery and requests for a clean bill despite known discrepancies are different, higher-risk situations. There is no single standard IG LOI form covering every request.</p>
+            </article>
+
+            <article class="learning-card">
+              <h4>5. A careful LOI workflow</h4>
+              <ol>
+                <li>Write down the exact request, reason, cargo, bill numbers, requested recipient and delivery port.</li>
+                <li>Check the charterparty and any LOI clause. Escalate immediately to the owner/operator and their P&amp;I club or legal contact.</li>
+                <li>Use the owner/club’s current approved wording for that specific request; do not improvise or mix forms.</li>
+                <li>Check the issuer’s legal identity, signatory authority and credit/security. Complete every vessel, cargo, bill and beneficiary detail accurately.</li>
+                <li>Wait for explicit written owner acceptance and any required bank counter-signature or security before any cargo release.</li>
+                <li>Follow only the named, approved delivery instruction. Retain the LOI chain, identity checks, messages and release evidence.</li>
+                <li>Track the originals and arrange surrender/cancellation if they later arrive. Follow the LOI wording to confirm when its obligations end.</li>
+              </ol>
+            </article>
+
+            <article class="learning-card">
+              <h4>6. Stop and escalate if you see these</h4>
+              <ul>
+                <li>Backdated, antedated, false “clean” or knowingly inaccurate cargo details.</li>
+                <li>Conflicting instructions, a buyer/seller or bank dispute, or uncertainty over where the originals are.</li>
+                <li>Unverified recipient, forged or incomplete endorsements, unclear issuer identity or signatory authority.</li>
+                <li>Pressure to release before the owner has approved the exact LOI and recipient in writing.</li>
+                <li>A proposed switch bill before all originals in the first set are controlled and cancelled.</li>
+              </ul>
+              <p>Knowingly misstating cargo or delivery facts can make an LOI unenforceable and may leave serious liabilities outside P&amp;I cover. An LOI does not automatically restore insurance cover.</p>
+            </article>
+
+            <article class="learning-card">
+              <h4>7. What a broker should master next</h4>
+              <ul>
+                <li><b>Recaps and subjects:</b> laycan, cancelling date, option wording, freight basis and when a fixture becomes firm.</li>
+                <li><b>Laytime:</b> NOR validity, SHINC/SHEX, weather interruptions, demurrage, despatch and statement of facts.</li>
+                <li><b>Vessel/cargo fit:</b> DWT vs DWCC, draft, stowage factor, gear/SWL, cargo quantity and port restrictions.</li>
+                <li><b>Cost and performance:</b> bunkers, port disbursements, canal dues, sea/port days and TCE assumptions.</li>
+                <li><b>Paper trail:</b> save the exact recap, amendments, approvals, document versions and time-stamped release instructions.</li>
+              </ul>
+              <p><button type="button" class="glossary-chip" onclick="switchTab('tab-glossary')">Open shipping glossary</button></p>
+            </article>
+
+            <article class="learning-card learning-wide">
+              <h4>Further reading</h4>
+              <p>Read current club/owner wording before handling an actual request. These references explain common OBL and LOI risks; they are not a substitute for case-specific advice.</p>
+              <div class="learning-links">
+                <a href="https://gard.no/en/circulars/8-2023-ig-proforma-letters-of-indemnity-review/" target="_blank" rel="noopener noreferrer">Gard: 2023 IG proforma LOI review</a>
+                <a href="https://www.gard.no/rules-statutes-and-guidances/document/risks-covered-rule-34-cargo-liability/" target="_blank" rel="noopener noreferrer">Gard: cargo liability and delivery risks</a>
+                <a href="https://www.westpandi.com/getattachment/fa2a3cc4-500f-4a8a-aff3-6d040ef57d60/p-i_guide_bills_of_lading_5_4pp_v2_lr-1-.pdf" target="_blank" rel="noopener noreferrer">West P&amp;I: bill of lading guide</a>
+                <a href="https://www.gard.no/en/insights/straight-bills-of-lading-not-so-straightforward/" target="_blank" rel="noopener noreferrer">Gard: straight bills and delivery</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div><!-- /tab-learning -->
+
+      </div><!-- /tab-panels -->
+      </div><!-- /quote-workspace -->
+
     </div>
   </div>
 </div>
+
+<dialog id="glossaryDialog" class="glossary-dialog" aria-labelledby="glossaryDialogTitle" onclick="if(event.target===this)this.close()">
+  <button type="button" class="glossary-dialog-close" onclick="closeGlossaryDefinition()" aria-label="Close definition">&#10005;</button>
+  <div class="glossary-dialog-category" id="glossaryDialogCategory"></div>
+  <h3 id="glossaryDialogTitle"></h3>
+  <p class="glossary-dialog-definition" id="glossaryDialogDefinition"></p>
+  <p class="glossary-dialog-aliases" id="glossaryDialogAliases" hidden></p>
+</dialog>
 
 <!-- DISTANCE PANEL -->
 <div class="dist-panel">
@@ -7513,10 +7679,40 @@ function calculateFreight() {
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
 function switchTab(tabId) {
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabId);
+    const selected = btn.dataset.tab === tabId;
+    btn.classList.toggle('active', selected);
+    btn.setAttribute('aria-selected', String(selected));
+    btn.tabIndex = selected ? 0 : -1;
   });
   document.querySelectorAll('.tab-content').forEach(div => {
-    div.classList.toggle('active', div.id === tabId);
+    const selected = div.id === tabId;
+    div.classList.toggle('active', selected);
+    div.setAttribute('aria-hidden', String(!selected));
+  });
+  document.querySelector('.main')?.classList.toggle('wide-tool-focus', tabId === 'tab-glossary' || tabId === 'tab-learning');
+}
+
+const toolTabList = document.querySelector('.tabs[role="tablist"]');
+if (toolTabList) {
+  const syncToolTabOrientation = () => {
+    toolTabList.setAttribute('aria-orientation', window.matchMedia('(max-width: 680px)').matches ? 'horizontal' : 'vertical');
+  };
+  syncToolTabOrientation();
+  window.addEventListener('resize', syncToolTabOrientation);
+  toolTabList.addEventListener('keydown', event => {
+    const tabs = [...toolTabList.querySelectorAll('[role="tab"]')];
+    const index = tabs.indexOf(document.activeElement);
+    if (index < 0) return;
+    const horizontal = toolTabList.getAttribute('aria-orientation') === 'horizontal';
+    let next = null;
+    if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = tabs.length - 1;
+    else if (event.key === (horizontal ? 'ArrowRight' : 'ArrowDown')) next = (index + 1) % tabs.length;
+    else if (event.key === (horizontal ? 'ArrowLeft' : 'ArrowUp')) next = (index - 1 + tabs.length) % tabs.length;
+    if (next === null) return;
+    event.preventDefault();
+    tabs[next].focus();
+    switchTab(tabs[next].dataset.tab);
   });
 }
 
@@ -8909,6 +9105,8 @@ const SHIPPING_GLOSSARY = [
   {term:'Cargo manifest',category:'Documents & operations',meaning:'A summary of cargo carried aboard, with shipment and consignee details required by authorities and vessel operations.'},
   {term:'Draft survey',category:'Documents & operations',meaning:'A cargo quantity calculation based on vessel drafts and hydrostatic data before and after loading or discharge, with adjustments for onboard weights and water density.'},
   {term:'Mate’s receipt',category:'Documents & operations',meaning:'The vessel’s receipt for cargo loaded, recording apparent condition and quantity. It is used to prepare the bill of lading; exceptions should be checked carefully.'},
+  {term:'LOI — Letter of Indemnity',category:'Documents & operations',meaning:'A separate undertaking that may indemnify a party for a specified action, such as delivery without an original bill. It does not itself prove title or guarantee P&I cover; use only the owner/club-approved wording and authority.'},
+  {term:'OBL — Original Bill of Lading',category:'Documents & operations',meaning:'An issued original bill within the stated set. “OBL” describes original-document status, not a particular bill type; presentation and delivery rules depend on the document wording and governing law.'},
   {term:'SOF — Statement of Facts',category:'Documents & operations',meaning:'A time log of vessel and cargo events at port, typically recording arrival, NOR, berth, commencement/completion and interruptions. It supports laytime calculation.'},
   {term:'Tally',category:'Documents & operations',meaning:'A record of cargo units or quantities loaded or discharged. Agree who performs it and how discrepancies are handled.'},
   {term:'Vessel nomination',category:'Documents & operations',meaning:'The charterer’s proposal of a vessel for a shipment, subject to the charterparty’s requirements and any owner or cargo approval.'},
@@ -8936,11 +9134,32 @@ function renderShippingGlossary() {
     .filter(item => !search || `${item.term} ${item.meaning} ${item.aliases || ''}`.toLowerCase().includes(search))
     .sort((a,b) => a.term.localeCompare(b.term));
   count.textContent = `Showing ${filtered.length} of ${SHIPPING_GLOSSARY.length} terms`;
-  list.innerHTML = filtered.length ? filtered.map(item => `
-    <details class="glossary-item">
-      <summary><span class="glossary-term">${escapeHtml(item.term)}</span><span class="glossary-category">${escapeHtml(item.category)}</span></summary>
-      <div class="glossary-definition">${escapeHtml(item.meaning)}${item.aliases ? `<span class="glossary-aliases">Also searched as: ${escapeHtml(item.aliases)}</span>` : ''}</div>
-    </details>`).join('') : '<div class="glossary-empty">No terms match that search. Try an acronym or a shorter phrase.</div>';
+  list.innerHTML = filtered.length ? filtered.map(item => {
+    const index = SHIPPING_GLOSSARY.indexOf(item);
+    return `<button type="button" class="glossary-card" onclick="openGlossaryDefinition(${index})" aria-label="Open definition: ${escapeHtml(item.term)}">
+      <span class="glossary-card-term">${escapeHtml(item.term)}</span>
+      <span class="glossary-card-category">${escapeHtml(item.category)} &middot; View definition</span>
+    </button>`;
+  }).join('') : '<div class="glossary-empty">No terms match that search. Try an acronym or a shorter phrase.</div>';
+}
+function openGlossaryDefinition(index) {
+  const item = SHIPPING_GLOSSARY[index];
+  const dialog = document.getElementById('glossaryDialog');
+  if (!item || !dialog) return;
+  document.getElementById('glossaryDialogTitle').textContent = item.term;
+  document.getElementById('glossaryDialogCategory').textContent = item.category;
+  document.getElementById('glossaryDialogDefinition').textContent = item.meaning;
+  const aliases = document.getElementById('glossaryDialogAliases');
+  aliases.hidden = !item.aliases;
+  aliases.textContent = item.aliases ? `Also searched as: ${item.aliases}` : '';
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+  dialog.querySelector('.glossary-dialog-close').focus();
+}
+function closeGlossaryDefinition() {
+  const dialog = document.getElementById('glossaryDialog');
+  if (dialog?.open && typeof dialog.close === 'function') dialog.close();
+  else dialog?.removeAttribute('open');
 }
 renderShippingGlossary();
 
